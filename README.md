@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://orkajs.com/logo.png" alt="OrkaJS" width="120" />
+  <img src="https://orkajs.com/loutre-orka.png" alt="OrkaJS" width="120" />
 </p>
 
 <h1 align="center">OrkaJS</h1>
