@@ -71,6 +71,7 @@ console.log(result.answer);
 ## Documentation
 
 **📚 [orkajs.com](https://orkajs.com)**
+**💬 [Discord](https://discord.gg/KAZCesekvg)**
 
 - [Getting Started](https://orkajs.com/en/getting-started/introduction)
 - [RAG & Knowledge](https://orkajs.com/en/core/knowledge)
