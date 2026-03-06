@@ -1,6 +1,7 @@
 # Source files
 src/
 examples/
+scripts/
 *.ts
 !*.d.ts
 
