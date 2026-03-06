@@ -6,25 +6,3 @@ dist/
 .DS_Store
 coverage/
 .turbo/
-
-# Generated subpath redirect files (created by scripts/generate-subpath-exports.js)
-/adapters/
-/agent/
-/cache/
-/chains/
-/core/
-/errors/
-/evaluation/
-/graph/
-/loaders/
-/memory/
-/observability/
-/orchestration/
-/parsers/
-/prompts/
-/resilience/
-/retrievers/
-/splitters/
-/templates/
-/types/
-/workflow/
