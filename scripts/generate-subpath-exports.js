@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 /**
  * Generate subpath export files for compatibility with moduleResolution: "node"
- * This creates .js and .d.ts files at the package root for each export path
+ * 
+ * All redirect files are placed inside subdirectories (never at root).
+ * - "./core"            → core/index.js + core/index.d.ts
+ * - "./core/chunker"    → core/chunker.js + core/chunker.d.ts
+ * - "./adapters/memory"  → adapters/memory.js + adapters/memory.d.ts
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
@@ -35,48 +39,62 @@ for (const [exportPath, exportConfig] of Object.entries(exports)) {
     continue;
   }
   
-  // Calculate relative paths from the subpath location to dist
-  const subpathDir = dirname(subpath);
-  const subpathParts = subpath.split('/');
-  // For "adapters/memory" -> depth is 1 (we're in adapters/ folder, need to go up 1 level)
-  // For "core" -> depth is 0 (we're at root, need to go up 0 levels, just use ./)
-  const depth = subpathParts.length - 1;
-  const prefix = depth > 0 ? '../'.repeat(depth) : './';
+  // Determine file paths:
+  // Single-segment paths like "core" → core/index.js (inside subdirectory)
+  // Multi-segment paths like "adapters/memory" → adapters/memory.js (already in subdirectory)
+  const segments = subpath.split('/');
+  const isSingleSegment = segments.length === 1;
+  
+  let targetDir, jsFileName, dtsFileName, relativeLabel;
+  
+  if (isSingleSegment) {
+    // "./core" → core/index.js, core/index.d.ts
+    targetDir = join(rootDir, subpath);
+    jsFileName = 'index.js';
+    dtsFileName = 'index.d.ts';
+    relativeLabel = `${subpath}/index`;
+  } else {
+    // "./adapters/memory" → adapters/memory.js, adapters/memory.d.ts
+    targetDir = join(rootDir, dirname(subpath));
+    const baseName = segments[segments.length - 1];
+    jsFileName = `${baseName}.js`;
+    dtsFileName = `${baseName}.d.ts`;
+    relativeLabel = subpath;
+  }
+  
+  // Calculate the depth from target directory to root for relative path to dist/
+  const targetRelative = isSingleSegment ? subpath : dirname(subpath);
+  const depth = targetRelative.split('/').length;
+  const prefix = '../'.repeat(depth);
   
   // Create directory if needed
-  const fullDir = join(rootDir, subpathDir);
-  if (subpathDir && subpathDir !== '.' && !createdDirs.has(fullDir)) {
-    if (!existsSync(fullDir)) {
-      mkdirSync(fullDir, { recursive: true });
-      console.log(`Created directory: ${subpathDir}/`);
+  if (!createdDirs.has(targetDir)) {
+    if (!existsSync(targetDir)) {
+      mkdirSync(targetDir, { recursive: true });
     }
-    createdDirs.add(fullDir);
+    createdDirs.add(targetDir);
   }
   
   // Create .js file (CommonJS redirect)
-  const jsFilePath = join(rootDir, `${subpath}.js`);
+  const jsFilePath = join(targetDir, jsFileName);
   const jsContent = `module.exports = require('${prefix}${cjsPath.slice(2)}');\n`;
   writeFileSync(jsFilePath, jsContent);
-  createdFiles.push(`${subpath}.js`);
+  createdFiles.push(`${relativeLabel}.js`);
   
   // Create .d.ts file (TypeScript types redirect)
-  const dtsFilePath = join(rootDir, `${subpath}.d.ts`);
-  // Remove .d.ts extension from the path for the export statement
+  const dtsFilePath = join(targetDir, dtsFileName);
   const typesImportPath = typesPath.slice(2).replace(/\.d\.ts$/, '');
   const dtsContent = `export * from '${prefix}${typesImportPath}';\n`;
   writeFileSync(dtsFilePath, dtsContent);
-  createdFiles.push(`${subpath}.d.ts`);
+  createdFiles.push(`${relativeLabel}.d.ts`);
   
-  console.log(`Created: ${subpath}.js, ${subpath}.d.ts`);
+  console.log(`Created: ${relativeLabel}.js, ${relativeLabel}.d.ts`);
 }
 
 console.log(`\n✅ Generated ${createdFiles.length} files for ${Object.keys(exports).length - 1} subpath exports`);
 
-// Output the list of files/dirs to add to package.json "files" array
-const dirsToAdd = [...new Set(createdFiles.map(f => {
-  const parts = f.split('/');
-  return parts.length > 1 ? parts[0] : null;
-}).filter(Boolean))];
+// Output the list of top-level directories to add to package.json "files" array
+const dirsToAdd = [...new Set(createdFiles.map(f => f.split('/')[0]))].sort();
 
-console.log('\n📦 Add these to your package.json "files" array:');
+console.log('\n📦 Add these directories to your package.json "files" array:');
 dirsToAdd.forEach(d => console.log(`  "${d}",`));
