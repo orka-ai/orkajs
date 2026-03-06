@@ -12,7 +12,7 @@
   <a href="https://www.npmjs.com/package/orkajs"><img src="https://img.shields.io/npm/v/orkajs.svg" alt="npm version"></a>
   <a href="https://www.npmjs.com/package/orkajs"><img src="https://img.shields.io/npm/dm/orkajs.svg" alt="npm downloads"></a>
   <a href="https://github.com/orkajs/orkajs/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/orkajs.svg" alt="license"></a>
-  <a href="https://docs.orkajs.com"><img src="https://img.shields.io/badge/docs-orkajs.com-blue.svg" alt="documentation"></a>
+  <a href="https://orkajs.com"><img src="https://img.shields.io/badge/docs-orkajs.com-blue.svg" alt="documentation"></a>
 </p>
 
 ---
