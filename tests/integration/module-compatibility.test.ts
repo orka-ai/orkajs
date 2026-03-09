@@ -164,6 +164,22 @@ describe('Module Exports', () => {
       const { StructuredChatAgent } = await import('../../src/agent/structured-chat-agent.js');
       expect(StructuredChatAgent).toBeDefined();
     });
+
+    it('should export HITLAgent', async () => {
+      const { HITLAgent } = await import('../../src/agent/hitl/index.js');
+      expect(HITLAgent).toBeDefined();
+    });
+
+    it('should export MemoryCheckpointStore', async () => {
+      const { MemoryCheckpointStore } = await import('../../src/agent/hitl/index.js');
+      expect(MemoryCheckpointStore).toBeDefined();
+    });
+
+    it('should export HITL types', async () => {
+      const hitl = await import('../../src/agent/hitl/index.js');
+      expect(hitl.HITLAgent).toBeDefined();
+      expect(hitl.MemoryCheckpointStore).toBeDefined();
+    });
   });
 
   describe('Chains subpath exports', () => {

@@ -65,6 +65,7 @@ export default defineConfig({
     'agent/plan-and-execute': 'src/agent/plan-and-execute-agent.ts',
     'agent/openai-functions': 'src/agent/openai-functions-agent.ts',
     'agent/structured-chat': 'src/agent/structured-chat-agent.ts',
+    'agent/hitl': 'src/agent/hitl/index.ts',
     'agent/toolkits/sql': 'src/agent/toolkits/sql-toolkit.ts',
     'agent/toolkits/csv': 'src/agent/toolkits/csv-toolkit.ts',
 

@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-03-09
+
+### Added
+- **Human-in-the-Loop (HITL) Agent** - Full support for human oversight in agent workflows
+  - `HITLAgent` - Agent with built-in interrupt and checkpoint capabilities
+  - `MemoryCheckpointStore` - In-memory checkpoint storage for development
+  - Tool approval system with `requireApprovalFor` and `autoApproveTools` configuration
+  - Checkpoint system with configurable intervals (`checkpointEvery`)
+  - Resume from checkpoint support for long-running tasks
+  - Interrupt types: `tool_approval`, `checkpoint`, `review`, `confirmation`, `custom`
+  - Response types: `approved`, `rejected`, `modified`, `timeout`
+  - Custom `CheckpointStore` interface for Redis/PostgreSQL persistence
+  - `requestConfirmation()` and `requestReview()` methods for manual interrupts
+- New subpath export: `orkajs/agent/hitl`
+- Documentation: Human-in-the-Loop page added (EN/FR)
+
 ## [1.3.2] - 2026-03-07
 
 ### Added

@@ -23,6 +23,7 @@ import { OpenAIFunctionsAgent } from '../../dist/agent/openai-functions.js';
 import { StructuredChatAgent } from '../../dist/agent/structured-chat.js';
 import { SQLToolkit } from '../../dist/agent/toolkits/sql.js';
 import { CSVToolkit } from '../../dist/agent/toolkits/csv.js';
+import { HITLAgent, MemoryCheckpointStore } from '../../dist/agent/hitl.js';
 
 // ============== CACHE ==============
 import { MemoryCache } from '../../dist/cache/memory-cache.js';
@@ -134,7 +135,7 @@ const modules = {
   OllamaAdapter, PineconeAdapter, QdrantAdapter, ChromaAdapter,
   // Agent
   ReActAgent, PlanAndExecuteAgent, OpenAIFunctionsAgent, StructuredChatAgent,
-  SQLToolkit, CSVToolkit,
+  SQLToolkit, CSVToolkit, HITLAgent, MemoryCheckpointStore,
   // Cache
   MemoryCache, RedisCache, CachedLLM, CachedEmbeddings,
   // Chains

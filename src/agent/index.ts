@@ -6,6 +6,23 @@ export { OpenAIFunctionsAgent } from './openai-functions-agent.js';
 export { StructuredChatAgent } from './structured-chat-agent.js';
 export { SQLToolkit } from './toolkits/sql-toolkit.js';
 export { CSVToolkit } from './toolkits/csv-toolkit.js';
+export { 
+  HITLAgent, 
+  MemoryCheckpointStore,
+  type InterruptReason,
+  type InterruptStatus,
+  type InterruptRequest,
+  type InterruptData,
+  type InterruptResponse,
+  type Checkpoint,
+  type CheckpointState,
+  type CheckpointStep,
+  type HITLConfig,
+  type InterruptHandler,
+  type CheckpointStore,
+  type HITLAgentConfig,
+  type HITLAgentResult,
+} from './hitl/index.js';
 export type { 
   Tool, 
   ToolParameter, 

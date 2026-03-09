@@ -1,6 +1,6 @@
 {
   "name": "orkajs",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "TypeScript framework for building production-ready LLM systems. RAG, agents, workflows, multi-model orchestration.",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -189,6 +189,9 @@
       ],
       "agent/toolkits/csv": [
         "dist/agent/toolkits/csv.d.ts"
+      ],
+      "agent/hitl": [
+        "dist/agent/hitl.d.ts"
       ],
       "evaluation": [
         "dist/evaluation/index.d.ts"
@@ -708,6 +711,11 @@
       "types": "./dist/agent/toolkits/csv.d.ts",
       "import": "./dist/agent/toolkits/csv.js",
       "require": "./dist/agent/toolkits/csv.cjs"
+    },
+    "./agent/hitl": {
+      "types": "./dist/agent/hitl.d.ts",
+      "import": "./dist/agent/hitl.js",
+      "require": "./dist/agent/hitl.cjs"
     },
     "./evaluation": {
       "types": "./dist/evaluation/index.d.ts",
