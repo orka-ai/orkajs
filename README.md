@@ -24,21 +24,6 @@
 npm install orkajs
 ```
 
-### TypeScript Configuration
-
-OrkaJS works with all `moduleResolution` modes:
-
-```json
-{
-  "compilerOptions": {
-    "moduleResolution": "node"      // ✅ Legacy (supported)
-    // or "node16"                   // ✅ Modern
-    // or "nodenext"                 // ✅ Modern
-    // or "bundler"                  // ✅ Bundlers (Vite, Webpack)
-  }
-}
-```
-
 ## Quick Start
 
 ```typescript
