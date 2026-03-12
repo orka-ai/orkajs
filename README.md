@@ -20,9 +20,44 @@
 
 ## Installation
 
+**Full package (recommended):**
 ```bash
 npm install orkajs
 ```
+
+**Or install only what you need:**
+```bash
+npm install @orka-js/core @orka-js/tools @orka-js/memory
+```
+
+<details>
+<summary><strong>📦 Available packages</strong></summary>
+
+| Package | Description |
+|---------|-------------|
+| `orkajs` | Full package with all features |
+| `@orka-js/core` | Types, errors, utils, Knowledge |
+| `@orka-js/openai` | OpenAI adapter |
+| `@orka-js/anthropic` | Anthropic adapter |
+| `@orka-js/mistral` | Mistral adapter |
+| `@orka-js/ollama` | Ollama adapter |
+| `@orka-js/memory` | In-memory vector store |
+| `@orka-js/pinecone` | Pinecone adapter |
+| `@orka-js/qdrant` | Qdrant adapter |
+| `@orka-js/chroma` | ChromaDB adapter |
+| `@orka-js/agent` | Agents (ReAct, HITL, Toolkits) |
+| `@orka-js/tools` | Loaders, splitters, parsers, chains |
+| `@orka-js/cache` | Memory/Redis cache |
+| `@orka-js/resilience` | Retry, fallback |
+| `@orka-js/orchestration` | Router, Consensus, Race, LoadBalancer |
+| `@orka-js/workflow` | Multi-step workflows |
+| `@orka-js/graph` | Graph workflows |
+| `@orka-js/evaluation` | Metrics, test runner |
+| `@orka-js/observability` | Tracer, hooks |
+| `@orka-js/prompts` | Prompt versioning |
+| `@orka-js/memory-store` | Conversation memory |
+
+</details>
 
 ## Quick Start
 

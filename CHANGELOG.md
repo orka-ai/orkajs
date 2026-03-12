@@ -5,6 +5,67 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-03-12
+
+### 🚀 Major Release: Monorepo Architecture
+
+OrkaJS is now a **monorepo** with 21 independently installable packages under the `@orka-js/*` scope.
+
+### Breaking Changes
+
+- **Package structure**: OrkaJS is now distributed as scoped packages (`@orka-js/*`)
+- **Imports**: Tree-shakeable imports changed from `orkajs/adapters/openai` to `@orka-js/openai`
+- The `orkajs` meta-package still works and re-exports everything
+
+### Migration Guide
+
+**Before (v1.x/v2.x):**
+```typescript
+import { createOrka } from 'orkajs';
+import { OpenAIAdapter } from 'orkajs/adapters/openai';
+import { MemoryVectorAdapter } from 'orkajs/adapters/memory';
+```
+
+**After (v3.0.0):**
+```typescript
+// Option 1: Full package (no changes needed)
+import { createOrka, OpenAIAdapter, MemoryVectorAdapter } from 'orkajs';
+
+// Option 2: Selective packages (smaller bundles)
+import { createOrka } from '@orka-js/core';
+import { OpenAIAdapter } from '@orka-js/openai';
+import { MemoryVectorAdapter } from '@orka-js/memory';
+```
+
+### Added
+
+- **21 scoped packages** for selective installation:
+  - `@orka-js/core` - Types, errors, utils, Knowledge
+  - `@orka-js/openai`, `@orka-js/anthropic`, `@orka-js/mistral`, `@orka-js/ollama` - LLM adapters
+  - `@orka-js/memory`, `@orka-js/pinecone`, `@orka-js/qdrant`, `@orka-js/chroma` - Vector DB adapters
+  - `@orka-js/agent` - Agents (ReAct, PlanAndExecute, HITL, Toolkits)
+  - `@orka-js/tools` - Loaders, splitters, retrievers, parsers, chains, templates
+  - `@orka-js/cache` - MemoryCache, RedisCache, CachedLLM, CachedEmbeddings
+  - `@orka-js/resilience` - Retry, fallback, ResilientLLM
+  - `@orka-js/orchestration` - RouterLLM, ConsensusLLM, RaceLLM, LoadBalancerLLM
+  - `@orka-js/workflow` - Multi-step workflows
+  - `@orka-js/graph` - Graph-based workflows
+  - `@orka-js/evaluation` - Metrics, assertions, reporters, test runner
+  - `@orka-js/observability` - Tracer, hooks, logging
+  - `@orka-js/prompts` - Prompt registry, versioning, persistence
+  - `@orka-js/memory-store` - Conversation memory (single + multi-session)
+- **Turborepo** for optimized builds
+- **Changesets** for versioning and publishing
+- `CONTRIBUTING.md` and `DEVELOPMENT.md` guides
+
+### Improved
+
+- **Smaller bundle sizes** when using selective packages
+- **Faster installs** by installing only what you need
+- **Better tree-shaking** with ESM-first package structure
+
+---
+
 ## [1.4.0] - 2026-03-09
 
 ### Added
