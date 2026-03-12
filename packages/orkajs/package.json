@@ -67,7 +67,8 @@
     "@orka-js/evaluation": "workspace:*",
     "@orka-js/observability": "workspace:*",
     "@orka-js/prompts": "workspace:*",
-    "@orka-js/memory-store": "workspace:*"
+    "@orka-js/memory-store": "workspace:*",
+    "@orka-js/ocr": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.1",

@@ -53,3 +53,6 @@ export type {
 
 // Memory Store (conversation memory)
 export * from '@orka-js/memory-store';
+
+// OCR (document extraction)
+export * from '@orka-js/ocr';
