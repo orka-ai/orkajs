@@ -56,6 +56,7 @@ npm install @orka-js/core @orka-js/tools @orka-js/memory
 | `@orka-js/observability` | Tracer, hooks |
 | `@orka-js/prompts` | Prompt versioning |
 | `@orka-js/memory-store` | Conversation memory |
+| `@orka-js/ocr` | OCR & document extraction |
 
 </details>
 
@@ -98,6 +99,8 @@ console.log(result.answer);
 | **Evaluation** | Built-in metrics: relevance, faithfulness, hallucination |
 | **Resilience** | Retry, fallback, timeouts, circuit breaker patterns |
 | **Caching** | Memory & Redis cache for LLM and embeddings |
+| **OCR** | Extract text from images, PDFs, scanned documents (Tesseract, OpenAI Vision) |
+| **PII Guard** | Detect and redact sensitive data before LLM calls (RGPD compliant) |
 
 ## Providers
 
