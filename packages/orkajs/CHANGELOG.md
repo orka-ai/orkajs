@@ -1,5 +1,11 @@
 # orkajs
 
+## 3.0.2
+
+### Patch Changes
+
+- docs: include README.md in published package
+
 ## 3.0.1
 
 ### Patch Changes
