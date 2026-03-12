@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/ocr",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "OCR and document extraction for OrkaJS - Extract text from images, PDFs, and scanned documents",
   "type": "module",
   "main": "./dist/index.cjs",

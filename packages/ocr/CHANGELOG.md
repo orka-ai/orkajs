@@ -1,5 +1,12 @@
 # @orka-js/ocr
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [897bfff]
+  - @orka-js/core@1.2.0
+
 ## 1.1.0
 
 ### Minor Changes

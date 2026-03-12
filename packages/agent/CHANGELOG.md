@@ -1,5 +1,13 @@
 # @orka-js/agent
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies [897bfff]
+  - @orka-js/core@1.2.0
+  - @orka-js/memory-store@1.0.2
+
 ## 1.0.1
 
 ### Patch Changes

@@ -1,5 +1,32 @@
 # orkajs
 
+## 3.1.1
+
+### Patch Changes
+
+- Updated dependencies [897bfff]
+  - @orka-js/core@1.2.0
+  - @orka-js/openai@1.1.0
+  - @orka-js/anthropic@1.1.0
+  - @orka-js/mistral@1.1.0
+  - @orka-js/ollama@1.1.0
+  - @orka-js/agent@1.0.2
+  - @orka-js/cache@1.0.2
+  - @orka-js/chroma@1.0.2
+  - @orka-js/evaluation@1.0.2
+  - @orka-js/graph@1.0.2
+  - @orka-js/memory@1.0.2
+  - @orka-js/memory-store@1.0.2
+  - @orka-js/observability@1.0.2
+  - @orka-js/ocr@1.1.1
+  - @orka-js/orchestration@1.0.2
+  - @orka-js/pinecone@1.0.2
+  - @orka-js/prompts@1.0.2
+  - @orka-js/qdrant@1.0.2
+  - @orka-js/resilience@1.0.2
+  - @orka-js/tools@1.0.2
+  - @orka-js/workflow@1.0.2
+
 ## 3.1.0
 
 ### Minor Changes

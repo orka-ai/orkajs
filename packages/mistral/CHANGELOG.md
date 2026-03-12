@@ -1,5 +1,25 @@
 # @orka-js/mistral
 
+## 1.1.0
+
+### Minor Changes
+
+- 897bfff: feat: Add real-time token streaming for all LLM adapters
+
+  - Add streaming types and utilities in @orka-js/core (StreamingLLMAdapter, LLMStreamEvent, StreamResult, etc.)
+  - Implement stream() and streamGenerate() methods for OpenAI, Anthropic, Mistral, and Ollama adapters
+  - Support for token-by-token streaming with onToken and onEvent callbacks
+  - Time to First Token (TTFT) tracking for performance monitoring
+  - AbortController support for stream cancellation
+  - Extended thinking support for Claude models (ThinkingEvent)
+  - Event types: token, content, tool_call, thinking, usage, done, error
+  - Helper functions: isStreamingAdapter(), createStreamEvent(), consumeStream(), parseSSEStream()
+
+### Patch Changes
+
+- Updated dependencies [897bfff]
+  - @orka-js/core@1.2.0
+
 ## 1.0.1
 
 ### Patch Changes

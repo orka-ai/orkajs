@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/graph",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Graph-based workflows for OrkaJS - nodes, edges, conditions, parallel",
   "type": "module",
   "main": "./dist/index.cjs",
