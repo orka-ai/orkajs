@@ -1,5 +1,21 @@
 # orkajs
 
+## 3.3.0
+
+### Minor Changes
+
+- feat(tools): add API-based loaders for external services
+
+  - NotionLoader: Load pages and databases from Notion with rich text extraction
+  - SlackLoader: Load channel messages with thread support and date filtering
+  - GitHubLoader: Load repository files with path filtering and extension support
+  - GoogleDriveLoader: Load files and folders with Google Docs export support
+
+### Patch Changes
+
+- Updated dependencies
+  - @orka-js/tools@1.1.0
+
 ## 3.2.0
 
 ### Minor Changes
