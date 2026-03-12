@@ -1,5 +1,12 @@
 # @orka-js/workflow
 
+## 1.0.1
+
+### Patch Changes
+
+- Updated dependencies [16bc6c1]
+  - @orka-js/core@1.1.0
+
 ## 1.0.0
 
 ### Major Changes
