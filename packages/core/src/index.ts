@@ -46,3 +46,27 @@ export {
   type PIIGuardConfig,
   type CustomPIIPattern,
 } from './guard.js';
+
+// Streaming
+export {
+  isStreamingAdapter,
+  createStreamEvent,
+  consumeStream,
+  parseSSEStream,
+  type StreamEventType,
+  type StreamEvent,
+  type TokenEvent,
+  type ContentEvent,
+  type ToolCallEvent,
+  type ToolResultEvent,
+  type ThinkingEvent,
+  type UsageEvent,
+  type DoneEvent,
+  type ErrorEvent,
+  type LLMStreamEvent,
+  type StreamEventHandler,
+  type TokenHandler,
+  type StreamGenerateOptions,
+  type StreamResult,
+  type StreamingLLMAdapter,
+} from './streaming.js';
