@@ -1,4 +1,20 @@
-import type { LLMAdapter, LLMGenerateOptions, LLMResult, ContentPart } from '@orka-js/core';
+import type {
+  LLMAdapter,
+  LLMGenerateOptions,
+  LLMResult,
+  ContentPart,
+  StreamingLLMAdapter,
+  StreamGenerateOptions,
+  StreamResult,
+  LLMStreamEvent,
+  TokenEvent,
+  ContentEvent,
+  ThinkingEvent,
+  UsageEvent,
+  DoneEvent,
+  ErrorEvent as OrkaErrorEvent,
+} from '@orka-js/core';
+import { createStreamEvent } from '@orka-js/core';
 
 export interface AnthropicAdapterConfig {
   apiKey: string;
@@ -7,8 +23,9 @@ export interface AnthropicAdapterConfig {
   timeoutMs?: number;
 }
 
-export class AnthropicAdapter implements LLMAdapter {
+export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
   readonly name = 'anthropic';
+  readonly supportsStreaming = true;
   private apiKey: string;
   private model: string;
   private baseURL: string;
@@ -142,5 +159,241 @@ export class AnthropicAdapter implements LLMAdapter {
       case 'tool_use': return 'tool_calls';
       default: return 'stop';
     }
+  }
+
+  /**
+   * Stream generation - returns an AsyncIterable of stream events
+   */
+  async *stream(prompt: string, options: StreamGenerateOptions = {}): AsyncIterable<LLMStreamEvent> {
+    let messages: Array<{ role: string; content: string | unknown[] }>;
+    let system = options.systemPrompt;
+
+    if (options.messages) {
+      messages = [];
+      for (const msg of options.messages) {
+        if (msg.role === 'system') {
+          system = typeof msg.content === 'string' ? msg.content : String(msg.content);
+          continue;
+        }
+        messages.push({
+          role: msg.role,
+          content: msg.content,
+        });
+      }
+    } else {
+      messages = [{ role: 'user', content: prompt }];
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    if (options.signal) {
+      options.signal.addEventListener('abort', () => controller.abort());
+    }
+
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseURL}/v1/messages`, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': this.apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: this.model,
+          max_tokens: options.maxTokens ?? 1024,
+          system,
+          messages,
+          temperature: options.temperature ?? 0.7,
+          stop_sequences: options.stopSequences,
+          stream: true,
+        }),
+      });
+    } catch (error) {
+      clearTimeout(timeout);
+      if ((error as Error).name === 'AbortError') {
+        yield createStreamEvent<OrkaErrorEvent>('error', {
+          error: new Error(`Anthropic API request timed out after ${this.timeoutMs}ms`),
+          message: `Request timed out after ${this.timeoutMs}ms`,
+        });
+        return;
+      }
+      yield createStreamEvent<OrkaErrorEvent>('error', {
+        error: error as Error,
+        message: (error as Error).message,
+      });
+      return;
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      yield createStreamEvent<OrkaErrorEvent>('error', {
+        error: new Error(`Anthropic API error: ${response.status} - ${errorText}`),
+        message: `Anthropic API error: ${response.status}`,
+      });
+      return;
+    }
+
+    if (!response.body) {
+      yield createStreamEvent<OrkaErrorEvent>('error', {
+        error: new Error('No response body'),
+        message: 'No response body received',
+      });
+      return;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let content = '';
+    let _thinking = '';
+    let tokenIndex = 0;
+    let usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+    let finishReason: LLMResult['finishReason'] = 'stop';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith('data: ')) continue;
+
+          try {
+            const json = JSON.parse(trimmed.slice(6));
+            const eventType = json.type;
+
+            switch (eventType) {
+              case 'message_start':
+                if (json.message?.usage) {
+                  usage.promptTokens = json.message.usage.input_tokens || 0;
+                }
+                break;
+
+              case 'content_block_start':
+                // Handle thinking blocks (Claude extended thinking)
+                if (json.content_block?.type === 'thinking') {
+                  _thinking = '';
+                }
+                break;
+
+              case 'content_block_delta':
+                if (json.delta?.type === 'thinking_delta') {
+                  // Extended thinking content
+                  const thinkingDelta = json.delta.thinking || '';
+                  _thinking += thinkingDelta;
+                  yield createStreamEvent<ThinkingEvent>('thinking', {
+                    thinking: _thinking,
+                    delta: thinkingDelta,
+                  });
+                } else if (json.delta?.type === 'text_delta') {
+                  // Regular text content
+                  const token = json.delta.text || '';
+                  content += token;
+
+                  yield createStreamEvent<TokenEvent>('token', {
+                    token,
+                    index: tokenIndex++,
+                  });
+
+                  options.onToken?.(token, tokenIndex - 1);
+
+                  yield createStreamEvent<ContentEvent>('content', {
+                    content,
+                    delta: token,
+                    index: tokenIndex - 1,
+                  });
+                }
+                break;
+
+              case 'message_delta':
+                if (json.delta?.stop_reason) {
+                  finishReason = this.mapStopReason(json.delta.stop_reason);
+                }
+                if (json.usage) {
+                  usage.completionTokens = json.usage.output_tokens || 0;
+                  usage.totalTokens = usage.promptTokens + usage.completionTokens;
+                  yield createStreamEvent<UsageEvent>('usage', { usage });
+                }
+                break;
+
+              case 'message_stop':
+                // Stream complete
+                break;
+            }
+          } catch {
+            // Skip malformed JSON lines
+          }
+        }
+      }
+
+      // Emit done event
+      yield createStreamEvent<DoneEvent>('done', {
+        content,
+        finishReason,
+        usage,
+      });
+
+      options.onEvent?.(createStreamEvent<DoneEvent>('done', {
+        content,
+        finishReason,
+        usage,
+      }));
+
+    } finally {
+      reader.releaseLock();
+    }
+  }
+
+  /**
+   * Stream generation with final result
+   */
+  async streamGenerate(prompt: string, options: StreamGenerateOptions = {}): Promise<StreamResult> {
+    const startTime = Date.now();
+    let content = '';
+    let tokenIndex = 0;
+    let usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+    let finishReason: StreamResult['finishReason'] = 'stop';
+    let ttft: number | undefined;
+
+    for await (const event of this.stream(prompt, options)) {
+      options.onEvent?.(event);
+
+      switch (event.type) {
+        case 'token':
+          if (ttft === undefined) ttft = Date.now() - startTime;
+          content += event.token;
+          options.onToken?.(event.token, tokenIndex++);
+          break;
+        case 'usage':
+          usage = event.usage;
+          break;
+        case 'done':
+          content = event.content;
+          finishReason = event.finishReason;
+          if (event.usage) usage = event.usage;
+          break;
+        case 'error':
+          throw event.error;
+      }
+    }
+
+    return {
+      content,
+      usage,
+      model: this.model,
+      finishReason,
+      ttft,
+      durationMs: Date.now() - startTime,
+    };
   }
 }
