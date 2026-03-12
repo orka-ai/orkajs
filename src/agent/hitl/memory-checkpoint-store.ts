@@ -6,7 +6,7 @@ export class MemoryCheckpointStore implements CheckpointStore {
 
   async save(checkpoint: Checkpoint): Promise<void> {
     this.checkpoints.set(checkpoint.id, checkpoint);
-    
+
     const agentList = this.agentCheckpoints.get(checkpoint.agentId) ?? [];
     if (!agentList.includes(checkpoint.id)) {
       agentList.push(checkpoint.id);
@@ -21,7 +21,7 @@ export class MemoryCheckpointStore implements CheckpointStore {
   async loadLatest(agentId: string): Promise<Checkpoint | null> {
     const agentList = this.agentCheckpoints.get(agentId);
     if (!agentList || agentList.length === 0) return null;
-    
+
     const latestId = agentList[agentList.length - 1];
     return this.checkpoints.get(latestId) ?? null;
   }

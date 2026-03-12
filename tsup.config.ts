@@ -97,6 +97,7 @@ export default defineConfig({
     'orchestration/load-balancer': 'src/orchestration/load-balancer.ts',
     
     //Core
+    'core/index': 'src/core/index.ts',
     'core/orka': 'src/core/orka.ts',
     'core/chunker': 'src/core/chunker.ts',
     'core/knowledge': 'src/core/knowledge.ts',
@@ -110,6 +111,7 @@ export default defineConfig({
     'evaluation/reporters': 'src/evaluation/reporters.ts',
 
     // Existing adapters
+    'adapters/index': 'src/adapters/index.ts',
     'adapters/openai': 'src/adapters/openai/index.ts',
     'adapters/anthropic': 'src/adapters/anthropic/index.ts',
     'adapters/pinecone': 'src/adapters/pinecone/index.ts',

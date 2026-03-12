@@ -131,7 +131,7 @@ const modules = {
   // Main
   Orka, Knowledge,
   // Adapters
-  OpenAIAdapter, AnthropicAdapter, MemoryVectorAdapter, MistralAdapter, 
+  OpenAIAdapter, AnthropicAdapter, MemoryVectorAdapter, MistralAdapter,
   OllamaAdapter, PineconeAdapter, QdrantAdapter, ChromaAdapter,
   // Agent
   ReActAgent, PlanAndExecuteAgent, OpenAIFunctionsAgent, StructuredChatAgent,
