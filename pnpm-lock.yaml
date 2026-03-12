@@ -29,10 +29,10 @@ importers:
 
   packages/agent:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
-      '@orkajs/memory-store':
+      '@orka-js/memory-store':
         specifier: workspace:*
         version: link:../memory-store
     devDependencies:
@@ -45,7 +45,7 @@ importers:
 
   packages/anthropic:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -58,7 +58,7 @@ importers:
 
   packages/cache:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
       redis:
@@ -74,7 +74,7 @@ importers:
 
   packages/chroma:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -96,7 +96,7 @@ importers:
 
   packages/evaluation:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -109,7 +109,7 @@ importers:
 
   packages/graph:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -122,7 +122,7 @@ importers:
 
   packages/memory:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -135,7 +135,7 @@ importers:
 
   packages/memory-store:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -148,7 +148,7 @@ importers:
 
   packages/mistral:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -161,7 +161,7 @@ importers:
 
   packages/observability:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -174,7 +174,7 @@ importers:
 
   packages/ollama:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -187,7 +187,7 @@ importers:
 
   packages/openai:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -200,7 +200,7 @@ importers:
 
   packages/orchestration:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -213,64 +213,64 @@ importers:
 
   packages/orkajs:
     dependencies:
-      '@orkajs/agent':
+      '@orka-js/agent':
         specifier: workspace:*
         version: link:../agent
-      '@orkajs/anthropic':
+      '@orka-js/anthropic':
         specifier: workspace:*
         version: link:../anthropic
-      '@orkajs/cache':
+      '@orka-js/cache':
         specifier: workspace:*
         version: link:../cache
-      '@orkajs/chroma':
+      '@orka-js/chroma':
         specifier: workspace:*
         version: link:../chroma
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
-      '@orkajs/evaluation':
+      '@orka-js/evaluation':
         specifier: workspace:*
         version: link:../evaluation
-      '@orkajs/graph':
+      '@orka-js/graph':
         specifier: workspace:*
         version: link:../graph
-      '@orkajs/memory':
+      '@orka-js/memory':
         specifier: workspace:*
         version: link:../memory
-      '@orkajs/memory-store':
+      '@orka-js/memory-store':
         specifier: workspace:*
         version: link:../memory-store
-      '@orkajs/mistral':
+      '@orka-js/mistral':
         specifier: workspace:*
         version: link:../mistral
-      '@orkajs/observability':
+      '@orka-js/observability':
         specifier: workspace:*
         version: link:../observability
-      '@orkajs/ollama':
+      '@orka-js/ollama':
         specifier: workspace:*
         version: link:../ollama
-      '@orkajs/openai':
+      '@orka-js/openai':
         specifier: workspace:*
         version: link:../openai
-      '@orkajs/orchestration':
+      '@orka-js/orchestration':
         specifier: workspace:*
         version: link:../orchestration
-      '@orkajs/pinecone':
+      '@orka-js/pinecone':
         specifier: workspace:*
         version: link:../pinecone
-      '@orkajs/prompts':
+      '@orka-js/prompts':
         specifier: workspace:*
         version: link:../prompts
-      '@orkajs/qdrant':
+      '@orka-js/qdrant':
         specifier: workspace:*
         version: link:../qdrant
-      '@orkajs/resilience':
+      '@orka-js/resilience':
         specifier: workspace:*
         version: link:../resilience
-      '@orkajs/tools':
+      '@orka-js/tools':
         specifier: workspace:*
         version: link:../tools
-      '@orkajs/workflow':
+      '@orka-js/workflow':
         specifier: workspace:*
         version: link:../workflow
     devDependencies:
@@ -283,7 +283,7 @@ importers:
 
   packages/pinecone:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -296,7 +296,7 @@ importers:
 
   packages/prompts:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -309,7 +309,7 @@ importers:
 
   packages/qdrant:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -322,7 +322,7 @@ importers:
 
   packages/resilience:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -335,7 +335,7 @@ importers:
 
   packages/tools:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
       pdf-parse:
@@ -354,7 +354,7 @@ importers:
 
   packages/workflow:
     dependencies:
-      '@orkajs/core':
+      '@orka-js/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:

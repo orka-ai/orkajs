@@ -4,7 +4,7 @@ import type {
   VectorSearchOptions, 
   VectorSearchResult,
   CreateCollectionOptions 
-} from '@orkajs/core';
+} from '@orka-js/core';
 
 interface Collection {
   dimension: number;

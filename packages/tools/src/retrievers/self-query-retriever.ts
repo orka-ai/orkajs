@@ -1,4 +1,4 @@
-import type { VectorSearchResult, LLMAdapter, VectorDBAdapter } from '@orkajs/core';
+import type { VectorSearchResult, LLMAdapter, VectorDBAdapter } from '@orka-js/core';
 import type { Retriever } from './types.js';
 
 export interface SelfQueryRetrieverOptions {

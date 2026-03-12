@@ -1,4 +1,4 @@
-import type { Document } from '@orkajs/core';
+import type { Document } from '@orka-js/core';
 import type { DocumentLoader, DirectoryLoaderOptions, LoaderOptions } from './types.js';
 import { TextLoader } from './text-loader.js';
 import { CSVLoader } from './csv-loader.js';

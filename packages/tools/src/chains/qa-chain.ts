@@ -1,5 +1,5 @@
 import type { Retriever } from '../retrievers/types.js';
-import type { LLMAdapter, VectorSearchResult } from '@orkajs/core';
+import type { LLMAdapter, VectorSearchResult } from '@orka-js/core';
 import type { ChainResult, QAChainOptions } from './types.js';
 
 export class QAChain {

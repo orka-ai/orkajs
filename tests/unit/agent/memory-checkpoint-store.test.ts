@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MemoryCheckpointStore } from '@orkajs/agent';
-import type { Checkpoint } from '@orkajs/agent';
+import { MemoryCheckpointStore } from '@orka-js/agent';
+import type { Checkpoint } from '@orka-js/agent';
 
 describe('MemoryCheckpointStore', () => {
   let store: MemoryCheckpointStore;

@@ -1,47 +1,47 @@
 // Core - types, errors, utils, knowledge, chunker
-export * from '@orkajs/core';
+export * from '@orka-js/core';
 
 // LLM Adapters
-export { OpenAIAdapter, type OpenAIAdapterConfig } from '@orkajs/openai';
-export { AnthropicAdapter, type AnthropicAdapterConfig } from '@orkajs/anthropic';
-export { MistralAdapter, type MistralAdapterConfig } from '@orkajs/mistral';
-export { OllamaAdapter, type OllamaAdapterConfig } from '@orkajs/ollama';
+export { OpenAIAdapter, type OpenAIAdapterConfig } from '@orka-js/openai';
+export { AnthropicAdapter, type AnthropicAdapterConfig } from '@orka-js/anthropic';
+export { MistralAdapter, type MistralAdapterConfig } from '@orka-js/mistral';
+export { OllamaAdapter, type OllamaAdapterConfig } from '@orka-js/ollama';
 
 // VectorDB Adapters
-export { MemoryVectorAdapter, MemoryVectorDBAdapter } from '@orkajs/memory';
-export { PineconeAdapter, type PineconeAdapterConfig } from '@orkajs/pinecone';
-export { QdrantAdapter, type QdrantAdapterConfig } from '@orkajs/qdrant';
-export { ChromaAdapter, type ChromaAdapterConfig } from '@orkajs/chroma';
+export { MemoryVectorAdapter, MemoryVectorDBAdapter } from '@orka-js/memory';
+export { PineconeAdapter, type PineconeAdapterConfig } from '@orka-js/pinecone';
+export { QdrantAdapter, type QdrantAdapterConfig } from '@orka-js/qdrant';
+export { ChromaAdapter, type ChromaAdapterConfig } from '@orka-js/chroma';
 
 // Agent
-export * from '@orkajs/agent';
+export * from '@orka-js/agent';
 
 // Tools (loaders, splitters, retrievers, parsers, chains, templates)
-export * from '@orkajs/tools';
+export * from '@orka-js/tools';
 
 // Cache
-export * from '@orkajs/cache';
+export * from '@orka-js/cache';
 
 // Resilience
-export * from '@orkajs/resilience';
+export * from '@orka-js/resilience';
 
 // Orchestration
-export * from '@orkajs/orchestration';
+export * from '@orka-js/orchestration';
 
 // Workflow
-export * from '@orkajs/workflow';
+export * from '@orka-js/workflow';
 
 // Graph
-export * from '@orkajs/graph';
+export * from '@orka-js/graph';
 
 // Evaluation
-export * from '@orkajs/evaluation';
+export * from '@orka-js/evaluation';
 
 // Observability
-export * from '@orkajs/observability';
+export * from '@orka-js/observability';
 
-// Prompts (explicit to avoid PromptTemplate name collision with @orkajs/tools)
-export { PromptRegistry, FilePromptPersistence } from '@orkajs/prompts';
+// Prompts (explicit to avoid PromptTemplate name collision with @orka-js/tools)
+export { PromptRegistry, FilePromptPersistence } from '@orka-js/prompts';
 export type {
   PromptTemplate as PromptVersionTemplate,
   PromptRenderOptions,
@@ -49,7 +49,7 @@ export type {
   PromptChange,
   PromptRegistryConfig,
   PromptPersistence,
-} from '@orkajs/prompts';
+} from '@orka-js/prompts';
 
 // Memory Store (conversation memory)
-export * from '@orkajs/memory-store';
+export * from '@orka-js/memory-store';

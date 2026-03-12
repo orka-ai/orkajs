@@ -1,4 +1,4 @@
-import type { Document, Chunk } from '@orkajs/core';
+import type { Document, Chunk } from '@orka-js/core';
 import type { TextSplitter, RecursiveCharacterTextSplitterOptions } from './types.js';
 
 const DEFAULT_SEPARATORS = ['\n\n', '\n', '. ', ', ', ' ', ''];

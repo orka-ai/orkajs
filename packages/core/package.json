@@ -1,5 +1,5 @@
 {
-  "name": "@orkajs/core",
+  "name": "@orka-js/core",
   "version": "0.1.0",
   "description": "Core types, interfaces and classes for OrkaJS - TypeScript LLM framework",
   "type": "module",

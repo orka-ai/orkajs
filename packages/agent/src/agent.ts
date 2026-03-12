@@ -1,6 +1,6 @@
-import type { LLMAdapter, VectorDBAdapter } from '@orkajs/core';
-import type { Knowledge } from '@orkajs/core';
-import type { Memory } from '@orkajs/memory-store';
+import type { LLMAdapter, VectorDBAdapter } from '@orka-js/core';
+import type { Knowledge } from '@orka-js/core';
+import type { Memory } from '@orka-js/memory-store';
 import type { 
   AgentConfig, 
   AgentContext, 

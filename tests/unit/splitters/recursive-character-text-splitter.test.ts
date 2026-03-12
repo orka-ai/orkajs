@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { RecursiveCharacterTextSplitter } from '@orkajs/tools';
-import type { Document } from '@orkajs/core';
+import { RecursiveCharacterTextSplitter } from '@orka-js/tools';
+import type { Document } from '@orka-js/core';
 
 describe('RecursiveCharacterTextSplitter', () => {
   describe('split', () => {

@@ -1,6 +1,6 @@
 import crypto from 'crypto';
-import type { LLMAdapter } from '@orkajs/core';
-import type { Memory } from '@orkajs/memory-store';
+import type { LLMAdapter } from '@orka-js/core';
+import type { Memory } from '@orka-js/memory-store';
 import type { AgentStepResult } from '../types.js';
 import { BaseAgent } from '../base-agent.js';
 import type {

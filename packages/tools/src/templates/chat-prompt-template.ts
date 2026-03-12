@@ -1,4 +1,4 @@
-import type { ChatMessage } from '@orkajs/core';
+import type { ChatMessage } from '@orka-js/core';
 import type { ChatPromptTemplateOptions, ChatMessageTemplate } from './types.js';
 import { PromptTemplate } from './prompt-template.js';
 

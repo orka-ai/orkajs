@@ -1,5 +1,5 @@
 import type { Trace, TraceEvent, ObservabilityHook, LogLevel } from './types.js';
-import { generateId } from '@orkajs/core';
+import { generateId } from '@orka-js/core';
 
 export class Tracer {
   private traces: Map<string, Trace> = new Map();

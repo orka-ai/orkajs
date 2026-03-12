@@ -1,4 +1,4 @@
-import type { LLMAdapter } from '@orkajs/core';
+import type { LLMAdapter } from '@orka-js/core';
 import type { CacheStore, EmbeddingCacheOptions } from './types.js';
 
 export class CachedEmbeddings {

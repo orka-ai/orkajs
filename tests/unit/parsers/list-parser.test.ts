@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ListParser } from '@orkajs/tools';
+import { ListParser } from '@orka-js/tools';
 
 describe('ListParser', () => {
   const parser = new ListParser();

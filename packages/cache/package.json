@@ -1,5 +1,5 @@
 {
-  "name": "@orkajs/cache",
+  "name": "@orka-js/cache",
   "version": "0.1.0",
   "description": "Caching layer for OrkaJS - Memory, Redis, CachedLLM, CachedEmbeddings",
   "type": "module",
@@ -33,7 +33,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@orkajs/core": "workspace:*"
+    "@orka-js/core": "workspace:*"
   },
   "peerDependencies": {
     "redis": "^4.6.0"

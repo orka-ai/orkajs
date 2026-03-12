@@ -1,6 +1,6 @@
-import type { Document } from '@orkajs/core';
+import type { Document } from '@orka-js/core';
 import type { DocumentLoader, CSVLoaderOptions } from './types.js';
-import { generateId } from '@orkajs/core';
+import { generateId } from '@orka-js/core';
 
 export class CSVLoader implements DocumentLoader {
   private path: string;

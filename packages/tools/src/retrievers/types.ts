@@ -1,4 +1,4 @@
-import type { VectorSearchResult, LLMAdapter, VectorDBAdapter } from '@orkajs/core';
+import type { VectorSearchResult, LLMAdapter, VectorDBAdapter } from '@orka-js/core';
 
 export interface Retriever {
   retrieve(query: string, collection: string): Promise<VectorSearchResult[]>;

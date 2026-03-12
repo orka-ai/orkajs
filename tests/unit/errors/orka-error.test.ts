@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { OrkaError, OrkaErrorCode } from '@orkajs/core';
+import { OrkaError, OrkaErrorCode } from '@orka-js/core';
 
 describe('OrkaError', () => {
   describe('OrkaError class', () => {

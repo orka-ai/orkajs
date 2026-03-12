@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { HITLAgent, MemoryCheckpointStore } from '@orkajs/agent';
-import type { InterruptRequest, InterruptResponse, HITLConfig, Tool } from '@orkajs/agent';
-import type { LLMAdapter, LLMResult } from '@orkajs/core';
+import { HITLAgent, MemoryCheckpointStore } from '@orka-js/agent';
+import type { InterruptRequest, InterruptResponse, HITLConfig, Tool } from '@orka-js/agent';
+import type { LLMAdapter, LLMResult } from '@orka-js/core';
 
 const createMockLLM = (): LLMAdapter => ({
   name: 'mock-llm',

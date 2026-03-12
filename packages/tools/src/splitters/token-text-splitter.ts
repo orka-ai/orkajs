@@ -1,4 +1,4 @@
-import type { Document, Chunk } from '@orkajs/core';
+import type { Document, Chunk } from '@orka-js/core';
 import type { TextSplitter, TokenTextSplitterOptions } from './types.js';
 
 export class TokenTextSplitter implements TextSplitter {

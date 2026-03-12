@@ -1,4 +1,4 @@
-import type { LLMAdapter } from '@orkajs/core';
+import type { LLMAdapter } from '@orka-js/core';
 
 export interface OrkaLike {
   ask(options: { knowledge?: string; question: string; includeContext?: boolean }): Promise<{

@@ -1,5 +1,5 @@
-import type { LLMAdapter, VectorDBAdapter } from '@orkajs/core';
-import type { Knowledge } from '@orkajs/core';
+import type { LLMAdapter, VectorDBAdapter } from '@orka-js/core';
+import type { Knowledge } from '@orka-js/core';
 import type { 
   GraphConfig, 
   GraphContext, 

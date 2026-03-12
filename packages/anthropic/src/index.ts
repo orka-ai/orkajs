@@ -1,4 +1,4 @@
-import type { LLMAdapter, LLMGenerateOptions, LLMResult, ContentPart } from '@orkajs/core';
+import type { LLMAdapter, LLMGenerateOptions, LLMResult, ContentPart } from '@orka-js/core';
 
 export interface AnthropicAdapterConfig {
   apiKey: string;

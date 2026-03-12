@@ -1,4 +1,4 @@
-import type { VectorSearchResult, LLMAdapter, VectorDBAdapter } from '@orkajs/core';
+import type { VectorSearchResult, LLMAdapter, VectorDBAdapter } from '@orka-js/core';
 import type { Retriever, ParentDocumentRetrieverOptions } from './types.js';
 
 export class ParentDocumentRetriever implements Retriever {

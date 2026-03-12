@@ -1,5 +1,5 @@
 {
-  "name": "@orkajs/agent",
+  "name": "@orka-js/agent",
   "version": "0.1.0",
   "description": "Agent system for OrkaJS - ReAct, PlanAndExecute, OpenAI Functions, Structured Chat",
   "type": "module",
@@ -33,8 +33,8 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@orkajs/core": "workspace:*",
-    "@orkajs/memory-store": "workspace:*"
+    "@orka-js/core": "workspace:*",
+    "@orka-js/memory-store": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.1",

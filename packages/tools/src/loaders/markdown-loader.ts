@@ -1,6 +1,6 @@
-import type { Document } from '@orkajs/core';
+import type { Document } from '@orka-js/core';
 import type { DocumentLoader, MarkdownLoaderOptions } from './types.js';
-import { generateId } from '@orkajs/core';
+import { generateId } from '@orka-js/core';
 
 export class MarkdownLoader implements DocumentLoader {
   private pathOrContent: string;

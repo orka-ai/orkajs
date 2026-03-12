@@ -1,5 +1,5 @@
-import type { LLMAdapter, VectorDBAdapter, RetrievedContext } from '@orkajs/core';
-import type { Knowledge } from '@orkajs/core';
+import type { LLMAdapter, VectorDBAdapter, RetrievedContext } from '@orka-js/core';
+import type { Knowledge } from '@orka-js/core';
 
 export interface GraphContext {
   input: string;

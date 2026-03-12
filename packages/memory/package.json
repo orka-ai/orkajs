@@ -1,5 +1,5 @@
 {
-  "name": "@orkajs/memory",
+  "name": "@orka-js/memory",
   "version": "0.1.0",
   "description": "In-memory vector store adapter for OrkaJS",
   "type": "module",
@@ -39,7 +39,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@orkajs/core": "workspace:*"
+    "@orka-js/core": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.1",

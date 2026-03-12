@@ -14,7 +14,7 @@ const PACKAGES = [
 
 describe('Monorepo Build Output', () => {
   for (const pkg of PACKAGES) {
-    describe(`@orkajs/${pkg}`, () => {
+    describe(`@orka-js/${pkg}`, () => {
       const distDir = join(PACKAGES_DIR, pkg, 'dist');
 
       it('should have ESM output (index.js)', () => {
@@ -38,7 +38,7 @@ describe('Monorepo Build Output', () => {
 
 describe('Package.json Structure', () => {
   for (const pkg of PACKAGES) {
-    describe(`@orkajs/${pkg}`, () => {
+    describe(`@orka-js/${pkg}`, () => {
       let packageJson: Record<string, unknown>;
 
       beforeAll(() => {

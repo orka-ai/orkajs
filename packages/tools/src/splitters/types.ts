@@ -1,4 +1,4 @@
-import type { Document, Chunk } from '@orkajs/core';
+import type { Document, Chunk } from '@orka-js/core';
 
 export interface TextSplitter {
   split(text: string): string[];

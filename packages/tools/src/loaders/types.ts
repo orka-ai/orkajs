@@ -1,4 +1,4 @@
-import type { Document } from '@orkajs/core';
+import type { Document } from '@orka-js/core';
 
 export interface LoaderOptions {
   metadata?: Record<string, unknown>;

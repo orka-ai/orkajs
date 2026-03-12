@@ -1,6 +1,6 @@
-import type { Document } from '@orkajs/core';
+import type { Document } from '@orka-js/core';
 import type { DocumentLoader, TextLoaderOptions } from './types.js';
-import { generateId } from '@orkajs/core';
+import { generateId } from '@orka-js/core';
 
 export class TextLoader implements DocumentLoader {
   private path: string;

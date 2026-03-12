@@ -1,4 +1,4 @@
-import type { LLMAdapter, VectorSearchResult } from '@orkajs/core';
+import type { LLMAdapter, VectorSearchResult } from '@orka-js/core';
 import type { Retriever } from '../retrievers/types.js';
 
 export interface ChainResult {

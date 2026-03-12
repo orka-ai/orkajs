@@ -1,21 +1,21 @@
 /**
- * Test file to verify @orkajs/* scoped package imports
+ * Test file to verify @orka-js/* scoped package imports
  * This file will be compiled with different moduleResolution settings
  */
 
 // Scoped package imports
-import { Knowledge, OrkaError, OrkaErrorCode } from '@orkajs/core';
-import type { LLMAdapter, VectorDBAdapter, ChatMessage } from '@orkajs/core';
-import { OpenAIAdapter } from '@orkajs/openai';
-import { AnthropicAdapter } from '@orkajs/anthropic';
-import { MemoryVectorAdapter } from '@orkajs/memory';
-import { JSONParser, ListParser, PromptTemplate, ChatPromptTemplate, RecursiveCharacterTextSplitter } from '@orkajs/tools';
-import { MemoryCache, CachedLLM } from '@orkajs/cache';
-import { ReActAgent, PlanAndExecuteAgent } from '@orkajs/agent';
-import { RetrievalQAChain } from '@orkajs/tools';
+import { Knowledge, OrkaError, OrkaErrorCode } from '@orka-js/core';
+import type { LLMAdapter, VectorDBAdapter, ChatMessage } from '@orka-js/core';
+import { OpenAIAdapter } from '@orka-js/openai';
+import { AnthropicAdapter } from '@orka-js/anthropic';
+import { MemoryVectorAdapter } from '@orka-js/memory';
+import { JSONParser, ListParser, PromptTemplate, ChatPromptTemplate, RecursiveCharacterTextSplitter } from '@orka-js/tools';
+import { MemoryCache, CachedLLM } from '@orka-js/cache';
+import { ReActAgent, PlanAndExecuteAgent } from '@orka-js/agent';
+import { RetrievalQAChain } from '@orka-js/tools';
 
 // Verify exports exist
-console.log('Testing @orkajs/* imports...');
+console.log('Testing @orka-js/* imports...');
 console.log('Knowledge:', typeof Knowledge);
 console.log('OpenAIAdapter:', typeof OpenAIAdapter);
 console.log('AnthropicAdapter:', typeof AnthropicAdapter);

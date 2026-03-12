@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PromptTemplate } from '@orkajs/tools';
+import { PromptTemplate } from '@orka-js/tools';
 
 describe('PromptTemplate', () => {
   describe('format', () => {

@@ -1,4 +1,4 @@
-import type { LLMAdapter, LLMGenerateOptions, LLMResult } from '@orkajs/core';
+import type { LLMAdapter, LLMGenerateOptions, LLMResult } from '@orka-js/core';
 import { withRetry, type RetryOptions } from './retry.js';
 
 export interface ResilientLLMConfig {

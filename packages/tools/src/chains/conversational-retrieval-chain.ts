@@ -1,5 +1,5 @@
 import type { Retriever } from '../retrievers/types.js';
-import type { LLMAdapter } from '@orkajs/core';
+import type { LLMAdapter } from '@orka-js/core';
 import type { ChainResult, ConversationalRetrievalChainOptions, ChatHistoryEntry } from './types.js';
 
 export class ConversationalRetrievalChain {

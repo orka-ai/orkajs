@@ -1,4 +1,4 @@
-import type { LLMAdapter, LLMGenerateOptions } from '@orkajs/core';
+import type { LLMAdapter, LLMGenerateOptions } from '@orka-js/core';
 import type { RaceConfig, RaceResult } from './types.js';
 
 export class RaceLLM implements LLMAdapter {

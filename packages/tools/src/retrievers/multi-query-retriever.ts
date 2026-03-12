@@ -1,4 +1,4 @@
-import type { VectorSearchResult } from '@orkajs/core';
+import type { VectorSearchResult } from '@orka-js/core';
 import type { Retriever, MultiQueryRetrieverOptions } from './types.js';
 
 export class MultiQueryRetriever implements Retriever {

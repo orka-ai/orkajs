@@ -6,7 +6,7 @@ import type {
   PromptRegistryConfig,
   PromptPersistence,
 } from './types.js';
-import { generateId } from '@orkajs/core';
+import { generateId } from '@orka-js/core';
 
 export class PromptRegistry {
   private prompts: Map<string, PromptTemplate[]> = new Map();

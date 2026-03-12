@@ -1,4 +1,4 @@
-import type { LLMAdapter, LLMGenerateOptions, LLMResult } from '@orkajs/core';
+import type { LLMAdapter, LLMGenerateOptions, LLMResult } from '@orka-js/core';
 
 export interface RouterConfig {
   routes: Route[];

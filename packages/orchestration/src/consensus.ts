@@ -1,4 +1,4 @@
-import type { LLMAdapter, LLMGenerateOptions, LLMResult } from '@orkajs/core';
+import type { LLMAdapter, LLMGenerateOptions, LLMResult } from '@orka-js/core';
 import type { ConsensusConfig, ConsensusResult } from './types.js';
 
 export class ConsensusLLM implements LLMAdapter {

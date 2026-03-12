@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import type { LLMAdapter, LLMGenerateOptions, LLMResult } from '@orkajs/core';
+import type { LLMAdapter, LLMGenerateOptions, LLMResult } from '@orka-js/core';
 import type { CacheStore, LLMCacheOptions } from './types.js';
 
 export class CachedLLM implements LLMAdapter {

@@ -1,27 +1,27 @@
 /**
- * EXHAUSTIVE TEST - All @orkajs/* package imports
+ * EXHAUSTIVE TEST - All @orka-js/* package imports
  * Tests every single scoped package export
  */
 
 // ============== CORE ==============
-import { Knowledge, OrkaError, OrkaErrorCode, generateId, chunkDocument, chunkDocuments } from '@orkajs/core';
-import type { LLMAdapter, VectorDBAdapter, ChatMessage, LLMResult, Document, Chunk } from '@orkajs/core';
+import { Knowledge, OrkaError, OrkaErrorCode, generateId, chunkDocument, chunkDocuments } from '@orka-js/core';
+import type { LLMAdapter, VectorDBAdapter, ChatMessage, LLMResult, Document, Chunk } from '@orka-js/core';
 
 // ============== LLM ADAPTERS ==============
-import { OpenAIAdapter } from '@orkajs/openai';
-import { AnthropicAdapter } from '@orkajs/anthropic';
-import { MistralAdapter } from '@orkajs/mistral';
-import { OllamaAdapter } from '@orkajs/ollama';
+import { OpenAIAdapter } from '@orka-js/openai';
+import { AnthropicAdapter } from '@orka-js/anthropic';
+import { MistralAdapter } from '@orka-js/mistral';
+import { OllamaAdapter } from '@orka-js/ollama';
 
 // ============== VECTORDB ADAPTERS ==============
-import { MemoryVectorAdapter } from '@orkajs/memory';
-import { PineconeAdapter } from '@orkajs/pinecone';
-import { QdrantAdapter } from '@orkajs/qdrant';
-import { ChromaAdapter } from '@orkajs/chroma';
+import { MemoryVectorAdapter } from '@orka-js/memory';
+import { PineconeAdapter } from '@orka-js/pinecone';
+import { QdrantAdapter } from '@orka-js/qdrant';
+import { ChromaAdapter } from '@orka-js/chroma';
 
 // ============== AGENT ==============
-import { ReActAgent, PlanAndExecuteAgent, OpenAIFunctionsAgent, StructuredChatAgent } from '@orkajs/agent';
-import { SQLToolkit, CSVToolkit, HITLAgent, MemoryCheckpointStore } from '@orkajs/agent';
+import { ReActAgent, PlanAndExecuteAgent, OpenAIFunctionsAgent, StructuredChatAgent } from '@orka-js/agent';
+import { SQLToolkit, CSVToolkit, HITLAgent, MemoryCheckpointStore } from '@orka-js/agent';
 
 // ============== TOOLS (loaders, splitters, retrievers, parsers, chains, templates) ==============
 import {
@@ -33,37 +33,37 @@ import {
   StructuredOutputParser, AutoFixParser,
   RetrievalQAChain, ConversationalRetrievalChain, SummarizationChain, QAChain,
   PromptTemplate, ChatPromptTemplate, FewShotPromptTemplate,
-} from '@orkajs/tools';
+} from '@orka-js/tools';
 
 // ============== CACHE ==============
-import { MemoryCache, RedisCache, CachedLLM, CachedEmbeddings } from '@orkajs/cache';
+import { MemoryCache, RedisCache, CachedLLM, CachedEmbeddings } from '@orka-js/cache';
 
 // ============== RESILIENCE ==============
-import { FallbackLLM, ResilientLLM } from '@orkajs/resilience';
+import { FallbackLLM, ResilientLLM } from '@orka-js/resilience';
 
 // ============== ORCHESTRATION ==============
-import { ConsensusLLM, RaceLLM, RouterLLM, LoadBalancerLLM } from '@orkajs/orchestration';
+import { ConsensusLLM, RaceLLM, RouterLLM, LoadBalancerLLM } from '@orka-js/orchestration';
 
 // ============== WORKFLOW ==============
-import { Workflow } from '@orkajs/workflow';
+import { Workflow } from '@orka-js/workflow';
 
 // ============== GRAPH ==============
-import { GraphWorkflow } from '@orkajs/graph';
+import { GraphWorkflow } from '@orka-js/graph';
 
 // ============== EVALUATION ==============
-import { TestRunner, Evaluator } from '@orkajs/evaluation';
+import { TestRunner, Evaluator } from '@orka-js/evaluation';
 
 // ============== OBSERVABILITY ==============
-import { Tracer } from '@orkajs/observability';
+import { Tracer } from '@orka-js/observability';
 
 // ============== PROMPTS ==============
-import { PromptRegistry, FilePromptPersistence } from '@orkajs/prompts';
+import { PromptRegistry, FilePromptPersistence } from '@orka-js/prompts';
 
 // ============== MEMORY STORE ==============
-import { Memory, SessionMemory } from '@orkajs/memory-store';
+import { Memory, SessionMemory } from '@orka-js/memory-store';
 
 // ============== VERIFICATION ==============
-console.log('=== EXHAUSTIVE @orkajs/* IMPORT TEST ===\n');
+console.log('=== EXHAUSTIVE @orka-js/* IMPORT TEST ===\n');
 
 const modules = {
   // Core
