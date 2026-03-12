@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PromptTemplate } from '../../../src/templates/prompt-template.js';
+import { PromptTemplate } from '@orkajs/tools';
 
 describe('PromptTemplate', () => {
   describe('format', () => {

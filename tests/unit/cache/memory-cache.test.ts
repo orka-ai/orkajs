@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MemoryCache } from '../../../src/cache/memory-cache.js';
+import { MemoryCache } from '@orkajs/cache';
 
 describe('MemoryCache', () => {
   let cache: MemoryCache;

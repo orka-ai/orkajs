@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MemoryCheckpointStore } from '../../../src/agent/hitl/memory-checkpoint-store.js';
-import type { Checkpoint } from '../../../src/agent/hitl/types.js';
+import { MemoryCheckpointStore } from '@orkajs/agent';
+import type { Checkpoint } from '@orkajs/agent';
 
 describe('MemoryCheckpointStore', () => {
   let store: MemoryCheckpointStore;

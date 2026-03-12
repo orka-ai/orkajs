@@ -6,26 +6,3 @@ dist/
 .DS_Store
 coverage/
 .turbo/
-
-# Generated subpath proxy files (created by scripts/generate-subpath-exports.js)
-# Included in npm publish via "files", excluded from git
-/adapters/
-/agent/
-/cache/
-/chains/
-/core/
-/errors/
-/evaluation/
-/graph/
-/loaders/
-/memory/
-/observability/
-/orchestration/
-/parsers/
-/prompts/
-/resilience/
-/retrievers/
-/splitters/
-/templates/
-/types/
-/workflow/

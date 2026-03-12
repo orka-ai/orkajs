@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MemoryVectorAdapter } from '../../../src/adapters/memory/index.js';
-import type { VectorSearchResult } from '../../../src/types/index.js';
+import { MemoryVectorAdapter } from '@orkajs/memory';
+import type { VectorSearchResult } from '@orkajs/core';
 
 describe('MemoryVectorAdapter', () => {
   let vectorDB: MemoryVectorAdapter;

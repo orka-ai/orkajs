@@ -6,7 +6,7 @@
     "lib": ["ES2022", "DOM"],
     "types": ["node"],
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -21,9 +21,29 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@orkajs/core": ["./packages/core/src/index.ts"],
+      "@orkajs/openai": ["./packages/openai/src/index.ts"],
+      "@orkajs/anthropic": ["./packages/anthropic/src/index.ts"],
+      "@orkajs/mistral": ["./packages/mistral/src/index.ts"],
+      "@orkajs/ollama": ["./packages/ollama/src/index.ts"],
+      "@orkajs/memory": ["./packages/memory/src/index.ts"],
+      "@orkajs/pinecone": ["./packages/pinecone/src/index.ts"],
+      "@orkajs/qdrant": ["./packages/qdrant/src/index.ts"],
+      "@orkajs/chroma": ["./packages/chroma/src/index.ts"],
+      "@orkajs/agent": ["./packages/agent/src/index.ts"],
+      "@orkajs/tools": ["./packages/tools/src/index.ts"],
+      "@orkajs/cache": ["./packages/cache/src/index.ts"],
+      "@orkajs/resilience": ["./packages/resilience/src/index.ts"],
+      "@orkajs/orchestration": ["./packages/orchestration/src/index.ts"],
+      "@orkajs/workflow": ["./packages/workflow/src/index.ts"],
+      "@orkajs/graph": ["./packages/graph/src/index.ts"],
+      "@orkajs/evaluation": ["./packages/evaluation/src/index.ts"],
+      "@orkajs/observability": ["./packages/observability/src/index.ts"],
+      "@orkajs/prompts": ["./packages/prompts/src/index.ts"],
+      "@orkajs/memory-store": ["./packages/memory-store/src/index.ts"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*", "tests/**/*", "packages/*/src/**/*"],
+  "exclude": ["node_modules", "dist", "packages/*/dist"]
 }
