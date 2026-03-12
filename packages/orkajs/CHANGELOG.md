@@ -1,5 +1,11 @@
 # orkajs
 
+## 3.0.1
+
+### Patch Changes
+
+- docs: update README and CONTRIBUTING with monorepo installation options
+
 ## 3.0.0
 
 ### Major Changes
