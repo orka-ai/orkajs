@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/cache",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Caching layer for OrkaJS - Memory, Redis, CachedLLM, CachedEmbeddings",
   "type": "module",
   "main": "./dist/index.cjs",

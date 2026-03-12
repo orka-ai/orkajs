@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/resilience",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Resilience patterns for OrkaJS - retry, fallback, resilient LLM",
   "type": "module",
   "main": "./dist/index.cjs",

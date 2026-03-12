@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/mistral",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Mistral adapter for OrkaJS",
   "type": "module",
   "main": "./dist/index.cjs",
