@@ -5,6 +5,10 @@ export { JSONLoader } from './loaders/json-loader.js';
 export { MarkdownLoader } from './loaders/markdown-loader.js';
 export { PDFLoader } from './loaders/pdf-loader.js';
 export { DirectoryLoader } from './loaders/directory-loader.js';
+export { NotionLoader } from './loaders/notion-loader.js';
+export { SlackLoader } from './loaders/slack-loader.js';
+export { GitHubLoader } from './loaders/github-loader.js';
+export { GoogleDriveLoader } from './loaders/google-drive-loader.js';
 export type {
   DocumentLoader,
   LoaderOptions,
@@ -14,6 +18,10 @@ export type {
   PDFLoaderOptions,
   TextLoaderOptions,
   DirectoryLoaderOptions,
+  NotionLoaderOptions,
+  SlackLoaderOptions,
+  GitHubLoaderOptions,
+  GoogleDriveLoaderOptions,
 } from './loaders/types.js';
 
 // Splitters
