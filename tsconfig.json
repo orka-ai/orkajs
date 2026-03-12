@@ -6,7 +6,7 @@
     "lib": ["ES2022", "DOM"],
     "types": ["node"],
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -21,9 +21,29 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@orka-js/core": ["./packages/core/src/index.ts"],
+      "@orka-js/openai": ["./packages/openai/src/index.ts"],
+      "@orka-js/anthropic": ["./packages/anthropic/src/index.ts"],
+      "@orka-js/mistral": ["./packages/mistral/src/index.ts"],
+      "@orka-js/ollama": ["./packages/ollama/src/index.ts"],
+      "@orka-js/memory": ["./packages/memory/src/index.ts"],
+      "@orka-js/pinecone": ["./packages/pinecone/src/index.ts"],
+      "@orka-js/qdrant": ["./packages/qdrant/src/index.ts"],
+      "@orka-js/chroma": ["./packages/chroma/src/index.ts"],
+      "@orka-js/agent": ["./packages/agent/src/index.ts"],
+      "@orka-js/tools": ["./packages/tools/src/index.ts"],
+      "@orka-js/cache": ["./packages/cache/src/index.ts"],
+      "@orka-js/resilience": ["./packages/resilience/src/index.ts"],
+      "@orka-js/orchestration": ["./packages/orchestration/src/index.ts"],
+      "@orka-js/workflow": ["./packages/workflow/src/index.ts"],
+      "@orka-js/graph": ["./packages/graph/src/index.ts"],
+      "@orka-js/evaluation": ["./packages/evaluation/src/index.ts"],
+      "@orka-js/observability": ["./packages/observability/src/index.ts"],
+      "@orka-js/prompts": ["./packages/prompts/src/index.ts"],
+      "@orka-js/memory-store": ["./packages/memory-store/src/index.ts"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*", "tests/**/*", "packages/*/src/**/*"],
+  "exclude": ["node_modules", "dist", "packages/*/dist"]
 }

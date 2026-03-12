@@ -1,0 +1,76 @@
+{
+  "name": "orkajs",
+  "version": "3.0.2",
+  "description": "OrkaJS - TypeScript framework for building production-ready LLM systems",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "orkajs",
+    "llm",
+    "ai",
+    "typescript",
+    "openai",
+    "anthropic",
+    "rag",
+    "agent",
+    "framework"
+  ],
+  "author": "Orka Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orka-ai/orkajs.git",
+    "directory": "packages/orkajs"
+  },
+  "homepage": "https://orkajs.com",
+  "bugs": {
+    "url": "https://github.com/orka-ai/orkajs/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@orka-js/core": "workspace:*",
+    "@orka-js/openai": "workspace:*",
+    "@orka-js/anthropic": "workspace:*",
+    "@orka-js/mistral": "workspace:*",
+    "@orka-js/ollama": "workspace:*",
+    "@orka-js/memory": "workspace:*",
+    "@orka-js/pinecone": "workspace:*",
+    "@orka-js/qdrant": "workspace:*",
+    "@orka-js/chroma": "workspace:*",
+    "@orka-js/agent": "workspace:*",
+    "@orka-js/tools": "workspace:*",
+    "@orka-js/cache": "workspace:*",
+    "@orka-js/resilience": "workspace:*",
+    "@orka-js/orchestration": "workspace:*",
+    "@orka-js/workflow": "workspace:*",
+    "@orka-js/graph": "workspace:*",
+    "@orka-js/evaluation": "workspace:*",
+    "@orka-js/observability": "workspace:*",
+    "@orka-js/prompts": "workspace:*",
+    "@orka-js/memory-store": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  }
+}

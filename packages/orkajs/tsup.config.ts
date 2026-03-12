@@ -1,0 +1,33 @@
+import { defineConfig } from 'tsup';
+
+export default defineConfig({
+  entry: { index: 'src/index.ts' },
+  format: ['esm', 'cjs'],
+  dts: true,
+  splitting: true,
+  treeshake: true,
+  clean: true,
+  sourcemap: true,
+  external: [
+    '@orkajs/core',
+    '@orkajs/openai',
+    '@orkajs/anthropic',
+    '@orkajs/mistral',
+    '@orkajs/ollama',
+    '@orkajs/memory',
+    '@orkajs/pinecone',
+    '@orkajs/qdrant',
+    '@orkajs/chroma',
+    '@orkajs/agent',
+    '@orkajs/tools',
+    '@orkajs/cache',
+    '@orkajs/resilience',
+    '@orkajs/orchestration',
+    '@orkajs/workflow',
+    '@orkajs/graph',
+    '@orkajs/evaluation',
+    '@orkajs/observability',
+    '@orkajs/prompts',
+    '@orkajs/memory-store',
+  ],
+});

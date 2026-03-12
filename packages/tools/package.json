@@ -1,0 +1,66 @@
+{
+  "name": "@orka-js/tools",
+  "version": "1.0.0",
+  "description": "Document loaders, text splitters, retrievers, parsers, chains and templates for OrkaJS",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "orkajs",
+    "loaders",
+    "splitters",
+    "retrievers",
+    "parsers",
+    "chains",
+    "templates"
+  ],
+  "author": "Orka Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orka-ai/orkajs.git",
+    "directory": "packages/tools"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@orka-js/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "pdf-parse": "^1.1.1",
+    "zod": "^3.22.0"
+  },
+  "peerDependenciesMeta": {
+    "pdf-parse": {
+      "optional": true
+    },
+    "zod": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

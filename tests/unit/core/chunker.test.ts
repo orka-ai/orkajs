@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { chunkDocument, chunkDocuments, type ChunkerOptions } from '../../../src/core/chunker.js';
-import type { Document, Chunk } from '../../../src/types/index.js';
+import { chunkDocument, chunkDocuments, type ChunkerOptions } from '@orka-js/core';
+import type { Document, Chunk } from '@orka-js/core';
 
 describe('Chunker', () => {
   const createDoc = (content: string, id = 'doc-1'): Document => ({
