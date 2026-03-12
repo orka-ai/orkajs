@@ -4,6 +4,10 @@ export { JSONLoader } from './json-loader.js';
 export { MarkdownLoader } from './markdown-loader.js';
 export { PDFLoader } from './pdf-loader.js';
 export { DirectoryLoader } from './directory-loader.js';
+export { NotionLoader } from './notion-loader.js';
+export { SlackLoader } from './slack-loader.js';
+export { GitHubLoader } from './github-loader.js';
+export { GoogleDriveLoader } from './google-drive-loader.js';
 export type {
   DocumentLoader,
   LoaderOptions,
@@ -13,4 +17,8 @@ export type {
   PDFLoaderOptions,
   TextLoaderOptions,
   DirectoryLoaderOptions,
+  NotionLoaderOptions,
+  SlackLoaderOptions,
+  GitHubLoaderOptions,
+  GoogleDriveLoaderOptions,
 } from './types.js';
