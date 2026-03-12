@@ -17,3 +17,34 @@ export type {
   GraphNodeResult, 
   GraphResult 
 } from './types.js';
+
+// StateGraph exports
+export { 
+  StateGraph, 
+  createStateAnnotation, 
+  Reducers,
+  MemoryCheckpointStore as GraphCheckpointStore,
+  START,
+  END,
+} from './state-graph/index.js';
+export type {
+  BaseState,
+  StateAnnotation,
+  ChannelType,
+  ChannelDefinition,
+  StateNodeFunction,
+  ConditionalEdgeFunction,
+  StateNode,
+  StateEdge,
+  ConditionalEdge,
+  InterruptConfig,
+  Checkpoint as GraphCheckpoint,
+  CheckpointStore as GraphCheckpointStoreInterface,
+  StateGraphRunConfig,
+  StateNodeResult,
+  StateGraphResult,
+  StateGraphConfig,
+  CompiledStateGraph,
+  StateGraphEventType,
+  StateGraphEvent,
+} from './state-graph/index.js';
