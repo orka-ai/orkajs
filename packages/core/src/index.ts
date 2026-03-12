@@ -33,3 +33,16 @@ export { chunkDocument, chunkDocuments, type ChunkerOptions } from './chunker.js
 
 // Knowledge
 export { Knowledge } from './knowledge.js';
+
+// PII Guard
+export {
+  PIIGuard,
+  createPIIGuard,
+  redactPII,
+  detectPII,
+  type PIIType,
+  type PIIMatch,
+  type PIIDetectionResult,
+  type PIIGuardConfig,
+  type CustomPIIPattern,
+} from './guard.js';

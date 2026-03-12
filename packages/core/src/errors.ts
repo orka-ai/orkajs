@@ -35,6 +35,7 @@ export enum OrkaErrorCode {
   // Security errors
   SQL_INJECTION_BLOCKED = 'SQL_INJECTION_BLOCKED',
   SSRF_BLOCKED = 'SSRF_BLOCKED',
+  PII_DETECTED = 'PII_DETECTED',
 
   // Graph errors
   GRAPH_MAX_ITERATIONS = 'GRAPH_MAX_ITERATIONS',
