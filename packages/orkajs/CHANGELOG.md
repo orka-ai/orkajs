@@ -1,5 +1,25 @@
 # orkajs
 
+## 3.2.0
+
+### Minor Changes
+
+- feat(graph): add StateGraph with typed state, interrupts, and persistence
+
+  - Add StateGraph class for building typed state machines
+  - Support conditional edges based on state
+  - Implement interrupt before/after nodes (human-in-the-loop)
+  - Add checkpoint persistence with GraphCheckpointStore
+  - Support resume from checkpoint with state updates
+  - Add streaming execution with events
+  - Include Mermaid diagram export
+  - Add state reducers (appendList, increment, mergeObject, etc.)
+
+### Patch Changes
+
+- Updated dependencies
+  - @orka-js/graph@1.1.0
+
 ## 3.1.1
 
 ### Patch Changes
