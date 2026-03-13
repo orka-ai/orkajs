@@ -1,5 +1,12 @@
 # orkajs
 
+## 3.4.5
+
+### Patch Changes
+
+- Updated dependencies [19905d4]
+  - @orka-js/openai@1.2.0
+
 ## 3.4.4
 
 ### Patch Changes
