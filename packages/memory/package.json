@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/memory",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "In-memory vector store adapter for OrkaJS",
   "type": "module",
   "main": "./dist/index.cjs",

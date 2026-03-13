@@ -1,5 +1,16 @@
 # @orka-js/core
 
+## 1.2.1
+
+### Patch Changes
+
+- feat: add new LLM providers and streaming RAG
+
+  - @orka-js/google: Google AI (Gemini) adapter with streaming support
+  - @orka-js/cohere: Cohere adapter with streaming support
+  - @orka-js/replicate: Replicate adapter with streaming support
+  - @orka-js/core: Add Orka class with ask(), streamAsk(), streamAskComplete() for streaming RAG
+
 ## 1.2.0
 
 ### Minor Changes

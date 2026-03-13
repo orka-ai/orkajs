@@ -1,5 +1,39 @@
 # orkajs
 
+## 3.3.1
+
+### Patch Changes
+
+- feat: add new LLM providers and streaming RAG
+
+  - @orka-js/google: Google AI (Gemini) adapter with streaming support
+  - @orka-js/cohere: Cohere adapter with streaming support
+  - @orka-js/replicate: Replicate adapter with streaming support
+  - @orka-js/core: Add Orka class with ask(), streamAsk(), streamAskComplete() for streaming RAG
+
+- Updated dependencies
+  - @orka-js/core@1.2.1
+  - @orka-js/agent@1.0.3
+  - @orka-js/anthropic@1.1.1
+  - @orka-js/cache@1.0.3
+  - @orka-js/chroma@1.0.3
+  - @orka-js/evaluation@1.0.3
+  - @orka-js/graph@1.1.1
+  - @orka-js/memory@1.0.3
+  - @orka-js/memory-store@1.0.3
+  - @orka-js/mistral@1.1.1
+  - @orka-js/observability@1.0.3
+  - @orka-js/ocr@1.1.2
+  - @orka-js/ollama@1.1.1
+  - @orka-js/openai@1.1.1
+  - @orka-js/orchestration@1.0.3
+  - @orka-js/pinecone@1.0.3
+  - @orka-js/prompts@1.0.3
+  - @orka-js/qdrant@1.0.3
+  - @orka-js/resilience@1.0.3
+  - @orka-js/tools@1.1.1
+  - @orka-js/workflow@1.0.3
+
 ## 3.3.0
 
 ### Minor Changes

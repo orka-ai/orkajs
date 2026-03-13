@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/chroma",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Chroma vector store adapter for OrkaJS",
   "type": "module",
   "main": "./dist/index.cjs",

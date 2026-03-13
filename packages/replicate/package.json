@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/replicate",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Replicate adapter for OrkaJS",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -18,7 +18,10 @@
       }
     }
   },
-  "files": ["dist", "LICENSE"],
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch"
@@ -30,7 +33,13 @@
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
-  "keywords": ["orka", "ai", "llm", "replicate", "adapter"],
+  "keywords": [
+    "orka",
+    "ai",
+    "llm",
+    "replicate",
+    "adapter"
+  ],
   "author": "Orka AI",
   "license": "MIT",
   "repository": {
@@ -38,5 +47,7 @@
     "url": "https://github.com/orka-ai/orkajs.git",
     "directory": "packages/replicate"
   },
-  "publishConfig": { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  }
 }
