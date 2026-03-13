@@ -295,6 +295,9 @@ importers:
       '@orka-js/core':
         specifier: workspace:*
         version: link:../core
+      '@orka-js/devtools':
+        specifier: workspace:*
+        version: link:../devtools
       '@orka-js/evaluation':
         specifier: workspace:*
         version: link:../evaluation

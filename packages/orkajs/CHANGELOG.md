@@ -1,5 +1,19 @@
 # orkajs
 
+## 3.4.3
+
+### Patch Changes
+
+- feat: add @orka-js/devtools to meta-package dependencies
+
+  The DevTools package is now included in the orkajs meta-package, providing:
+
+  - `devtools()` - Start the debugging dashboard
+  - `trace` - Manual tracing helpers
+  - `createDevToolsHook()` - Integration with Tracer
+  - `createOTLPExporter()` - Export to Datadog/Grafana/Jaeger
+  - `getReplayDebugger()` - Replay and compare traces
+
 ## 3.4.2
 
 ### Patch Changes

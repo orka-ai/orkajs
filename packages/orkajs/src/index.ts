@@ -56,3 +56,17 @@ export * from '@orka-js/memory-store';
 
 // OCR (document extraction)
 export * from '@orka-js/ocr';
+
+// DevTools (debugging and observability dashboard)
+export {
+  devtools,
+  trace,
+  createDevToolsHook,
+  createOTLPExporter,
+  getReplayDebugger,
+  TraceCollector,
+  DevToolsServer,
+  withTrace,
+  type DevToolsConfig,
+  type OpenTelemetryConfig,
+} from '@orka-js/devtools';

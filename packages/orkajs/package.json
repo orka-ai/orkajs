@@ -1,6 +1,6 @@
 {
   "name": "orkajs",
-  "version": "3.4.2",
+  "version": "3.4.3",
   "description": "OrkaJS - TypeScript framework for building production-ready LLM systems",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -68,7 +68,8 @@
     "@orka-js/observability": "workspace:*",
     "@orka-js/prompts": "workspace:*",
     "@orka-js/memory-store": "workspace:*",
-    "@orka-js/ocr": "workspace:*"
+    "@orka-js/ocr": "workspace:*",
+    "@orka-js/devtools": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.1",
