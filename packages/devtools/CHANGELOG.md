@@ -1,5 +1,45 @@
 # @orka-js/devtools
 
+## 1.2.0
+
+### Minor Changes
+
+- feat(devtools): add OpenTelemetry export and Replay Debugging
+
+  ### OpenTelemetry Export
+
+  - `createOTLPExporter()` - Export traces to Datadog, Grafana, Jaeger, Zipkin
+  - Automatic span creation with proper hierarchy
+  - Configurable service name, version, and headers
+  - Support for OTLP/HTTP protocol
+
+  ### Replay Debugging
+
+  - `getReplayDebugger()` - Access the replay debugger instance
+  - `replay.replay()` - Re-execute traces with modified inputs
+  - `replay.fork()` - Create branch points for A/B testing
+  - `replay.compare()` - Compare two runs side-by-side
+  - `replay.exportTestCase()` - Export traces as test cases
+
+  ### Usage
+
+  ```typescript
+  import { createOTLPExporter, getReplayDebugger } from "@orka-js/devtools";
+
+  // Export to Datadog/Grafana
+  const exporter = createOTLPExporter({
+    endpoint: "http://localhost:4318",
+    serviceName: "my-app",
+  });
+
+  // Replay a trace with modifications
+  const replay = getReplayDebugger();
+  const result = await replay.replay({
+    runId: "run-123",
+    modifyInput: (input) => ({ ...input, temperature: 0.5 }),
+  });
+  ```
+
 ## 1.1.0
 
 ### Minor Changes
