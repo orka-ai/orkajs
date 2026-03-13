@@ -274,23 +274,64 @@
       setTimeout(function() { toast.remove(); }, 3000);
     }
 
-    // SSE connection
-    let eventSource;
+    // SSE connection with proper cleanup
+    let eventSource = null;
+    let reconnectTimeout = null;
+    
     function connectSSE() {
+      // Close existing connection before creating new one
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+        reconnectTimeout = null;
+      }
+      
       eventSource = new EventSource('/api/events');
+      
       eventSource.onmessage = function(e) {
-        const event = JSON.parse(e.data);
-        handleEvent(event);
-        refreshData();
+        try {
+          const event = JSON.parse(e.data);
+          handleEvent(event);
+          refreshData();
+        } catch (err) {
+          console.error('Failed to parse SSE event:', err);
+        }
       };
+      
       eventSource.onerror = function() {
         document.getElementById('status').innerHTML = '<span class="w-2 h-2 bg-red-500 rounded-full"></span><span class="text-red-600 dark:text-red-400">Disconnected</span>';
-        setTimeout(connectSSE, 3000);
+        // Close the failed connection
+        if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+        }
+        // Schedule reconnection (only if not already scheduled)
+        if (!reconnectTimeout) {
+          reconnectTimeout = setTimeout(function() {
+            reconnectTimeout = null;
+            connectSSE();
+          }, 3000);
+        }
       };
+      
       eventSource.onopen = function() {
         document.getElementById('status').innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span><span class="text-green-600 dark:text-green-400">Live</span>';
       };
     }
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+      if (eventSource) {
+        eventSource.close();
+      }
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
+    });
+    
     connectSSE();
 
     function handleEvent(event) {
