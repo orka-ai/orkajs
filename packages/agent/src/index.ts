@@ -23,6 +23,20 @@ export {
   type HITLAgentConfig,
   type HITLAgentResult,
 } from './hitl/index.js';
+export {
+  AgentTeam,
+  createAgentTeam,
+  type AgentRole,
+  type AgentMessage,
+  type AgentState,
+  type CollaborationStrategy,
+  type AgentTeamConfig,
+  type TeamTask,
+  type TeamResult,
+  type AgentContribution,
+  type TeamEventType,
+  type TeamEvent,
+} from './multi-agent/index.js';
 export type { 
   Tool, 
   ToolParameter, 

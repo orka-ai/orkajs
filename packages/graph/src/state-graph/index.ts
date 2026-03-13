@@ -1,5 +1,6 @@
 export { StateGraph, createStateAnnotation, Reducers } from './state-graph.js';
 export { MemoryCheckpointStore } from './memory-checkpoint-store.js';
+export { StateGraphTimeTravel, createTimeTravel } from './time-travel.js';
 export { START, END } from './types.js';
 export type {
   BaseState,
@@ -21,4 +22,12 @@ export type {
   CompiledStateGraph,
   StateGraphEventType,
   StateGraphEvent,
+  TimeTravelDebugger,
+  CheckpointHistory,
+  CheckpointBranch,
+  CheckpointDiff,
+  StateDiff,
+  ExecutionTimeline,
+  TimelineEvent,
+  TimelineBranch,
 } from './types.js';
