@@ -1,5 +1,42 @@
 # orkajs
 
+## 3.4.0
+
+### Minor Changes
+
+- feat: P2 advanced features - time travel, hybrid search, multi-agent
+
+  ### Time Travel Debugging (@orka-js/graph)
+
+  - `StateGraphTimeTravel` class for debugging StateGraph executions
+  - `getHistory()` - Get complete execution history with branches
+  - `replayFrom()` - Replay execution from any checkpoint
+  - `fork()` - Fork execution with modified state
+  - `diff()` - Compare two checkpoints (state + path diff)
+  - `getTimeline()` - Visualize execution timeline
+  - `stepBack()` / `stepForward()` - Navigate checkpoints
+
+  ### Hybrid Search & Reranking (@orka-js/tools)
+
+  - `HybridRetriever` - Combines vector + BM25 keyword search with Reciprocal Rank Fusion
+  - `Reranker` - LLM-based batch reranking with relevance scoring
+  - `CrossEncoderReranker` - Pairwise cross-encoder style reranking
+  - `CohereReranker` - Cohere Rerank API integration
+
+  ### Multi-Agent Collaboration (@orka-js/agent)
+
+  - `AgentTeam` - Orchestrate multiple agents working together
+  - Collaboration strategies: supervisor, peer-to-peer, round-robin, consensus, hierarchical
+  - Agent messaging system with broadcast support
+  - Streaming team execution events
+
+### Patch Changes
+
+- Updated dependencies
+  - @orka-js/graph@1.2.0
+  - @orka-js/tools@1.2.0
+  - @orka-js/agent@1.1.0
+
 ## 3.3.1
 
 ### Patch Changes
