@@ -34,6 +34,9 @@ export { chunkDocument, chunkDocuments, type ChunkerOptions } from './chunker.js
 // Knowledge
 export { Knowledge } from './knowledge.js';
 
+// Orka main class
+export { Orka, createOrka, type StreamAskOptions, type StreamAskResult } from './orka.js';
+
 // PII Guard
 export {
   PIIGuard,
