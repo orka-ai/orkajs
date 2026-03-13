@@ -1,5 +1,12 @@
 # orkajs
 
+## 3.4.8
+
+### Patch Changes
+
+- Updated dependencies [e844452]
+  - @orka-js/devtools@1.4.0
+
 ## 3.4.7
 
 ### Patch Changes
