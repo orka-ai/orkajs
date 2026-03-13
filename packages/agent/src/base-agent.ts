@@ -1,4 +1,5 @@
-import type { LLMAdapter } from '@orka-js/core';
+import type { LLMAdapter, CallbackManager } from '@orka-js/core';
+import { getCallbackManager } from '@orka-js/core';
 import type { Memory } from '@orka-js/memory-store';
 import type {
   AgentPolicy,
@@ -16,6 +17,8 @@ export interface BaseAgentConfig {
   systemPrompt?: string;
   maxSteps?: number;
   temperature?: number;
+  /** Optional callback manager for centralized event handling */
+  callbackManager?: CallbackManager;
 }
 
 export type AgentEventType = 'step:start' | 'step:end' | 'tool:start' | 'tool:end' | 'tool:error' | 'complete' | 'error';
@@ -43,7 +46,9 @@ export abstract class BaseAgent {
   protected maxSteps: number;
   protected temperature: number;
   protected agentType: string;
+  protected callbackManager?: CallbackManager;
   private listeners: Map<AgentEventType, AgentEventListener[]> = new Map();
+  private currentRunId?: string;
 
   constructor(
     config: BaseAgentConfig,
@@ -60,6 +65,7 @@ export abstract class BaseAgent {
     this.maxSteps = config.policy?.maxSteps ?? config.maxSteps ?? 10;
     this.temperature = config.temperature ?? 0.3;
     this.agentType = agentType;
+    this.callbackManager = config.callbackManager ?? getCallbackManager();
   }
 
   abstract run(input: string): Promise<AgentResult>;
@@ -82,6 +88,7 @@ export abstract class BaseAgent {
   }
 
   protected emit(event: AgentEvent): void {
+    // Emit to local listeners
     const listeners = this.listeners.get(event.type);
     if (listeners) {
       for (const listener of listeners) {
@@ -92,6 +99,82 @@ export abstract class BaseAgent {
         }
       }
     }
+
+    // Emit to global CallbackManager
+    if (this.callbackManager) {
+      this.emitToCallbackManager(event);
+    }
+  }
+
+  private emitToCallbackManager(event: AgentEvent): void {
+    if (!this.callbackManager) return;
+
+    const runId = this.currentRunId ?? `agent_${Date.now()}`;
+
+    switch (event.type) {
+      case 'tool:start':
+        this.callbackManager.emitToolStart(event.toolName ?? 'unknown', event.input, {
+          runId,
+          metadata: { agentType: event.agentType },
+        });
+        break;
+      case 'tool:end':
+        this.callbackManager.emitToolEnd(
+          runId,
+          event.toolName ?? 'unknown',
+          event.input,
+          event.output,
+          event.latencyMs ?? 0,
+          { metadata: { agentType: event.agentType } }
+        );
+        break;
+      case 'tool:error':
+        this.callbackManager.emitToolError(
+          runId,
+          event.toolName ?? 'unknown',
+          event.input,
+          event.error ?? new Error('Unknown error'),
+          { metadata: { agentType: event.agentType } }
+        );
+        break;
+      case 'step:start':
+        this.callbackManager.emitAgentAction(
+          'step',
+          event.input,
+          { runId, metadata: { agentType: event.agentType, step: event.step } }
+        );
+        break;
+      case 'complete':
+        this.callbackManager.emitAgentFinish(
+          runId,
+          event.output,
+          event.latencyMs ?? 0,
+          { metadata: { agentType: event.agentType } }
+        );
+        break;
+      case 'error':
+        this.callbackManager.emitAgentError(
+          runId,
+          event.error ?? new Error('Unknown error'),
+          { metadata: { agentType: event.agentType } }
+        );
+        break;
+    }
+  }
+
+  /**
+   * Start a new agent run with a unique ID
+   */
+  protected startRun(): string {
+    this.currentRunId = `agent_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    return this.currentRunId;
+  }
+
+  /**
+   * Get the current run ID
+   */
+  protected getRunId(): string {
+    return this.currentRunId ?? 'unknown';
   }
 
   protected getMemoryContext(): string {
