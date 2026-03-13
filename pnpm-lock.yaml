@@ -207,6 +207,25 @@ importers:
         specifier: ^5.3.3
         version: 5.9.3
 
+  packages/multimodal:
+    dependencies:
+      '@orka-js/anthropic':
+        specifier: workspace:*
+        version: link:../anthropic
+      '@orka-js/core':
+        specifier: workspace:*
+        version: link:../core
+      '@orka-js/openai':
+        specifier: workspace:*
+        version: link:../openai
+    devDependencies:
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.1(postcss@8.5.8)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+
   packages/observability:
     dependencies:
       '@orka-js/core':

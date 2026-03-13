@@ -20,16 +20,72 @@ export interface OpenAIAdapterConfig {
   apiKey: string;
   model?: string;
   embeddingModel?: string;
+  whisperModel?: string;
+  ttsModel?: string;
+  ttsVoice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
   baseURL?: string;
   timeoutMs?: number;
 }
 
-export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter {
+/**
+ * Whisper transcription options
+ */
+export interface TranscriptionOptions {
+  /** Language of the audio (ISO-639-1 code) */
+  language?: string;
+  /** Prompt to guide the transcription */
+  prompt?: string;
+  /** Output format */
+  responseFormat?: 'json' | 'text' | 'srt' | 'verbose_json' | 'vtt';
+  /** Temperature for sampling */
+  temperature?: number;
+  /** Timestamp granularities for verbose_json */
+  timestampGranularities?: ('word' | 'segment')[];
+}
+
+/**
+ * Transcription result
+ */
+export interface TranscriptionResult {
+  text: string;
+  language?: string;
+  duration?: number;
+  words?: Array<{ word: string; start: number; end: number }>;
+  segments?: Array<{ id: number; text: string; start: number; end: number }>;
+}
+
+/**
+ * Text-to-Speech options
+ */
+export interface TTSOptions {
+  /** Voice to use */
+  voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+  /** Output format */
+  responseFormat?: 'mp3' | 'opus' | 'aac' | 'flac' | 'wav' | 'pcm';
+  /** Speed of the generated audio (0.25 to 4.0) */
+  speed?: number;
+}
+
+/**
+ * Audio adapter interface for transcription and TTS
+ */
+export interface AudioAdapter {
+  /** Transcribe audio to text (Whisper) */
+  transcribe(audio: Blob | ArrayBuffer | string, options?: TranscriptionOptions): Promise<TranscriptionResult>;
+  /** Convert text to speech */
+  textToSpeech(text: string, options?: TTSOptions): Promise<ArrayBuffer>;
+}
+
+export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter, AudioAdapter {
   readonly name = 'openai';
   readonly supportsStreaming = true;
+  readonly supportsAudio = true;
   private apiKey: string;
   private model: string;
   private embeddingModel: string;
+  private whisperModel: string;
+  private ttsModel: string;
+  private ttsVoice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
   private baseURL: string;
   private timeoutMs: number;
 
@@ -37,6 +93,9 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter {
     this.apiKey = config.apiKey;
     this.model = config.model ?? 'gpt-4o-mini';
     this.embeddingModel = config.embeddingModel ?? 'text-embedding-3-small';
+    this.whisperModel = config.whisperModel ?? 'whisper-1';
+    this.ttsModel = config.ttsModel ?? 'tts-1';
+    this.ttsVoice = config.ttsVoice ?? 'alloy';
     this.baseURL = config.baseURL ?? 'https://api.openai.com/v1';
     this.timeoutMs = config.timeoutMs ?? 60_000;
   }
@@ -418,5 +477,134 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter {
       ttft,
       durationMs: Date.now() - startTime,
     };
+  }
+
+  /**
+   * Transcribe audio to text using OpenAI Whisper
+   * @param audio - Audio data as Blob, ArrayBuffer, or base64 string
+   * @param options - Transcription options
+   */
+  async transcribe(
+    audio: Blob | ArrayBuffer | string,
+    options: TranscriptionOptions = {}
+  ): Promise<TranscriptionResult> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs * 2); // Longer timeout for audio
+
+    const formData = new FormData();
+    
+    // Convert audio to Blob if needed
+    let audioBlob: Blob;
+    if (typeof audio === 'string') {
+      // Base64 string
+      const binaryString = atob(audio);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      audioBlob = new Blob([bytes], { type: 'audio/wav' });
+    } else if (audio instanceof ArrayBuffer) {
+      audioBlob = new Blob([audio], { type: 'audio/wav' });
+    } else {
+      audioBlob = audio;
+    }
+
+    formData.append('file', audioBlob, 'audio.wav');
+    formData.append('model', this.whisperModel);
+    
+    if (options.language) formData.append('language', options.language);
+    if (options.prompt) formData.append('prompt', options.prompt);
+    if (options.responseFormat) formData.append('response_format', options.responseFormat);
+    if (options.temperature !== undefined) formData.append('temperature', String(options.temperature));
+    if (options.timestampGranularities) {
+      for (const granularity of options.timestampGranularities) {
+        formData.append('timestamp_granularities[]', granularity);
+      }
+    }
+
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseURL}/audio/transcriptions`, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: formData,
+      });
+    } catch (error) {
+      clearTimeout(timeout);
+      if ((error as Error).name === 'AbortError') {
+        throw new Error(`Whisper API request timed out after ${this.timeoutMs * 2}ms`);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Whisper API error: ${response.status} - ${error}`);
+    }
+
+    const data = await response.json() as {
+      text: string;
+      language?: string;
+      duration?: number;
+      words?: Array<{ word: string; start: number; end: number }>;
+      segments?: Array<{ id: number; text: string; start: number; end: number }>;
+    };
+
+    return {
+      text: data.text,
+      language: data.language,
+      duration: data.duration,
+      words: data.words,
+      segments: data.segments,
+    };
+  }
+
+  /**
+   * Convert text to speech using OpenAI TTS
+   * @param text - Text to convert to speech
+   * @param options - TTS options
+   */
+  async textToSpeech(text: string, options: TTSOptions = {}): Promise<ArrayBuffer> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    let response: Response;
+    try {
+      response = await fetch(`${this.baseURL}/audio/speech`, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: this.ttsModel,
+          input: text,
+          voice: options.voice ?? this.ttsVoice,
+          response_format: options.responseFormat ?? 'mp3',
+          speed: options.speed ?? 1.0,
+        }),
+      });
+    } catch (error) {
+      clearTimeout(timeout);
+      if ((error as Error).name === 'AbortError') {
+        throw new Error(`TTS API request timed out after ${this.timeoutMs}ms`);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`TTS API error: ${response.status} - ${error}`);
+    }
+
+    return response.arrayBuffer();
   }
 }
