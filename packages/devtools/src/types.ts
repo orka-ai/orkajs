@@ -2,13 +2,69 @@
  * DevTools Types
  */
 
+/**
+ * Source mode for trace collection
+ * - 'local': Run dashboard locally (development)
+ * - 'remote': Send traces to a remote collector (production)
+ */
+export type CollectorSource = 'local' | 'remote';
+
+/**
+ * Operation mode for remote source
+ * - 'agent': Send traces to the collector
+ * - 'viewer': Listen to traces from the collector
+ */
+export type CollectorMode = 'agent' | 'viewer';
+
+/**
+ * Remote collector configuration
+ */
+export interface RemoteCollectorConfig {
+  /** Remote collector endpoint URL */
+  endpoint: string;
+  /** API key for authentication */
+  apiKey?: string;
+  /** Project identifier */
+  projectId?: string;
+  /** Environment tag */
+  environment?: 'development' | 'staging' | 'production';
+  /** Sampling rate (0-1) for production tracing */
+  sampling?: number;
+  /** Filters for viewer mode */
+  filters?: {
+    userId?: string;
+    traceId?: string;
+    sessionId?: string;
+    timeRange?: string;
+    environment?: string;
+    tags?: Record<string, string>;
+  };
+}
+
+/**
+ * DevTools configuration
+ */
 export interface DevToolsConfig {
+  /** Source mode: 'local' (default) or 'remote' */
+  source?: CollectorSource;
+  /** Operation mode for remote: 'agent' or 'viewer' */
+  mode?: CollectorMode;
+  /** Remote collector configuration */
+  remote?: RemoteCollectorConfig;
+  /** Local server port (default: 3001) */
   port?: number;
+  /** Local server host (default: 'localhost') */
   host?: string;
+  /** Open browser on start (default: true for local) */
   open?: boolean;
+  /** Enable CORS (default: true) */
   cors?: boolean;
+  /** Maximum traces to keep in memory */
   maxTraces?: number;
+  /** Trace retention time in ms (default: 24h) */
   retentionMs?: number;
+  /** Verbose logging */
+  verbose?: boolean;
 }
 
 export interface TraceRun {
@@ -105,4 +161,18 @@ export interface ReplayResult {
     outputChanged: boolean;
     latencyDiff: number;
   };
+}
+
+/**
+ * Result returned by devtools() function
+ */
+export interface DevToolsResult {
+  /** Trace collector instance (renamed from 'collector' for clarity) */
+  tracer: import('./collector.js').TraceCollector;
+  /** DevTools server instance (only for local mode) */
+  server?: import('./server.js').DevToolsServer;
+  /** Stop the devtools server/agent */
+  stop: () => Promise<void>;
+  /** Current configuration */
+  config: DevToolsConfig;
 }

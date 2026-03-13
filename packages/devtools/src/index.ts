@@ -1,46 +1,162 @@
 import { TraceCollector, getCollector } from './collector.js';
 import { DevToolsServer } from './server.js';
-import type { DevToolsConfig, TraceRunType, TraceMetadata } from './types.js';
+import { RemoteAgent } from './remote-agent.js';
+import { RemoteViewer } from './remote-viewer.js';
+import type { DevToolsConfig, DevToolsResult, TraceRunType, TraceMetadata } from './types.js';
 
 export * from './types.js';
 export { TraceCollector, getCollector, resetCollector } from './collector.js';
 export { DevToolsServer } from './server.js';
+export { RemoteAgent } from './remote-agent.js';
+export { RemoteViewer } from './remote-viewer.js';
 export { createDevToolsHook, createTracerWithDevTools } from './tracer-hook.js';
 export { OpenTelemetryExporter, createOTLPExporter, type OpenTelemetryConfig } from './opentelemetry.js';
 export { ReplayDebugger, createReplayDebugger, getReplayDebugger, type RunComparison, type TestCase } from './replay.js';
 
 /**
- * Start the DevTools dashboard
+ * Start the DevTools in the specified mode
+ * 
+ * @example Local development (default)
+ * ```typescript
+ * const { tracer, server, stop } = await devtools({ source: 'local', port: 3001 });
+ * ```
+ * 
+ * @example Production agent (sends traces to remote collector)
+ * ```typescript
+ * const { tracer, stop } = await devtools({
+ *   source: 'remote',
+ *   mode: 'agent',
+ *   remote: {
+ *     endpoint: 'https://traces.mycompany.com',
+ *     apiKey: process.env.COLLECTOR_API_KEY,
+ *     projectId: 'my-ai-app',
+ *     environment: 'production',
+ *     sampling: 0.1
+ *   }
+ * });
+ * ```
+ * 
+ * @example Remote viewer (listens to traces from remote collector)
+ * ```typescript
+ * const { tracer, server, stop } = await devtools({
+ *   source: 'remote',
+ *   mode: 'viewer',
+ *   remote: {
+ *     endpoint: 'https://traces.mycompany.com',
+ *     apiKey: process.env.COLLECTOR_API_KEY,
+ *     projectId: 'my-ai-app',
+ *     filters: { environment: 'production', timeRange: 'last-1h' }
+ *   },
+ *   port: 3001
+ * });
+ * ```
  */
-export async function devtools(config: DevToolsConfig = {}): Promise<{
-  collector: TraceCollector;
-  server: DevToolsServer;
-  stop: () => Promise<void>;
-}> {
-  const collector = getCollector(config);
-  const server = new DevToolsServer(collector, config);
-  
-  await server.start();
+export async function devtools(config: DevToolsConfig = {}): Promise<DevToolsResult> {
+  const source = config.source ?? 'local';
+  const tracer = getCollector(config);
 
-  // Open browser if requested
-  if (config.open !== false) {
-    const url = `http://${config.host ?? 'localhost'}:${config.port ?? 3001}`;
-    try {
-      const { exec } = await import('child_process');
-      const command = process.platform === 'darwin' ? 'open' :
-                      process.platform === 'win32' ? 'start' : 'xdg-open';
-      exec(`${command} ${url}`);
-    } catch {
-      // Ignore if can't open browser
-    }
+  // Log startup if verbose
+  if (config.verbose) {
+    console.log(`[DevTools] Starting in ${source} mode...`);
   }
 
-  return {
-    collector,
-    server,
-    stop: () => server.stop(),
-  };
+  // === LOCAL MODE (default) ===
+  if (source === 'local') {
+    const server = new DevToolsServer(tracer, config);
+    await server.start();
+
+    // Open browser if requested
+    if (config.open !== false) {
+      const url = `http://${config.host ?? 'localhost'}:${config.port ?? 3001}`;
+      try {
+        const { exec } = await import('child_process');
+        const command = process.platform === 'darwin' ? 'open' :
+                        process.platform === 'win32' ? 'start' : 'xdg-open';
+        exec(`${command} ${url}`);
+      } catch {
+        // Ignore if can't open browser
+      }
+    }
+
+    if (config.verbose) {
+      console.log(`[DevTools] Dashboard running at http://${config.host ?? 'localhost'}:${config.port ?? 3001}`);
+    }
+
+    return {
+      tracer,
+      server,
+      stop: () => server.stop(),
+      config,
+    };
+  }
+
+  // === REMOTE MODE ===
+  if (!config.remote?.endpoint) {
+    throw new Error('[DevTools] Remote mode requires remote.endpoint configuration');
+  }
+
+  const mode = config.mode ?? 'agent';
+
+  // Remote Agent Mode: Send traces to collector
+  if (mode === 'agent') {
+    const agent = new RemoteAgent(tracer, config);
+    await agent.start();
+
+    if (config.verbose) {
+      console.log(`[DevTools] Agent sending traces to ${config.remote.endpoint}`);
+    }
+
+    return {
+      tracer,
+      server: undefined,
+      stop: () => agent.stop(),
+      config,
+    };
+  }
+
+  // Remote Viewer Mode: Listen to traces and display in local dashboard
+  if (mode === 'viewer') {
+    const viewer = new RemoteViewer(tracer, config);
+    const server = new DevToolsServer(tracer, config);
+    
+    await Promise.all([viewer.start(), server.start()]);
+
+    // Open browser if requested
+    if (config.open !== false) {
+      const url = `http://${config.host ?? 'localhost'}:${config.port ?? 3001}`;
+      try {
+        const { exec } = await import('child_process');
+        const command = process.platform === 'darwin' ? 'open' :
+                        process.platform === 'win32' ? 'start' : 'xdg-open';
+        exec(`${command} ${url}`);
+      } catch {
+        // Ignore if can't open browser
+      }
+    }
+
+    if (config.verbose) {
+      console.log(`[DevTools] Viewer listening to ${config.remote.endpoint}`);
+      console.log(`[DevTools] Dashboard running at http://${config.host ?? 'localhost'}:${config.port ?? 3001}`);
+    }
+
+    return {
+      tracer,
+      server,
+      stop: async () => {
+        await Promise.all([viewer.stop(), server.stop()]);
+      },
+      config,
+    };
+  }
+
+  throw new Error(`[DevTools] Unknown mode: ${mode}`);
 }
+
+/**
+ * Alias for devtools() - use this for semantic clarity when focusing on trace collection
+ * @deprecated Use devtools() instead. This alias will be removed in v4.0.
+ */
+export const collector = devtools;
 
 /**
  * Create a trace wrapper for any function
@@ -50,21 +166,21 @@ export function withTrace<T extends (...args: unknown[]) => unknown>(
   options: {
     name?: string;
     type?: TraceRunType;
-    collector?: TraceCollector;
+    tracer?: TraceCollector;
   } = {}
 ): T {
-  const collector = options.collector ?? getCollector();
+  const tracer = options.tracer ?? getCollector();
   const name = options.name ?? fn.name ?? 'anonymous';
   const type = options.type ?? 'custom';
 
   return (async (...args: unknown[]) => {
-    const runId = collector.startRun(type, name, args);
+    const runId = tracer.startRun(type, name, args);
     try {
       const result = await fn(...args);
-      collector.endRun(runId, result);
+      tracer.endRun(runId, result);
       return result;
     } catch (error) {
-      collector.errorRun(runId, error as Error);
+      tracer.errorRun(runId, error as Error);
       throw error;
     }
   }) as T;
@@ -87,14 +203,14 @@ export function Trace(options: {
     const type = options.type ?? 'custom';
 
     descriptor.value = async function (...args: unknown[]) {
-      const collector = getCollector();
-      const runId = collector.startRun(type, name, args);
+      const tracer = getCollector();
+      const runId = tracer.startRun(type, name, args);
       try {
         const result = await originalMethod.apply(this, args);
-        collector.endRun(runId, result);
+        tracer.endRun(runId, result);
         return result;
       } catch (error) {
-        collector.errorRun(runId, error as Error);
+        tracer.errorRun(runId, error as Error);
         throw error;
       }
     };
