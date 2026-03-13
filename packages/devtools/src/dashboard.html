@@ -206,7 +206,7 @@
           <h2 class="text-lg font-semibold">Run Details</h2>
           <button onclick="closeDetails()" id="closeDetailsBtn" class="hidden text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Close</button>
         </div>
-        <div id="runDetails" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 min-h-[500px] max-h-[600px] overflow-hidden">
+        <div id="runDetails" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 min-h-[500px] max-h-[600px] overflow-y-auto scrollbar-thin">
           <div class="flex flex-col items-center justify-center h-full text-center py-12">
             <svg class="w-16 h-16 text-slate-300 dark:text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -483,7 +483,7 @@
       const statusColors = { success: 'text-green-500', error: 'text-red-500', running: 'text-yellow-500' };
       const statusCls = statusColors[run.status] || '';
       
-      let html = '<div class="h-full flex flex-col">' +
+      let html = '<div>' +
         '<div class="p-4 border-b border-slate-100 dark:border-slate-700">' +
         '<div class="flex items-center gap-2 mb-2">' +
         '<span class="font-semibold text-lg">' + run.name + '</span>' +
@@ -501,7 +501,7 @@
       }
       html += '</div></div>';
       
-      html += '<div class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">';
+      html += '<div class="p-4 space-y-4">';
       
       if (run.input) {
         html += '<div><h4 class="text-sm font-medium text-slate-500 mb-2 flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>Input</h4><pre class="text-sm bg-slate-50 dark:bg-slate-900 p-3 rounded-lg overflow-x-auto">' + formatJSON(run.input) + '</pre></div>';
@@ -520,7 +520,7 @@
       }
       
       html += '</div>';
-      html += '<div class="p-3 border-t border-slate-100 dark:border-slate-700 flex gap-2"><button onclick="copyRunData()" class="flex-1 px-3 py-1.5 text-sm bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">📋 Copy JSON</button></div>';
+      html += '<div class="p-3 border-t border-slate-100 dark:border-slate-700 flex gap-2 sticky bottom-0 bg-white dark:bg-slate-800"><button onclick="copyRunData()" class="flex-1 px-3 py-1.5 text-sm bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">📋 Copy JSON</button></div>';
       html += '</div>';
       
       container.innerHTML = html;

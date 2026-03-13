@@ -1,5 +1,14 @@
 # @orka-js/devtools
 
+## 1.3.1
+
+### Patch Changes
+
+- fix(devtools): corriger le scroll dans le panneau Run Details
+
+  - Le contenu long est maintenant scrollable verticalement
+  - Bouton "Copy JSON" reste visible en bas (sticky)
+
 ## 1.3.0
 
 ### Minor Changes
