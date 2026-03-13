@@ -1,5 +1,13 @@
 # orkajs
 
+## 3.4.2
+
+### Patch Changes
+
+- Updated dependencies [774d61f]
+  - @orka-js/memory-store@1.1.0
+  - @orka-js/agent@1.1.1
+
 ## 3.4.1
 
 ### Patch Changes
