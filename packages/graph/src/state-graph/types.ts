@@ -181,6 +181,118 @@ export interface CheckpointStore<S extends BaseState = BaseState> {
 }
 
 /**
+ * Time travel debugger interface
+ */
+export interface TimeTravelDebugger<S extends BaseState = BaseState> {
+  /**
+   * Get execution history for a thread
+   */
+  getHistory(threadId: string): Promise<CheckpointHistory<S>>;
+  /**
+   * Replay execution from a specific checkpoint
+   */
+  replayFrom(checkpointId: string, config?: StateGraphRunConfig<S>): Promise<StateGraphResult<S>>;
+  /**
+   * Fork execution from a checkpoint with modified state
+   */
+  fork(checkpointId: string, stateModifier: (state: S) => Partial<S>, config?: StateGraphRunConfig<S>): Promise<StateGraphResult<S>>;
+  /**
+   * Compare two checkpoints
+   */
+  diff(checkpointId1: string, checkpointId2: string): Promise<CheckpointDiff<S>>;
+  /**
+   * Get state at a specific point in time
+   */
+  getStateAt(threadId: string, timestamp: number): Promise<S | null>;
+  /**
+   * Visualize execution timeline
+   */
+  getTimeline(threadId: string): Promise<ExecutionTimeline<S>>;
+}
+
+/**
+ * Checkpoint history for time travel
+ */
+export interface CheckpointHistory<S extends BaseState = BaseState> {
+  threadId: string;
+  checkpoints: Checkpoint<S>[];
+  branches: CheckpointBranch<S>[];
+  totalDurationMs: number;
+  nodeExecutionCounts: Record<string, number>;
+}
+
+/**
+ * Branch in checkpoint history
+ */
+export interface CheckpointBranch<S extends BaseState = BaseState> {
+  branchId: string;
+  parentCheckpointId: string;
+  checkpoints: Checkpoint<S>[];
+  createdAt: number;
+}
+
+/**
+ * Diff between two checkpoints
+ */
+export interface CheckpointDiff<S extends BaseState = BaseState> {
+  checkpoint1: Checkpoint<S>;
+  checkpoint2: Checkpoint<S>;
+  stateDiff: StateDiff<S>;
+  pathDiff: {
+    added: string[];
+    removed: string[];
+    common: string[];
+  };
+  timeDiff: number;
+}
+
+/**
+ * State diff between checkpoints
+ */
+export interface StateDiff<S extends BaseState = BaseState> {
+  added: Partial<S>;
+  removed: Partial<S>;
+  modified: {
+    key: keyof S;
+    before: unknown;
+    after: unknown;
+  }[];
+}
+
+/**
+ * Execution timeline for visualization
+ */
+export interface ExecutionTimeline<S extends BaseState = BaseState> {
+  threadId: string;
+  events: TimelineEvent<S>[];
+  branches: TimelineBranch[];
+  startTime: number;
+  endTime: number;
+}
+
+/**
+ * Timeline event
+ */
+export interface TimelineEvent<S extends BaseState = BaseState> {
+  type: 'node_start' | 'node_end' | 'state_change' | 'interrupt' | 'branch' | 'error';
+  nodeId?: string;
+  checkpointId: string;
+  timestamp: number;
+  state?: S;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Timeline branch
+ */
+export interface TimelineBranch {
+  branchId: string;
+  parentCheckpointId: string;
+  startTime: number;
+  endTime?: number;
+}
+
+/**
  * Run configuration for state graph execution
  */
 export interface StateGraphRunConfig<S extends BaseState = BaseState> {
