@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/replicate",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Replicate adapter for OrkaJS",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/orchestration",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Multi-model orchestration for OrkaJS - router, consensus, race, load-balancer",
   "type": "module",
   "main": "./dist/index.cjs",

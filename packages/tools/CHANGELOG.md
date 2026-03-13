@@ -1,5 +1,12 @@
 # @orka-js/tools
 
+## 1.2.1
+
+### Patch Changes
+
+- Updated dependencies [674e66d]
+  - @orka-js/core@1.3.0
+
 ## 1.2.0
 
 ### Minor Changes
