@@ -6,6 +6,8 @@ export * from './types.js';
 export { TraceCollector, getCollector, resetCollector } from './collector.js';
 export { DevToolsServer } from './server.js';
 export { createDevToolsHook, createTracerWithDevTools } from './tracer-hook.js';
+export { OpenTelemetryExporter, createOTLPExporter, type OpenTelemetryConfig } from './opentelemetry.js';
+export { ReplayDebugger, createReplayDebugger, getReplayDebugger, type RunComparison, type TestCase } from './replay.js';
 
 /**
  * Start the DevTools dashboard
