@@ -1,6 +1,6 @@
 {
   "name": "orkajs",
-  "version": "3.4.5",
+  "version": "3.4.6",
   "description": "OrkaJS - TypeScript framework for building production-ready LLM systems",
   "type": "module",
   "main": "./dist/index.cjs",
