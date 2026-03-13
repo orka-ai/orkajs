@@ -5,6 +5,7 @@ import type { DevToolsConfig, TraceRunType, TraceMetadata } from './types.js';
 export * from './types.js';
 export { TraceCollector, getCollector, resetCollector } from './collector.js';
 export { DevToolsServer } from './server.js';
+export { createDevToolsHook, createTracerWithDevTools } from './tracer-hook.js';
 
 /**
  * Start the DevTools dashboard
