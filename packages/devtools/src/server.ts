@@ -2,6 +2,9 @@ import type { TraceCollector } from './collector.js';
 import type { DevToolsConfig, TraceEvent } from './types.js';
 import type { Application, Request, Response, NextFunction } from 'express';
 import type { Server, ServerResponse } from 'http';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 /**
  * DevTools Server - Express server for the DevTools dashboard
@@ -11,6 +14,7 @@ export class DevToolsServer {
   private config: Required<Pick<DevToolsConfig, 'port' | 'host' | 'cors'>>;
   private server?: Server;
   private clients: Set<ServerResponse> = new Set();
+  private dashboardHTML: string;
 
   constructor(collector: TraceCollector, config: DevToolsConfig = {}) {
     this.collector = collector;
@@ -19,6 +23,21 @@ export class DevToolsServer {
       host: config.host ?? 'localhost',
       cors: config.cors ?? true,
     };
+    this.dashboardHTML = this.loadDashboardHTML();
+  }
+
+  /**
+   * Load dashboard HTML from file
+   */
+  private loadDashboardHTML(): string {
+    try {
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = dirname(__filename);
+      return readFileSync(join(__dirname, 'dashboard.html'), 'utf-8');
+    } catch {
+      // Fallback to inline HTML if file not found
+      return this.getInlineDashboardHTML();
+    }
   }
 
   /**
@@ -169,7 +188,7 @@ export class DevToolsServer {
 
     // Serve static UI (if available)
     app.get('/', (_req: Request, res: Response) => {
-      res.send(this.getDashboardHTML());
+      res.send(this.dashboardHTML);
     });
   }
 
@@ -184,179 +203,9 @@ export class DevToolsServer {
   }
 
   /**
-   * Get embedded dashboard HTML
+   * Inline fallback dashboard HTML
    */
-  private getDashboardHTML(): string {
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OrkaJS DevTools</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .tree-line { border-left: 2px solid #e2e8f0; }
-    .dark .tree-line { border-left-color: #334155; }
-  </style>
-</head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white min-h-screen">
-  <div id="app" class="max-w-7xl mx-auto p-6">
-    <header class="flex items-center justify-between mb-8">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-          </svg>
-        </div>
-        <div>
-          <h1 class="text-2xl font-bold">OrkaJS DevTools</h1>
-          <p class="text-sm text-slate-500">Real-time LLM observability</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-4">
-        <span id="status" class="flex items-center gap-2 text-sm">
-          <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-          Connected
-        </span>
-        <button onclick="clearTraces()" class="px-3 py-1.5 text-sm bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20">
-          Clear
-        </button>
-        <button onclick="exportTraces()" class="px-3 py-1.5 text-sm bg-purple-500/10 text-purple-500 rounded-lg hover:bg-purple-500/20">
-          Export
-        </button>
-      </div>
-    </header>
-
-    <!-- Metrics -->
-    <div id="metrics" class="grid grid-cols-4 gap-4 mb-8">
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm">
-        <p class="text-sm text-slate-500 mb-1">Total Runs</p>
-        <p id="metric-runs" class="text-2xl font-bold">0</p>
-      </div>
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm">
-        <p class="text-sm text-slate-500 mb-1">Avg Latency</p>
-        <p id="metric-latency" class="text-2xl font-bold">0ms</p>
-      </div>
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm">
-        <p class="text-sm text-slate-500 mb-1">Total Tokens</p>
-        <p id="metric-tokens" class="text-2xl font-bold">0</p>
-      </div>
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm">
-        <p class="text-sm text-slate-500 mb-1">Error Rate</p>
-        <p id="metric-errors" class="text-2xl font-bold">0%</p>
-      </div>
-    </div>
-
-    <!-- Sessions & Traces -->
-    <div class="grid grid-cols-3 gap-6">
-      <div class="col-span-1">
-        <h2 class="text-lg font-semibold mb-4">Sessions</h2>
-        <div id="sessions" class="space-y-2"></div>
-      </div>
-      <div class="col-span-2">
-        <h2 class="text-lg font-semibold mb-4">Trace Viewer</h2>
-        <div id="traces" class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm min-h-[400px]">
-          <p class="text-slate-500 text-center py-8">Select a session to view traces</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    let selectedSession = null;
-
-    // SSE connection
-    const events = new EventSource('/api/events');
-    events.onmessage = (e) => {
-      const event = JSON.parse(e.data);
-      console.log('Event:', event);
-      refreshData();
-    };
-    events.onerror = () => {
-      document.getElementById('status').innerHTML = '<span class="w-2 h-2 bg-red-500 rounded-full"></span> Disconnected';
-    };
-
-    async function refreshData() {
-      // Fetch metrics
-      const metrics = await fetch('/api/metrics').then(r => r.json());
-      document.getElementById('metric-runs').textContent = metrics.totalRuns;
-      document.getElementById('metric-latency').textContent = Math.round(metrics.avgLatencyMs) + 'ms';
-      document.getElementById('metric-tokens').textContent = metrics.totalTokens.toLocaleString();
-      document.getElementById('metric-errors').textContent = (metrics.errorRate * 100).toFixed(1) + '%';
-
-      // Fetch sessions
-      const sessions = await fetch('/api/sessions').then(r => r.json());
-      renderSessions(sessions);
-
-      if (selectedSession) {
-        const session = await fetch('/api/sessions/' + selectedSession).then(r => r.json());
-        renderTraces(session.runs);
-      }
-    }
-
-    function renderSessions(sessions) {
-      const container = document.getElementById('sessions');
-      container.innerHTML = sessions.map(s => \`
-        <div onclick="selectSession('\${s.id}')" class="p-3 rounded-lg cursor-pointer \${selectedSession === s.id ? 'bg-purple-500/20 border border-purple-500' : 'bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700'}">
-          <p class="font-medium">\${s.name || 'Session'}</p>
-          <p class="text-xs text-slate-500">\${s.runs.length} runs • \${new Date(s.startTime).toLocaleTimeString()}</p>
-        </div>
-      \`).join('');
-    }
-
-    function selectSession(id) {
-      selectedSession = id;
-      refreshData();
-    }
-
-    function renderTraces(runs, depth = 0) {
-      if (!runs || runs.length === 0) {
-        document.getElementById('traces').innerHTML = '<p class="text-slate-500 text-center py-8">No traces in this session</p>';
-        return;
-      }
-
-      const html = runs.map(run => renderRun(run, depth)).join('');
-      document.getElementById('traces').innerHTML = html;
-    }
-
-    function renderRun(run, depth) {
-      const statusColor = run.status === 'success' ? 'bg-green-500' : run.status === 'error' ? 'bg-red-500' : 'bg-yellow-500';
-      const typeColors = {
-        llm: 'text-purple-500',
-        agent: 'text-blue-500',
-        tool: 'text-orange-500',
-        retrieval: 'text-green-500',
-        chain: 'text-pink-500',
-      };
-
-      return \`
-        <div class="mb-2" style="margin-left: \${depth * 20}px">
-          <div class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
-            <span class="w-2 h-2 rounded-full \${statusColor}"></span>
-            <span class="text-xs font-medium \${typeColors[run.type] || 'text-slate-500'}">\${run.type.toUpperCase()}</span>
-            <span class="font-medium">\${run.name}</span>
-            <span class="text-xs text-slate-500 ml-auto">\${run.latencyMs ? run.latencyMs + 'ms' : 'running...'}</span>
-            \${run.metadata?.totalTokens ? '<span class="text-xs text-slate-400">' + run.metadata.totalTokens + ' tokens</span>' : ''}
-          </div>
-          \${run.children.map(c => renderRun(c, depth + 1)).join('')}
-        </div>
-      \`;
-    }
-
-    async function clearTraces() {
-      await fetch('/api/sessions', { method: 'DELETE' });
-      selectedSession = null;
-      refreshData();
-    }
-
-    function exportTraces() {
-      window.open('/api/export', '_blank');
-    }
-
-    // Initial load
-    refreshData();
-  </script>
-</body>
-</html>`;
+  private getInlineDashboardHTML(): string {
+    return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>OrkaJS DevTools</title><script src="https://cdn.tailwindcss.com"><\/script><script>tailwind.config={darkMode:"class"}<\/script><style>.tree-line{border-left:2px solid #e2e8f0}.dark .tree-line{border-left-color:#334155}.scrollbar-thin::-webkit-scrollbar{width:6px}.scrollbar-thin::-webkit-scrollbar-thumb{background:#64748b;border-radius:3px}</style></head><body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white min-h-screen"><div id="app" class="max-w-7xl mx-auto p-6"><header class="flex items-center justify-between mb-8"><div class="flex items-center gap-3"><img src="https://devtools.orkajs.com/orka-devtools.png" alt="OrkaJS" class="w-10 h-10 rounded-lg" onerror="this.style.display=\'none\'"><div><h1 class="text-2xl font-bold">OrkaJS DevTools</h1><p class="text-sm text-slate-500">Real-time LLM observability</p></div></div><div class="flex items-center gap-3"><span id="status" class="flex items-center gap-2 text-sm px-3 py-1.5 bg-green-500/10 rounded-lg"><span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span><span class="text-green-600 dark:text-green-400">Live</span></span><button onclick="toggleTheme()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700"><svg id="themeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg></button><button onclick="clearTraces()" class="px-3 py-2 text-sm bg-red-500/10 text-red-600 rounded-lg hover:bg-red-500/20">Clear</button><button onclick="exportTraces()" class="px-3 py-2 text-sm bg-purple-500/10 text-purple-600 rounded-lg hover:bg-purple-500/20">Export</button></div></header><div class="grid grid-cols-4 gap-4 mb-8"><div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm"><p class="text-sm text-slate-500 mb-1">Total Runs</p><p id="metric-runs" class="text-2xl font-bold">0</p></div><div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm"><p class="text-sm text-slate-500 mb-1">Avg Latency</p><p id="metric-latency" class="text-2xl font-bold">0ms</p></div><div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm"><p class="text-sm text-slate-500 mb-1">Total Tokens</p><p id="metric-tokens" class="text-2xl font-bold">0</p></div><div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm"><p class="text-sm text-slate-500 mb-1">Error Rate</p><p id="metric-errors" class="text-2xl font-bold">0%</p></div></div><div class="grid grid-cols-3 gap-6"><div class="col-span-1"><h2 class="text-lg font-semibold mb-4">Sessions</h2><div id="sessions" class="space-y-2"></div></div><div class="col-span-2"><h2 class="text-lg font-semibold mb-4">Trace Viewer</h2><div id="traces" class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm min-h-[400px]"><p class="text-slate-500 text-center py-8">Select a session to view traces</p></div></div></div></div><script>let selectedSession=null;function initTheme(){const t=localStorage.getItem("orka-devtools-theme");("dark"===t||!t&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.documentElement.classList.add("dark")}initTheme();function toggleTheme(){const t=document.documentElement.classList.toggle("dark");localStorage.setItem("orka-devtools-theme",t?"dark":"light")}const events=new EventSource("/api/events");events.onmessage=e=>{refreshData()};events.onerror=()=>{document.getElementById("status").innerHTML=\'<span class="w-2 h-2 bg-red-500 rounded-full"></span><span class="text-red-600">Disconnected</span>\'};async function refreshData(){const[t,e]=await Promise.all([fetch("/api/metrics").then(t=>t.json()),fetch("/api/sessions").then(t=>t.json())]);document.getElementById("metric-runs").textContent=t.totalRuns;document.getElementById("metric-latency").textContent=Math.round(t.avgLatencyMs)+"ms";document.getElementById("metric-tokens").textContent=t.totalTokens.toLocaleString();document.getElementById("metric-errors").textContent=(100*t.errorRate).toFixed(1)+"%";renderSessions(e);if(selectedSession){const t=e.find(t=>t.id===selectedSession);t&&renderTraces(t.runs)}}function renderSessions(t){document.getElementById("sessions").innerHTML=t.map(t=>`<div onclick="selectSession(\'${t.id}\')" class="p-3 rounded-lg cursor-pointer ${selectedSession===t.id?"bg-purple-500/20 border border-purple-500":"bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700"}"><p class="font-medium">${t.name||"Session"}</p><p class="text-xs text-slate-500">${t.runs.length} runs</p></div>`).join("")}function selectSession(t){selectedSession=t;refreshData()}function renderTraces(t){if(!t||0===t.length)return void(document.getElementById("traces").innerHTML=\'<p class="text-slate-500 text-center py-8">No traces</p>\');document.getElementById("traces").innerHTML=t.map(t=>renderRun(t,0)).join("")}function renderRun(t,e){const s={success:"bg-green-500",error:"bg-red-500",running:"bg-yellow-500"},n={llm:"text-purple-500",agent:"text-blue-500",tool:"text-orange-500"};return`<div class="mb-2" style="margin-left:${20*e}px"><div class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"><span class="w-2 h-2 rounded-full ${s[t.status]||"bg-slate-400"}"></span><span class="text-xs font-medium ${n[t.type]||"text-slate-500"}">${t.type.toUpperCase()}</span><span class="font-medium">${t.name}</span><span class="text-xs text-slate-500 ml-auto">${t.latencyMs?t.latencyMs+"ms":"..."}</span></div>${(t.children||[]).map(t=>renderRun(t,e+1)).join("")}</div>`}async function clearTraces(){confirm("Clear all traces?")&&(await fetch("/api/sessions",{method:"DELETE"}),selectedSession=null,refreshData())}function exportTraces(){window.open("/api/export","_blank")}refreshData()<\/script></body></html>';
   }
 }

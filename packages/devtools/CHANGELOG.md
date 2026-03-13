@@ -1,5 +1,32 @@
 # @orka-js/devtools
 
+## 1.3.1
+
+### Patch Changes
+
+- fix(devtools): corriger le scroll dans le panneau Run Details
+
+  - Le contenu long est maintenant scrollable verticalement
+  - Bouton "Copy JSON" reste visible en bas (sticky)
+
+## 1.3.0
+
+### Minor Changes
+
+- feat(devtools): amélioration majeure de l'interface DevTools Dashboard
+
+  - Remplacement du logo SVG par le logo OrkaJS DevTools
+  - Ajout du mode dark/light avec persistance localStorage
+  - Raccourcis clavier (⌘K pour recherche, ⌘D pour thème)
+  - 6 cartes de métriques avec icônes (Runs, Latency, Tokens, Errors, Cost, Sessions)
+  - Panneau de détails des runs avec Input/Output/Metadata
+  - Filtres par type (Agent, LLM, Tool, Chain, Retrieval)
+  - Recherche en temps réel dans les traces
+  - Toast notifications pour les événements
+  - Command Palette pour recherche rapide
+  - Animations fluides et scrollbar personnalisée
+  - Architecture refactorisée avec fichier HTML externe
+
 ## 1.2.1
 
 ### Patch Changes

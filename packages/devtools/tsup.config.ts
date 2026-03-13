@@ -1,4 +1,5 @@
 import { defineConfig } from 'tsup';
+import { copyFileSync } from 'fs';
 
 export default defineConfig({
   entry: { index: 'src/index.ts' },
@@ -9,4 +10,8 @@ export default defineConfig({
   target: 'es2022',
   outDir: 'dist',
   external: ['express'],
+  onSuccess: async () => {
+    copyFileSync('src/dashboard.html', 'dist/dashboard.html');
+    console.log('📋 Copied dashboard.html to dist/');
+  },
 });
