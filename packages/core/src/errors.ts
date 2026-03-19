@@ -41,6 +41,13 @@ export enum OrkaErrorCode {
   GRAPH_MAX_ITERATIONS = 'GRAPH_MAX_ITERATIONS',
   GRAPH_NODE_ERROR = 'GRAPH_NODE_ERROR',
   GRAPH_INVALID_CONFIG = 'GRAPH_INVALID_CONFIG',
+
+  // General errors
+  NOT_FOUND = 'NOT_FOUND',
+  INVALID_INPUT = 'INVALID_INPUT',
+  INVALID_STATE = 'INVALID_STATE',
+  NETWORK_ERROR = 'NETWORK_ERROR',
+  EXTERNAL_SERVICE_ERROR = 'EXTERNAL_SERVICE_ERROR',
 }
 
 export class OrkaError extends Error {
@@ -91,6 +98,12 @@ export class OrkaError extends Error {
       OrkaErrorCode.LLM_API_ERROR,
       OrkaErrorCode.VECTORDB_ERROR,
       OrkaErrorCode.CACHE_ERROR,
+      OrkaErrorCode.NETWORK_ERROR,
+      OrkaErrorCode.EXTERNAL_SERVICE_ERROR,
     ].includes(error.code);
+  }
+
+  isRetryable(): boolean {
+    return OrkaError.isRetryable(this);
   }
 }
