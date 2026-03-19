@@ -70,3 +70,33 @@ export {
   type DevToolsConfig,
   type OpenTelemetryConfig,
 } from '@orka-js/devtools';
+
+// MCP (Model Context Protocol)
+export {
+  MCPClient,
+  MCPServer,
+  MCPGateway,
+  createMCPClient,
+  createMCPServer,
+  createMCPGateway,
+  type MCPClientConfig,
+  type MCPServerConfig,
+  type MCPGatewayConfig,
+  type MCPTool,
+  type MCPResource,
+  type MCPToolResult,
+} from '@orka-js/mcp';
+
+// Fine-tuning Orchestration
+export {
+  FineTuningOrchestrator,
+  DatasetValidator,
+  FeedbackCollector,
+  createFineTuningOrchestrator,
+  createDatasetValidator,
+  createFeedbackCollector,
+  type FineTuningConfig,
+  type FineTuningJob,
+  type DatasetEntry,
+  type FeedbackEntry,
+} from '@orka-js/finetuning';

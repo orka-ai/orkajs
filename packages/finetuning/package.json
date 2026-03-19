@@ -1,0 +1,48 @@
+{
+  "name": "@orka-js/finetuning",
+  "version": "1.0.0",
+  "description": "Fine-tuning orchestration for OrkaJS - dataset validation, API orchestration, and model versioning",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@orka-js/core": "workspace:*",
+    "form-data": "^4.0.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": { "optional": true }
+  },
+  "keywords": ["orka", "orkajs", "finetuning", "fine-tuning", "llm", "ai", "training", "dataset"],
+  "author": "OrkaJS Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/orka-js/orkajs.git",
+    "directory": "packages/finetuning"
+  }
+}
