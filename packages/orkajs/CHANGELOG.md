@@ -1,5 +1,57 @@
 # orkajs
 
+## 3.5.0
+
+### Minor Changes
+
+- 93651a4: feat(finetuning): Add Fine-tuning Orchestration package
+
+  - DatasetValidator: Validate JSONL datasets for fine-tuning compatibility
+  - FineTuningOrchestrator: Create, monitor, and manage fine-tuning jobs
+  - FeedbackCollector: Collect user feedback and convert to training datasets
+  - Multi-provider support: OpenAI, Anthropic, Mistral, Together, Anyscale
+  - Cost estimation before training
+  - Model versioning and tracking
+
+- 93651a4: feat(mcp): Add Model Context Protocol (MCP) package
+
+  - MCPClient: Connect to MCP servers, list/call tools, read resources, get prompts
+  - MCPServer: Expose tools, resources, and prompts via MCP protocol
+  - MCPGateway: Route requests to multiple upstream MCP servers with health checks
+  - Full JSON-RPC 2.0 implementation
+  - Event system for monitoring tool calls and results
+  - Authentication support via API keys
+
+### Patch Changes
+
+- Updated dependencies [93651a4]
+- Updated dependencies [93651a4]
+- Updated dependencies [93651a4]
+  - @orka-js/finetuning@1.1.0
+  - @orka-js/mcp@1.1.0
+  - @orka-js/core@1.3.1
+  - @orka-js/agent@1.1.3
+  - @orka-js/anthropic@1.1.3
+  - @orka-js/cache@1.0.5
+  - @orka-js/chroma@1.0.5
+  - @orka-js/devtools@1.4.2
+  - @orka-js/evaluation@1.0.5
+  - @orka-js/graph@1.2.2
+  - @orka-js/memory@1.0.5
+  - @orka-js/memory-store@1.1.2
+  - @orka-js/mistral@1.1.3
+  - @orka-js/observability@1.0.5
+  - @orka-js/ocr@1.1.4
+  - @orka-js/ollama@1.1.3
+  - @orka-js/openai@1.2.1
+  - @orka-js/orchestration@1.0.5
+  - @orka-js/pinecone@1.0.5
+  - @orka-js/prompts@1.0.5
+  - @orka-js/qdrant@1.0.5
+  - @orka-js/resilience@1.0.5
+  - @orka-js/tools@1.2.2
+  - @orka-js/workflow@1.0.5
+
 ## 3.4.8
 
 ### Patch Changes

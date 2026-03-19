@@ -1,5 +1,11 @@
 # @orka-js/collector
 
+## 1.1.2
+
+### Patch Changes
+
+- @orka-js/devtools@1.4.2
+
 ## 1.1.0
 
 ### Minor Changes

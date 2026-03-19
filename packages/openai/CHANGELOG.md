@@ -1,5 +1,12 @@
 # @orka-js/openai
 
+## 1.2.1
+
+### Patch Changes
+
+- Updated dependencies [93651a4]
+  - @orka-js/core@1.3.1
+
 ## 1.2.0
 
 ### Minor Changes

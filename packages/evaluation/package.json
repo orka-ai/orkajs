@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/evaluation",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Evaluation and testing for OrkaJS - metrics, assertions, reporters",
   "type": "module",
   "main": "./dist/index.cjs",

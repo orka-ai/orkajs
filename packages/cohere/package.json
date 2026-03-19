@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/cohere",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Cohere adapter for OrkaJS",
   "type": "module",
   "main": "./dist/index.cjs",
