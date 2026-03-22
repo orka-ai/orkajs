@@ -62,7 +62,32 @@ export type {
   RegisteredAgent,
   AgentQueryOptions,
   AgentRegistryStats,
+  // Agent Platform - Permissions & Access Control
+  PermissionAction,
+  PrincipalType,
+  Principal,
+  PermissionRule,
+  PermissionCondition,
+  AgentPermissions,
+  PermissionCheckRequest,
+  PermissionCheckResult,
+  // Agent Platform - Audit & Logging
+  AuditEventType,
+  AuditEvent,
+  AuditMetadata,
+  AuditQueryOptions,
+  AuditStats,
+  // Agent Platform - Team Management
+  Team,
+  TeamRole,
+  TeamMember,
 } from './types.js';
 
 // Agent Platform - Registry
 export { AgentRegistry, globalAgentRegistry } from './registry.js';
+
+// Agent Platform - Permissions
+export { PermissionManager, globalPermissionManager } from './permissions.js';
+
+// Agent Platform - Audit
+export { AuditLogger, globalAuditLogger } from './audit.js';

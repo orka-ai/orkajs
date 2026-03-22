@@ -1,5 +1,12 @@
 # orkajs
 
+## 3.6.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @orka-js/agent@1.3.0
+
 ## 3.6.0
 
 ### Minor Changes

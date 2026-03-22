@@ -1,5 +1,86 @@
 # @orka-js/agent
 
+## 1.3.0
+
+### Minor Changes
+
+- feat(agent): Add Permissions & Access Control (RBAC) for enterprise governance
+
+  ## New Features
+
+  ### PermissionManager
+
+  - Role-Based Access Control (RBAC) for agents
+  - Permission actions: `read`, `execute`, `edit`, `clone`, `delete`, `admin`
+  - Principal types: `user`, `team`, `role`, `service`
+  - Conditional permissions: time ranges, IP whitelist, rate limits
+  - Permission inheritance between agents
+  - `grant()` and `revoke()` methods for dynamic permission management
+  - `globalPermissionManager` singleton for application-wide usage
+
+  ### AuditLogger
+
+  - Full traceability of all agent-related actions
+  - Event types: agent.registered, agent.updated, agent.deleted, agent.executed, agent.cloned, permission.granted, permission.revoked, access.allowed, access.denied
+  - Query and filtering capabilities with `query()` method
+  - Statistics with `getStats()`: events by type, top principals, top agents, access denied count
+  - Real-time event subscription with `on()` / `off()`
+  - Export to JSON and CSV for compliance
+  - `globalAuditLogger` singleton for application-wide usage
+
+  ### Team Management Types
+
+  - `Team` interface for group management
+  - `TeamRole` for role definitions within teams
+  - `TeamMember` for user membership tracking
+
+  ## Usage
+
+  ```typescript
+  import { PermissionManager, AuditLogger } from "@orka-js/agent";
+
+  const permissions = new PermissionManager();
+  const audit = new AuditLogger();
+
+  // Set permissions
+  permissions.setPermissions("sales-agent", {
+    agentId: "sales-agent",
+    owner: "user:admin",
+    rules: [
+      { action: "read", principals: ["team:sales", "team:marketing"] },
+      { action: "execute", principals: ["role:sales-rep"] },
+      { action: "edit", principals: ["role:admin"] },
+    ],
+  });
+
+  // Register user memberships
+  permissions.registerPrincipalMemberships("user:john", [
+    "team:sales",
+    "role:sales-rep",
+  ]);
+
+  // Check permission
+  const result = permissions.check({
+    principal: { type: "user", id: "john" },
+    action: "execute",
+    agentId: "sales-agent",
+  });
+
+  // Log execution
+  if (result.allowed) {
+    audit.logAgentExecuted(
+      { type: "user", id: "john" },
+      "sales-agent",
+      "success"
+    );
+  }
+
+  // Subscribe to events
+  audit.on("access.denied", (event) => {
+    console.warn(`Access denied: ${event.principal.id}`);
+  });
+  ```
+
 ## 1.2.0
 
 ### Minor Changes
