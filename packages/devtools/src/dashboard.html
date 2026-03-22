@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OrkaJS DevTools</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -14,55 +16,262 @@
             'fade-in': 'fadeIn 0.3s ease-out',
             'slide-up': 'slideUp 0.3s ease-out',
             'pulse-slow': 'pulse 3s infinite',
+            'shimmer': 'shimmer 2s infinite',
           }
         }
       }
     }
   </script>
   <style>
-    .tree-line { border-left: 2px solid #e2e8f0; }
-    .dark .tree-line { border-left-color: #334155; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-    .animate-slide-up { animation: slideUp 0.3s ease-out; }
-    .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
-    .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-    .scrollbar-thin::-webkit-scrollbar-thumb { background: #64748b; border-radius: 3px; }
-    .dark .scrollbar-thin::-webkit-scrollbar-thumb { background: #475569; }
-    .glass { backdrop-filter: blur(12px); background: rgba(255,255,255,0.8); }
-    .dark .glass { background: rgba(15,23,42,0.8); }
-    .gradient-border { background: linear-gradient(135deg, #8b5cf6, #ec4899, #8b5cf6); background-size: 200% 200%; animation: gradient 3s ease infinite; }
-    @keyframes gradient { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-    .run-card { transition: all 0.2s ease; }
-    .run-card:hover { transform: translateX(4px); }
-    .tooltip { position: relative; }
-    .tooltip::after { content: attr(data-tip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); padding: 4px 8px; background: #1e293b; color: white; font-size: 12px; border-radius: 4px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
-    .tooltip:hover::after { opacity: 1; }
-    .kbd { display: inline-flex; align-items: center; padding: 2px 6px; font-size: 11px; font-family: monospace; background: #e2e8f0; border-radius: 4px; border: 1px solid #cbd5e1; }
-    .dark .kbd { background: #334155; border-color: #475569; }
+    .tree-line {
+      border-left: 2px solid #e2e8f0;
+    }
+
+    .dark .tree-line {
+      border-left-color: #334155;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+
+      100% {
+        background-position: 200% 0;
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .animate-slide-up {
+      animation: slideUp 0.3s ease-out;
+    }
+
+    .animate-shimmer {
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      background-size: 200% 100%;
+      animation: shimmer 2s infinite;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: #64748b;
+      border-radius: 3px;
+    }
+
+    .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+
+    .glass {
+      backdrop-filter: blur(12px);
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .dark .glass {
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    .gradient-border {
+      background: linear-gradient(135deg, #8b5cf6, #ec4899, #8b5cf6);
+      background-size: 200% 200%;
+      animation: gradient 3s ease infinite;
+    }
+
+    @keyframes gradient {
+
+      0%,
+      100% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+    }
+
+    .run-card {
+      transition: all 0.2s ease;
+    }
+
+    .run-card:hover {
+      transform: translateX(4px);
+    }
+
+    .tooltip {
+      position: relative;
+    }
+
+    .tooltip::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 8px;
+      background: #1e293b;
+      color: white;
+      font-size: 12px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 50;
+    }
+
+    .tooltip:hover::after {
+      opacity: 1;
+    }
+
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 6px;
+      font-size: 11px;
+      font-family: monospace;
+      background: #e2e8f0;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+    }
+
+    .dark .kbd {
+      background: #334155;
+      border-color: #475569;
+    }
+
+    .timeline-bar {
+      height: 8px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .timeline-bar:hover {
+      height: 12px;
+      filter: brightness(1.1);
+    }
+
+    .waterfall-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+    }
+
+    .waterfall-bar {
+      height: 20px;
+      border-radius: 4px;
+      min-width: 4px;
+      position: relative;
+    }
+
+    .waterfall-bar::after {
+      content: attr(data-duration);
+      position: absolute;
+      right: -40px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: #64748b;
+      white-space: nowrap;
+    }
+
+    .tab-active {
+      border-bottom: 2px solid #8b5cf6;
+      color: #8b5cf6;
+    }
+
+    .diff-add {
+      background: rgba(34, 197, 94, 0.1);
+      border-left: 3px solid #22c55e;
+    }
+
+    .diff-remove {
+      background: rgba(239, 68, 68, 0.1);
+      border-left: 3px solid #ef4444;
+    }
+
+    .flame-graph-row {
+      display: flex;
+      height: 24px;
+      margin-bottom: 2px;
+    }
+
+    .flame-segment {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: white;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: filter 0.2s;
+    }
+
+    .flame-segment:hover {
+      filter: brightness(1.2);
+    }
   </style>
 </head>
+
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white min-h-screen transition-colors duration-300">
   <div id="app" class="max-w-7xl mx-auto p-6">
     <header class="flex items-center justify-between mb-8">
       <div class="flex items-center gap-3">
-        <img src="https://devtools.orkajs.com/orka-devtools.png" alt="OrkaJS DevTools" class="w-10 h-10 rounded-lg" onerror="this.style.display='none'" />
+        <img src="https://devtools.orkajs.com/loutre-orka.png" alt="OrkaJS DevTools" class="w-10 h-10 rounded-lg"
+          onerror="this.style.display='none'" />
         <div>
-          <h1 class="text-2xl font-bold">OrkaJS DevTools</h1>
+          <h1 class="text-2xl font-bold">Orka DevTools</h1>
           <p class="text-sm text-slate-500">Real-time LLM observability</p>
         </div>
       </div>
       <div class="flex items-center gap-3">
         <div class="relative">
-          <input type="text" id="searchInput" placeholder="Search traces... (⌘K)" 
+          <input type="text" id="searchInput" placeholder="Search traces... (⌘K)"
             class="w-64 px-4 py-2 pl-10 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" />
-          <svg class="absolute left-3 top-2.5 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          <svg class="absolute left-3 top-2.5 w-4 h-4 text-slate-400" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
-        
-        <select id="typeFilter" onchange="applyFilters()" 
+
+        <select id="typeFilter" onchange="applyFilters()"
           class="px-3 py-2 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
           <option value="">All Types</option>
           <option value="agent">Agent</option>
@@ -77,94 +286,206 @@
           <span class="text-green-600 dark:text-green-400">Live</span>
         </span>
 
-        <button onclick="toggleTheme()" id="themeToggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors tooltip" data-tip="Toggle theme (⌘D)">
+        <button onclick="toggleTheme()" id="themeToggle"
+          class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors tooltip"
+          data-tip="Toggle theme (⌘D)">
           <svg id="sunIcon" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
           <svg id="moonIcon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
           </svg>
         </button>
 
-        <button onclick="clearTraces()" class="px-3 py-2 text-sm bg-red-500/10 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-500/20 transition-colors flex items-center gap-2">
+        <button onclick="clearTraces()"
+          class="px-3 py-2 text-sm bg-red-500/10 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-500/20 transition-colors flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
           Clear
         </button>
 
-        <button onclick="exportTraces()" class="px-3 py-2 text-sm bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-500/20 transition-colors flex items-center gap-2">
+        <button onclick="exportTraces()"
+          class="px-3 py-2 text-sm bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-500/20 transition-colors flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
           </svg>
           Export
         </button>
       </div>
     </header>
 
+    <!-- View Tabs -->
+    <div class="flex items-center gap-1 mb-6 border-b border-slate-200 dark:border-slate-700">
+      <button onclick="switchView('traces')" id="tab-traces" class="px-4 py-2 text-sm font-medium tab-active">
+        <span class="flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          Traces
+        </span>
+      </button>
+      <button onclick="switchView('timeline')" id="tab-timeline"
+        class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+        <span class="flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+          </svg>
+          Timeline
+        </span>
+      </button>
+      <button onclick="switchView('waterfall')" id="tab-waterfall"
+        class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+        <span class="flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+          </svg>
+          Waterfall
+        </span>
+      </button>
+      <button onclick="switchView('flamegraph')" id="tab-flamegraph"
+        class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+        <span class="flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+          </svg>
+          Flame Graph
+        </span>
+      </button>
+      <button onclick="switchView('compare')" id="tab-compare"
+        class="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+        <span class="flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          Compare
+        </span>
+      </button>
+    </div>
+
     <!-- Metrics -->
     <div id="metrics" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+      <div
+        class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-none border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-2">
           <p class="text-sm text-slate-500">Total Runs</p>
           <div class="p-1.5 bg-blue-500/10 rounded-lg">
-            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" width="22" height="22"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" class="lucide lucide-server-cog-icon lucide-server-cog text-blue-500">
+              <path d="m10.852 14.772-.383.923" />
+              <path d="M13.148 14.772a3 3 0 1 0-2.296-5.544l-.383-.923" />
+              <path d="m13.148 9.228.383-.923" />
+              <path d="m13.53 15.696-.382-.924a3 3 0 1 1-2.296-5.544" />
+              <path d="m14.772 10.852.923-.383" />
+              <path d="m14.772 13.148.923.383" />
+              <path d="M4.5 10H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-.5" />
+              <path d="M4.5 14H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-.5" />
+              <path d="M6 18h.01" />
+              <path d="M6 6h.01" />
+              <path d="m9.228 10.852-.923-.383" />
+              <path d="m9.228 13.148-.923.383" />
             </svg>
           </div>
         </div>
         <p id="metric-runs" class="text-2xl font-bold">0</p>
       </div>
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+      <div
+        class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-none border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-2">
           <p class="text-sm text-slate-500">Avg Latency</p>
           <div class="p-1.5 bg-yellow-500/10 rounded-lg">
-            <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="lucide lucide-clock-fading-icon lucide-clock-fading text-yellow-500">
+              <path d="M12 2a10 10 0 0 1 7.38 16.75" />
+              <path d="M12 6v6l4 2" />
+              <path d="M2.5 8.875a10 10 0 0 0-.5 3" />
+              <path d="M2.83 16a10 10 0 0 0 2.43 3.4" />
+              <path d="M4.636 5.235a10 10 0 0 1 .891-.857" />
+              <path d="M8.644 21.42a10 10 0 0 0 7.631-.38" />
             </svg>
           </div>
         </div>
         <p id="metric-latency" class="text-2xl font-bold">0ms</p>
       </div>
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+      <div
+        class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-none border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-2">
           <p class="text-sm text-slate-500">Total Tokens</p>
           <div class="p-1.5 bg-purple-500/10 rounded-lg">
-            <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="lucide lucide-coins-icon lucide-coins text-purple-500">
+              <path d="M13.744 17.736a6 6 0 1 1-7.48-7.48" />
+              <path d="M15 6h1v4" />
+              <path d="m6.134 14.768.866-.5 2 3.464" />
+              <circle cx="16" cy="8" r="6" />
             </svg>
           </div>
         </div>
         <p id="metric-tokens" class="text-2xl font-bold">0</p>
       </div>
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+      <div
+        class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-none border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-2">
           <p class="text-sm text-slate-500">Error Rate</p>
           <div class="p-1.5 bg-red-500/10 rounded-lg">
-            <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="lucide lucide-shield-alert-icon lucide-shield-alert text-red-500">
+              <path
+                d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+              <path d="M12 8v4" />
+              <path d="M12 16h.01" />
             </svg>
           </div>
         </div>
         <p id="metric-errors" class="text-2xl font-bold">0%</p>
       </div>
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+      <div
+        class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-none border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-2">
           <p class="text-sm text-slate-500">Est. Cost</p>
           <div class="p-1.5 bg-green-500/10 rounded-lg">
-            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="lucide lucide-wallet-icon lucide-wallet text-green-500">
+              <path
+                d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
+              <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
             </svg>
           </div>
         </div>
         <p id="metric-cost" class="text-2xl font-bold">$0.00</p>
       </div>
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+      <div
+        class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-none border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-2">
           <p class="text-sm text-slate-500">Sessions</p>
           <div class="p-1.5 bg-indigo-500/10 rounded-lg">
-            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="lucide lucide-monitor-cog-icon lucide-monitor-cog text-indigo-500">
+              <path d="M12 17v4" />
+              <path d="m14.305 7.53.923-.382" />
+              <path d="m15.228 4.852-.923-.383" />
+              <path d="m16.852 3.228-.383-.924" />
+              <path d="m16.852 8.772-.383.923" />
+              <path d="m19.148 3.228.383-.924" />
+              <path d="m19.53 9.696-.382-.924" />
+              <path d="m20.772 4.852.924-.383" />
+              <path d="m20.772 7.148.924.383" />
+              <path d="M22 13v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7" />
+              <path d="M8 21h8" />
+              <circle cx="18" cy="6" r="3" />
             </svg>
           </div>
         </div>
@@ -172,62 +493,182 @@
       </div>
     </div>
 
-    <!-- Sessions & Traces -->
-    <div class="grid grid-cols-12 gap-6">
-      <div class="col-span-3">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold">Sessions</h2>
-          <span id="sessionCount" class="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-full">0</span>
-        </div>
-        <div id="sessions" class="space-y-2 max-h-[600px] overflow-y-auto scrollbar-thin pr-2"></div>
+    <!-- Latency Chart (collapsible) -->
+    <div class="mb-6">
+      <button onclick="toggleLatencyChart()"
+        class="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 mb-2">
+        <svg id="latencyChartToggle" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+        Latency Over Time
+      </button>
+      <div id="latencyChartContainer"
+        class="hidden bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+        <canvas id="latencyChart" height="120"></canvas>
       </div>
+    </div>
 
-      <div class="col-span-5">
+    <!-- View: Traces (default) -->
+    <div id="view-traces" class="view-content">
+      <!-- Sessions & Traces -->
+      <div class="grid grid-cols-12 gap-6">
+        <div class="col-span-3">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold">Sessions</h2>
+            <span id="sessionCount" class="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-full">0</span>
+          </div>
+          <div id="sessions" class="space-y-2 max-h-[600px] overflow-y-auto scrollbar-thin pr-2"></div>
+        </div>
+
+        <div class="col-span-5">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold">Trace Viewer</h2>
+            <div class="flex items-center gap-2">
+              <button onclick="expandAll()"
+                class="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Expand
+                All</button>
+              <button onclick="collapseAll()"
+                class="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Collapse
+                All</button>
+            </div>
+          </div>
+          <div id="traces"
+            class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 min-h-[500px] max-h-[600px] overflow-y-auto scrollbar-thin">
+            <div class="flex flex-col items-center justify-center h-full text-center py-12">
+              <svg class="w-16 h-16 text-slate-300 dark:text-slate-600 mb-4" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <p class="text-slate-500 dark:text-slate-400 font-medium">No session selected</p>
+              <p class="text-sm text-slate-400 dark:text-slate-500 mt-1">Select a session from the left panel to view
+                traces</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-span-4">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold">Run Details</h2>
+            <button onclick="closeDetails()" id="closeDetailsBtn"
+              class="hidden text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Close</button>
+          </div>
+          <div id="runDetails"
+            class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 min-h-[500px] max-h-[600px] overflow-y-auto scrollbar-thin">
+            <div class="flex flex-col items-center justify-center h-full text-center py-12">
+              <svg class="w-16 h-16 text-slate-300 dark:text-slate-600 mb-4" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <p class="text-slate-500 dark:text-slate-400 font-medium">No run selected</p>
+              <p class="text-sm text-slate-400 dark:text-slate-500 mt-1">Click on a trace to view details</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View: Timeline -->
+    <div id="view-timeline" class="view-content hidden">
+      <div class="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold">Trace Viewer</h2>
+          <h2 class="text-lg font-semibold">Timeline View</h2>
           <div class="flex items-center gap-2">
-            <button onclick="expandAll()" class="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Expand All</button>
-            <button onclick="collapseAll()" class="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Collapse All</button>
+            <select id="timelineRange" onchange="updateTimeline()"
+              class="text-sm px-3 py-1.5 bg-slate-100 dark:bg-slate-700 rounded-lg border-none">
+              <option value="1m">Last 1 minute</option>
+              <option value="5m" selected>Last 5 minutes</option>
+              <option value="15m">Last 15 minutes</option>
+              <option value="1h">Last 1 hour</option>
+            </select>
           </div>
         </div>
-        <div id="traces" class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700 min-h-[500px] max-h-[600px] overflow-y-auto scrollbar-thin">
-          <div class="flex flex-col items-center justify-center h-full text-center py-12">
-            <svg class="w-16 h-16 text-slate-300 dark:text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-            </svg>
-            <p class="text-slate-500 dark:text-slate-400 font-medium">No session selected</p>
-            <p class="text-sm text-slate-400 dark:text-slate-500 mt-1">Select a session from the left panel to view traces</p>
-          </div>
+        <div id="timelineContent" class="space-y-2">
+          <p class="text-center text-slate-500 py-8">Select a session to view timeline</p>
         </div>
       </div>
+    </div>
 
-      <div class="col-span-4">
+    <!-- View: Waterfall -->
+    <div id="view-waterfall" class="view-content hidden">
+      <div class="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold">Run Details</h2>
-          <button onclick="closeDetails()" id="closeDetailsBtn" class="hidden text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Close</button>
-        </div>
-        <div id="runDetails" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 min-h-[500px] max-h-[600px] overflow-y-auto scrollbar-thin">
-          <div class="flex flex-col items-center justify-center h-full text-center py-12">
-            <svg class="w-16 h-16 text-slate-300 dark:text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-            </svg>
-            <p class="text-slate-500 dark:text-slate-400 font-medium">No run selected</p>
-            <p class="text-sm text-slate-400 dark:text-slate-500 mt-1">Click on a trace to view details</p>
+          <h2 class="text-lg font-semibold">Waterfall View</h2>
+          <div class="flex items-center gap-4 text-xs text-slate-500">
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-purple-500"></span> LLM</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-500"></span> Agent</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-orange-500"></span> Tool</span>
+            <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-green-500"></span> Retrieval</span>
           </div>
+        </div>
+        <div id="waterfallContent" class="space-y-1">
+          <p class="text-center text-slate-500 py-8">Select a session to view waterfall</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- View: Flame Graph -->
+    <div id="view-flamegraph" class="view-content hidden">
+      <div class="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold">Flame Graph</h2>
+          <p class="text-xs text-slate-500">Click on a segment to zoom in, click background to zoom out</p>
+        </div>
+        <div id="flamegraphContent" class="min-h-[300px]">
+          <p class="text-center text-slate-500 py-8">Select a session to view flame graph</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- View: Compare -->
+    <div id="view-compare" class="view-content hidden">
+      <div class="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold">Compare Runs</h2>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="text-sm text-slate-500 mb-1 block">Run A</label>
+            <select id="compareRunA" onchange="updateCompare()"
+              class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-700 rounded-lg border-none text-sm">
+              <option value="">Select a run...</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm text-slate-500 mb-1 block">Run B</label>
+            <select id="compareRunB" onchange="updateCompare()"
+              class="w-full px-3 py-2 bg-slate-100 dark:bg-slate-700 rounded-lg border-none text-sm">
+              <option value="">Select a run...</option>
+            </select>
+          </div>
+        </div>
+        <div id="compareContent" class="grid grid-cols-2 gap-4">
+          <div class="text-center text-slate-500 py-8">Select Run A</div>
+          <div class="text-center text-slate-500 py-8">Select Run B</div>
+        </div>
+        <div id="compareDiff" class="mt-4 hidden">
+          <h3 class="text-sm font-medium mb-2">Differences</h3>
+          <div id="diffContent" class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 text-sm font-mono"></div>
         </div>
       </div>
     </div>
 
     <div id="toastContainer" class="fixed bottom-6 right-6 z-50 space-y-2"></div>
 
-    <div id="commandPalette" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-start justify-center pt-[20vh]">
-      <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-slide-up">
+    <div id="commandPalette"
+      class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-start justify-center pt-[20vh]">
+      <div
+        class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-slide-up">
         <div class="flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-700">
           <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <input type="text" id="commandInput" placeholder="Search traces, sessions, or type a command..." 
+          <input type="text" id="commandInput" placeholder="Search traces, sessions, or type a command..."
             class="flex-1 bg-transparent border-none outline-none text-lg" autofocus />
           <span class="kbd">ESC</span>
         </div>
@@ -247,6 +688,11 @@
     let searchQuery = '';
     let typeFilter = '';
     let expandedRuns = new Set();
+    let currentView = 'traces';
+    let latencyChart = null;
+    let latencyData = [];
+    let compareRunA = null;
+    let compareRunB = null;
 
     // Theme management
     function initTheme() {
@@ -271,13 +717,13 @@
       toast.className = colors[type] + ' text-white px-4 py-3 rounded-lg shadow-lg animate-slide-up flex items-center gap-2';
       toast.innerHTML = '<span>' + message + '</span>';
       document.getElementById('toastContainer').appendChild(toast);
-      setTimeout(function() { toast.remove(); }, 3000);
+      setTimeout(function () { toast.remove(); }, 3000);
     }
 
     // SSE connection with proper cleanup
     let eventSource = null;
     let reconnectTimeout = null;
-    
+
     function connectSSE() {
       // Close existing connection before creating new one
       if (eventSource) {
@@ -288,10 +734,10 @@
         clearTimeout(reconnectTimeout);
         reconnectTimeout = null;
       }
-      
+
       eventSource = new EventSource('/api/events');
-      
-      eventSource.onmessage = function(e) {
+
+      eventSource.onmessage = function (e) {
         try {
           const event = JSON.parse(e.data);
           handleEvent(event);
@@ -300,8 +746,8 @@
           console.error('Failed to parse SSE event:', err);
         }
       };
-      
-      eventSource.onerror = function() {
+
+      eventSource.onerror = function () {
         document.getElementById('status').innerHTML = '<span class="w-2 h-2 bg-red-500 rounded-full"></span><span class="text-red-600 dark:text-red-400">Disconnected</span>';
         // Close the failed connection
         if (eventSource) {
@@ -310,20 +756,20 @@
         }
         // Schedule reconnection (only if not already scheduled)
         if (!reconnectTimeout) {
-          reconnectTimeout = setTimeout(function() {
+          reconnectTimeout = setTimeout(function () {
             reconnectTimeout = null;
             connectSSE();
           }, 3000);
         }
       };
-      
-      eventSource.onopen = function() {
+
+      eventSource.onopen = function () {
         document.getElementById('status').innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span><span class="text-green-600 dark:text-green-400">Live</span>';
       };
     }
-    
+
     // Cleanup on page unload
-    window.addEventListener('beforeunload', function() {
+    window.addEventListener('beforeunload', function () {
       if (eventSource) {
         eventSource.close();
       }
@@ -331,7 +777,7 @@
         clearTimeout(reconnectTimeout);
       }
     });
-    
+
     connectSSE();
 
     function handleEvent(event) {
@@ -346,8 +792,8 @@
     async function refreshData() {
       try {
         const [metrics, sessions] = await Promise.all([
-          fetch('/api/metrics').then(function(r) { return r.json(); }),
-          fetch('/api/sessions').then(function(r) { return r.json(); })
+          fetch('/api/metrics').then(function (r) { return r.json(); }),
+          fetch('/api/sessions').then(function (r) { return r.json(); })
         ]);
 
         document.getElementById('metric-runs').textContent = metrics.totalRuns.toLocaleString();
@@ -362,10 +808,15 @@
         renderSessions(sessions);
 
         if (selectedSession) {
-          const session = sessions.find(function(s) { return s.id === selectedSession; });
+          const session = sessions.find(function (s) { return s.id === selectedSession; });
           if (session) {
             currentRuns = session.runs;
             renderTraces(applyFilters(session.runs));
+            updateLatencyChart(session.runs);
+            if (currentView === 'timeline') updateTimeline();
+            if (currentView === 'waterfall') updateWaterfall();
+            if (currentView === 'flamegraph') updateFlameGraph();
+            if (currentView === 'compare') updateCompareSelects();
           }
         }
       } catch (err) {
@@ -380,7 +831,7 @@
         return;
       }
 
-      container.innerHTML = sessions.map(function(s) {
+      container.innerHTML = sessions.map(function (s) {
         const duration = s.endTime ? ((s.endTime - s.startTime) / 1000).toFixed(1) + 's' : 'active';
         const isSelected = selectedSession === s.id;
         const cls = isSelected ? 'bg-purple-500/10 border-purple-500 shadow-sm' : 'bg-white dark:bg-slate-800 border-transparent hover:border-slate-200 dark:hover:border-slate-600 hover:shadow-sm';
@@ -411,7 +862,7 @@
     }
 
     function filterByType(runs, type) {
-      return runs.filter(function(r) {
+      return runs.filter(function (r) {
         if (r.type === type) return true;
         if (r.children && r.children.length) {
           r.children = filterByType(r.children, type);
@@ -423,7 +874,7 @@
 
     function filterBySearch(runs, query) {
       const q = query.toLowerCase();
-      return runs.filter(function(r) {
+      return runs.filter(function (r) {
         const matches = r.name.toLowerCase().includes(q) || r.type.toLowerCase().includes(q);
         if (matches) return true;
         if (r.children && r.children.length) {
@@ -440,7 +891,7 @@
         container.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-center py-12"><svg class="w-12 h-12 text-slate-300 dark:text-slate-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><p class="text-slate-500">No traces found</p></div>';
         return;
       }
-      container.innerHTML = runs.map(function(run) { return renderRun(run, 0); }).join('');
+      container.innerHTML = runs.map(function (run) { return renderRun(run, 0); }).join('');
     }
 
     function renderRun(run, depth) {
@@ -462,7 +913,7 @@
       const selectedCls = isSelected ? 'bg-purple-500/10 ring-1 ring-purple-500' : 'hover:bg-slate-100 dark:hover:bg-slate-700/50';
       const expandIcon = hasChildren ? '<button onclick="event.stopPropagation(); toggleExpand(\'' + run.id + '\')" class="p-0.5 hover:bg-slate-200 dark:hover:bg-slate-600 rounded"><svg class="w-4 h-4 text-slate-400 transition-transform ' + (isExpanded ? 'rotate-90' : '') + '" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>' : '<span class="w-5"></span>';
       const tokens = run.metadata && run.metadata.totalTokens ? '<span class="text-xs text-slate-400">' + run.metadata.totalTokens + ' tok</span>' : '';
-      
+
       let html = '<div class="run-card mb-1" style="margin-left: ' + (depth * 16) + 'px">' +
         '<div onclick="selectRun(\'' + run.id + '\')" class="flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all ' + selectedCls + '">' +
         expandIcon +
@@ -472,9 +923,9 @@
         '<span class="text-xs text-slate-500">' + (run.latencyMs ? run.latencyMs + 'ms' : '...') + '</span>' +
         tokens +
         '</div>';
-      
+
       if (hasChildren && isExpanded) {
-        html += run.children.map(function(c) { return renderRun(c, depth + 1); }).join('');
+        html += run.children.map(function (c) { return renderRun(c, depth + 1); }).join('');
       }
       html += '</div>';
       return html;
@@ -491,7 +942,7 @@
 
     function expandAll() {
       function addAll(runs) {
-        runs.forEach(function(r) {
+        runs.forEach(function (r) {
           if (r.children && r.children.length) {
             expandedRuns.add(r.id);
             addAll(r.children);
@@ -509,7 +960,7 @@
 
     async function selectRun(runId) {
       try {
-        const run = await fetch('/api/runs/' + runId + '?sessionId=' + selectedSession).then(function(r) { return r.json(); });
+        const run = await fetch('/api/runs/' + runId + '?sessionId=' + selectedSession).then(function (r) { return r.json(); });
         selectedRun = run;
         renderRunDetails(run);
         document.getElementById('closeDetailsBtn').classList.remove('hidden');
@@ -523,7 +974,7 @@
       const container = document.getElementById('runDetails');
       const statusColors = { success: 'text-green-500', error: 'text-red-500', running: 'text-yellow-500' };
       const statusCls = statusColors[run.status] || '';
-      
+
       let html = '<div>' +
         '<div class="p-4 border-b border-slate-100 dark:border-slate-700">' +
         '<div class="flex items-center gap-2 mb-2">' +
@@ -533,7 +984,7 @@
         '</div>' +
         '<div class="flex items-center gap-4 text-sm text-slate-500">' +
         '<span>⏱️ ' + (run.latencyMs || 0) + 'ms</span>';
-      
+
       if (run.metadata && run.metadata.totalTokens) {
         html += '<span>🎫 ' + run.metadata.totalTokens + ' tokens</span>';
       }
@@ -541,29 +992,29 @@
         html += '<span>🤖 ' + run.metadata.model + '</span>';
       }
       html += '</div></div>';
-      
+
       html += '<div class="p-4 space-y-4">';
-      
+
       if (run.input) {
         html += '<div><h4 class="text-sm font-medium text-slate-500 mb-2 flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>Input</h4><pre class="text-sm bg-slate-50 dark:bg-slate-900 p-3 rounded-lg overflow-x-auto">' + formatJSON(run.input) + '</pre></div>';
       }
-      
+
       if (run.output) {
         html += '<div><h4 class="text-sm font-medium text-slate-500 mb-2 flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>Output</h4><pre class="text-sm bg-slate-50 dark:bg-slate-900 p-3 rounded-lg overflow-x-auto">' + formatJSON(run.output) + '</pre></div>';
       }
-      
+
       if (run.error) {
         html += '<div><h4 class="text-sm font-medium text-red-500 mb-2 flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Error</h4><pre class="text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-lg overflow-x-auto">' + run.error + '</pre></div>';
       }
-      
+
       if (run.metadata && Object.keys(run.metadata).length) {
         html += '<div><h4 class="text-sm font-medium text-slate-500 mb-2 flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>Metadata</h4><pre class="text-sm bg-slate-50 dark:bg-slate-900 p-3 rounded-lg overflow-x-auto">' + formatJSON(run.metadata) + '</pre></div>';
       }
-      
+
       html += '</div>';
       html += '<div class="p-3 border-t border-slate-100 dark:border-slate-700 flex gap-2 sticky bottom-0 bg-white dark:bg-slate-800"><button onclick="copyRunData()" class="flex-1 px-3 py-1.5 text-sm bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">📋 Copy JSON</button></div>';
       html += '</div>';
-      
+
       container.innerHTML = html;
     }
 
@@ -610,12 +1061,12 @@
       showToast('📤 Exporting traces...', 'info');
     }
 
-    document.getElementById('searchInput').addEventListener('input', function(e) {
+    document.getElementById('searchInput').addEventListener('input', function (e) {
       searchQuery = e.target.value;
       renderTraces(applyFilters(currentRuns));
     });
 
-    document.getElementById('typeFilter').addEventListener('change', function(e) {
+    document.getElementById('typeFilter').addEventListener('change', function (e) {
       typeFilter = e.target.value;
       renderTraces(applyFilters(currentRuns));
     });
@@ -630,11 +1081,11 @@
       document.getElementById('commandInput').value = '';
     }
 
-    document.getElementById('commandPalette').addEventListener('click', function(e) {
+    document.getElementById('commandPalette').addEventListener('click', function (e) {
       if (e.target.id === 'commandPalette') closeCommandPalette();
     });
 
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         openCommandPalette();
@@ -649,6 +1100,255 @@
     });
 
     refreshData();
+
+    // View switching
+    function switchView(view) {
+      currentView = view;
+      document.querySelectorAll('.view-content').forEach(function (el) { el.classList.add('hidden'); });
+      document.querySelectorAll('[id^="tab-"]').forEach(function (el) {
+        el.classList.remove('tab-active');
+        el.classList.add('text-slate-500');
+      });
+      document.getElementById('view-' + view).classList.remove('hidden');
+      document.getElementById('tab-' + view).classList.add('tab-active');
+      document.getElementById('tab-' + view).classList.remove('text-slate-500');
+
+      if (view === 'timeline') updateTimeline();
+      if (view === 'waterfall') updateWaterfall();
+      if (view === 'flamegraph') updateFlameGraph();
+      if (view === 'compare') updateCompareSelects();
+    }
+
+    // Latency Chart
+    function toggleLatencyChart() {
+      const container = document.getElementById('latencyChartContainer');
+      const toggle = document.getElementById('latencyChartToggle');
+      container.classList.toggle('hidden');
+      toggle.classList.toggle('rotate-180');
+      if (!container.classList.contains('hidden') && !latencyChart) {
+        initLatencyChart();
+      }
+    }
+
+    function initLatencyChart() {
+      const ctx = document.getElementById('latencyChart').getContext('2d');
+      const isDark = document.documentElement.classList.contains('dark');
+      latencyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Latency (ms)',
+            data: [],
+            borderColor: '#8b5cf6',
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: isDark ? '#334155' : '#e2e8f0' }, ticks: { color: isDark ? '#94a3b8' : '#64748b' } },
+            y: { grid: { color: isDark ? '#334155' : '#e2e8f0' }, ticks: { color: isDark ? '#94a3b8' : '#64748b' }, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    function updateLatencyChart(runs) {
+      if (!latencyChart) return;
+      const flatRuns = flattenRuns(runs).filter(function (r) { return r.latencyMs; }).slice(-50);
+      latencyChart.data.labels = flatRuns.map(function (r) { return new Date(r.startTime).toLocaleTimeString(); });
+      latencyChart.data.datasets[0].data = flatRuns.map(function (r) { return r.latencyMs; });
+      latencyChart.update();
+    }
+
+    function flattenRuns(runs, result) {
+      result = result || [];
+      runs.forEach(function (r) {
+        result.push(r);
+        if (r.children && r.children.length) flattenRuns(r.children, result);
+      });
+      return result;
+    }
+
+    // Timeline View
+    function updateTimeline() {
+      const container = document.getElementById('timelineContent');
+      if (!currentRuns || currentRuns.length === 0) {
+        container.innerHTML = '<p class="text-center text-slate-500 py-8">No runs in this session</p>';
+        return;
+      }
+      const flatRuns = flattenRuns(currentRuns);
+      const minTime = Math.min.apply(null, flatRuns.map(function (r) { return r.startTime; }));
+      const maxTime = Math.max.apply(null, flatRuns.map(function (r) { return r.endTime || Date.now(); }));
+      const totalDuration = maxTime - minTime || 1;
+
+      const typeColors = { llm: '#8b5cf6', agent: '#3b82f6', tool: '#f97316', retrieval: '#22c55e', chain: '#ec4899', workflow: '#6366f1', graph: '#06b6d4' };
+
+      container.innerHTML = '<div class="relative">' +
+        '<div class="flex justify-between text-xs text-slate-500 mb-2"><span>0ms</span><span>' + Math.round(totalDuration) + 'ms</span></div>' +
+        flatRuns.map(function (r) {
+          const left = ((r.startTime - minTime) / totalDuration * 100).toFixed(2);
+          const width = Math.max(1, ((r.latencyMs || 100) / totalDuration * 100)).toFixed(2);
+          const color = typeColors[r.type] || '#64748b';
+          return '<div class="flex items-center gap-2 py-1">' +
+            '<span class="w-24 text-xs truncate">' + r.name + '</span>' +
+            '<div class="flex-1 relative h-6 bg-slate-100 dark:bg-slate-700 rounded">' +
+            '<div class="timeline-bar absolute top-1/2 -translate-y-1/2 cursor-pointer tooltip" data-tip="' + r.name + ': ' + (r.latencyMs || '?') + 'ms" style="left: ' + left + '%; width: ' + width + '%; background: ' + color + ';" onclick="selectRun(\'' + r.id + '\')"></div>' +
+            '</div></div>';
+        }).join('') +
+        '</div>';
+    }
+
+    // Waterfall View
+    function updateWaterfall() {
+      const container = document.getElementById('waterfallContent');
+      if (!currentRuns || currentRuns.length === 0) {
+        container.innerHTML = '<p class="text-center text-slate-500 py-8">No runs in this session</p>';
+        return;
+      }
+      const flatRuns = flattenRuns(currentRuns);
+      const minTime = Math.min.apply(null, flatRuns.map(function (r) { return r.startTime; }));
+      const maxTime = Math.max.apply(null, flatRuns.map(function (r) { return r.endTime || Date.now(); }));
+      const totalDuration = maxTime - minTime || 1;
+
+      const typeColors = { llm: '#8b5cf6', agent: '#3b82f6', tool: '#f97316', retrieval: '#22c55e', chain: '#ec4899', workflow: '#6366f1', graph: '#06b6d4' };
+
+      function renderWaterfallRow(run, depth) {
+        const left = ((run.startTime - minTime) / totalDuration * 100).toFixed(2);
+        const width = Math.max(2, ((run.latencyMs || 100) / totalDuration * 100)).toFixed(2);
+        const color = typeColors[run.type] || '#64748b';
+        const indent = depth * 16;
+        let html = '<div class="waterfall-row" style="padding-left: ' + indent + 'px">' +
+          '<span class="w-32 text-xs truncate font-medium">' + run.name + '</span>' +
+          '<span class="w-16 text-xs text-slate-500">' + run.type + '</span>' +
+          '<div class="flex-1 relative h-5 bg-slate-100 dark:bg-slate-700 rounded overflow-visible">' +
+          '<div class="waterfall-bar cursor-pointer" data-duration="' + (run.latencyMs || '?') + 'ms" style="left: ' + left + '%; width: ' + width + '%; background: ' + color + '; position: absolute;" onclick="selectRun(\'' + run.id + '\')"></div>' +
+          '</div></div>';
+        if (run.children && run.children.length) {
+          run.children.forEach(function (c) { html += renderWaterfallRow(c, depth + 1); });
+        }
+        return html;
+      }
+
+      container.innerHTML = '<div class="flex justify-between text-xs text-slate-500 mb-2 pl-48"><span>0ms</span><span>' + Math.round(totalDuration) + 'ms</span></div>' +
+        currentRuns.map(function (r) { return renderWaterfallRow(r, 0); }).join('');
+    }
+
+    // Flame Graph View
+    function updateFlameGraph() {
+      const container = document.getElementById('flamegraphContent');
+      if (!currentRuns || currentRuns.length === 0) {
+        container.innerHTML = '<p class="text-center text-slate-500 py-8">No runs in this session</p>';
+        return;
+      }
+
+      const typeColors = { llm: '#8b5cf6', agent: '#3b82f6', tool: '#f97316', retrieval: '#22c55e', chain: '#ec4899', workflow: '#6366f1', graph: '#06b6d4' };
+
+      function buildFlameRows(runs, depth) {
+        depth = depth || 0;
+        let rows = [];
+        const totalLatency = runs.reduce(function (sum, r) { return sum + (r.latencyMs || 100); }, 0);
+
+        let row = '<div class="flame-graph-row">';
+        runs.forEach(function (r) {
+          const width = Math.max(2, ((r.latencyMs || 100) / totalLatency * 100)).toFixed(2);
+          const color = typeColors[r.type] || '#64748b';
+          row += '<div class="flame-segment tooltip" data-tip="' + r.name + ' (' + (r.latencyMs || '?') + 'ms)" style="width: ' + width + '%; background: ' + color + ';" onclick="selectRun(\'' + r.id + '\')">' + r.name + '</div>';
+        });
+        row += '</div>';
+        rows.push(row);
+
+        runs.forEach(function (r) {
+          if (r.children && r.children.length) {
+            rows = rows.concat(buildFlameRows(r.children, depth + 1));
+          }
+        });
+
+        return rows;
+      }
+
+      const rows = buildFlameRows(currentRuns);
+      container.innerHTML = rows.join('');
+    }
+
+    // Compare View
+    function updateCompareSelects() {
+      const flatRuns = flattenRuns(currentRuns);
+      const options = '<option value="">Select a run...</option>' +
+        flatRuns.map(function (r) { return '<option value="' + r.id + '">' + r.type + ': ' + r.name + ' (' + (r.latencyMs || '?') + 'ms)</option>'; }).join('');
+      document.getElementById('compareRunA').innerHTML = options;
+      document.getElementById('compareRunB').innerHTML = options;
+    }
+
+    async function updateCompare() {
+      const runAId = document.getElementById('compareRunA').value;
+      const runBId = document.getElementById('compareRunB').value;
+      const container = document.getElementById('compareContent');
+      const diffContainer = document.getElementById('compareDiff');
+
+      if (!runAId && !runBId) {
+        container.innerHTML = '<div class="text-center text-slate-500 py-8">Select Run A</div><div class="text-center text-slate-500 py-8">Select Run B</div>';
+        diffContainer.classList.add('hidden');
+        return;
+      }
+
+      let runA = null, runB = null;
+      if (runAId) {
+        try { runA = await fetch('/api/runs/' + runAId + '?sessionId=' + selectedSession).then(function (r) { return r.json(); }); } catch (e) { }
+      }
+      if (runBId) {
+        try { runB = await fetch('/api/runs/' + runBId + '?sessionId=' + selectedSession).then(function (r) { return r.json(); }); } catch (e) { }
+      }
+
+      function renderComparePanel(run) {
+        if (!run) return '<div class="text-center text-slate-500 py-8">Select a run</div>';
+        return '<div class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4">' +
+          '<h4 class="font-medium mb-2">' + run.name + '</h4>' +
+          '<div class="text-xs space-y-1">' +
+          '<p><span class="text-slate-500">Type:</span> ' + run.type + '</p>' +
+          '<p><span class="text-slate-500">Status:</span> ' + run.status + '</p>' +
+          '<p><span class="text-slate-500">Latency:</span> ' + (run.latencyMs || '?') + 'ms</p>' +
+          (run.metadata && run.metadata.totalTokens ? '<p><span class="text-slate-500">Tokens:</span> ' + run.metadata.totalTokens + '</p>' : '') +
+          '</div>' +
+          '<div class="mt-3"><p class="text-xs text-slate-500 mb-1">Input:</p><pre class="text-xs bg-white dark:bg-slate-800 p-2 rounded overflow-x-auto max-h-32">' + formatJSON(run.input) + '</pre></div>' +
+          '<div class="mt-2"><p class="text-xs text-slate-500 mb-1">Output:</p><pre class="text-xs bg-white dark:bg-slate-800 p-2 rounded overflow-x-auto max-h-32">' + formatJSON(run.output) + '</pre></div>' +
+          '</div>';
+      }
+
+      container.innerHTML = renderComparePanel(runA) + renderComparePanel(runB);
+
+      if (runA && runB) {
+        diffContainer.classList.remove('hidden');
+        let diffHtml = '';
+        if (runA.latencyMs !== runB.latencyMs) {
+          const diff = (runB.latencyMs || 0) - (runA.latencyMs || 0);
+          const cls = diff > 0 ? 'text-red-500' : 'text-green-500';
+          diffHtml += '<p>Latency: <span class="' + cls + '">' + (diff > 0 ? '+' : '') + diff + 'ms</span></p>';
+        }
+        if (runA.metadata && runB.metadata && runA.metadata.totalTokens !== runB.metadata.totalTokens) {
+          const diff = (runB.metadata.totalTokens || 0) - (runA.metadata.totalTokens || 0);
+          const cls = diff > 0 ? 'text-red-500' : 'text-green-500';
+          diffHtml += '<p>Tokens: <span class="' + cls + '">' + (diff > 0 ? '+' : '') + diff + '</span></p>';
+        }
+        if (JSON.stringify(runA.input) !== JSON.stringify(runB.input)) {
+          diffHtml += '<p class="text-yellow-500">⚠️ Inputs differ</p>';
+        }
+        if (JSON.stringify(runA.output) !== JSON.stringify(runB.output)) {
+          diffHtml += '<p class="text-yellow-500">⚠️ Outputs differ</p>';
+        }
+        document.getElementById('diffContent').innerHTML = diffHtml || '<p class="text-green-500">✓ No significant differences</p>';
+      } else {
+        diffContainer.classList.add('hidden');
+      }
+    }
   </script>
 </body>
+
 </html>

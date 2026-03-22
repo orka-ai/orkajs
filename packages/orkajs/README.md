@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="https://orkajs.com/loutre-orka.png" alt="OrkaJS" width="120" />
+  <img src="https://orkajs.com/loutre-orka.png" alt="OrkaJS" width="180" />
 </p>
 
 <h1 align="center">OrkaJS</h1>
 
 <p align="center">
-  <strong>TypeScript framework for building production-ready LLM systems. RAG, agents, workflows, multi-model orchestration.</strong>
+  <strong>Ship AI features 10x faster. Production-ready RAG, agents, and workflows with type-safe TypeScript. Zero boilerplate, infinite possibilities.</strong>
 </p>
 
 <p align="center">

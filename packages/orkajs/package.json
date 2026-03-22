@@ -31,7 +31,16 @@
     "anthropic",
     "rag",
     "agent",
-    "framework"
+    "framework",
+    "gpt3",
+    "chain",
+    "prompt",
+    "prompt engineering",
+    "chatgpt",
+    "machine learning",
+    "openai",
+    "embeddings",
+    "vectorstores"
   ],
   "author": "Orka Team",
   "license": "MIT",
