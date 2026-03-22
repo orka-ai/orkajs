@@ -1,5 +1,64 @@
 # @orka-js/core
 
+## 1.3.2
+
+### Patch Changes
+
+- feat(agent): Add Agent Platform with Identity, Registry, and Fleet Management
+
+  ## New Features
+
+  ### Agent Identity & Metadata
+
+  - `AgentIdentity` interface with id, name, role, version, description, and metadata
+  - `AgentMetadata` interface with tags, capabilities, author, and custom properties
+  - Semantic versioning validation for agent versions
+
+  ### Agent Registry
+
+  - `AgentRegistry` class for centralized agent management
+  - Full CRUD operations: `register()`, `get()`, `update()`, `delete()`
+  - Advanced querying with `list()` and `query()` methods
+  - Filter by tags, capabilities, role, author, or search text
+  - `getStats()` for registry statistics (total agents, by type, popular tags/capabilities)
+  - `export()` and `import()` for backup and migration
+  - `globalAgentRegistry` singleton for application-wide usage
+
+  ### Error Codes
+
+  - Added `AGENT_ALREADY_EXISTS` and `AGENT_NOT_FOUND` error codes to OrkaErrorCode enum
+
+  ## Usage
+
+  ```typescript
+  import { AgentRegistry } from "@orka-js/agent";
+
+  const registry = new AgentRegistry();
+
+  // Register an agent
+  await registry.register(
+    {
+      id: "sales-assistant",
+      name: "Sales Assistant",
+      role: "Lead qualification",
+      version: "1.0.0",
+      description: "Handles customer inquiries",
+      metadata: {
+        tags: ["sales", "customer-facing"],
+        capabilities: ["email", "crm-integration"],
+      },
+    },
+    agentConfig,
+    "react"
+  );
+
+  // Query agents
+  const salesAgents = registry.query({ tags: ["sales"] });
+
+  // Get statistics
+  const stats = registry.getStats();
+  ```
+
 ## 1.3.1
 
 ### Patch Changes

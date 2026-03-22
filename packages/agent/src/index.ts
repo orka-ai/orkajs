@@ -56,4 +56,13 @@ export type {
   AgentToolkit,
   SQLToolkitConfig,
   CSVToolkitConfig,
+  // Agent Platform - Identity & Registry
+  AgentIdentity,
+  AgentMetadata,
+  RegisteredAgent,
+  AgentQueryOptions,
+  AgentRegistryStats,
 } from './types.js';
+
+// Agent Platform - Registry
+export { AgentRegistry, globalAgentRegistry } from './registry.js';

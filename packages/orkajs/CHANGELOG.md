@@ -1,5 +1,92 @@
 # orkajs
 
+## 3.6.0
+
+### Minor Changes
+
+- feat(agent): Add Agent Platform with Identity, Registry, and Fleet Management
+
+  ## New Features
+
+  ### Agent Identity & Metadata
+
+  - `AgentIdentity` interface with id, name, role, version, description, and metadata
+  - `AgentMetadata` interface with tags, capabilities, author, and custom properties
+  - Semantic versioning validation for agent versions
+
+  ### Agent Registry
+
+  - `AgentRegistry` class for centralized agent management
+  - Full CRUD operations: `register()`, `get()`, `update()`, `delete()`
+  - Advanced querying with `list()` and `query()` methods
+  - Filter by tags, capabilities, role, author, or search text
+  - `getStats()` for registry statistics (total agents, by type, popular tags/capabilities)
+  - `export()` and `import()` for backup and migration
+  - `globalAgentRegistry` singleton for application-wide usage
+
+  ### Error Codes
+
+  - Added `AGENT_ALREADY_EXISTS` and `AGENT_NOT_FOUND` error codes to OrkaErrorCode enum
+
+  ## Usage
+
+  ```typescript
+  import { AgentRegistry } from "@orka-js/agent";
+
+  const registry = new AgentRegistry();
+
+  // Register an agent
+  await registry.register(
+    {
+      id: "sales-assistant",
+      name: "Sales Assistant",
+      role: "Lead qualification",
+      version: "1.0.0",
+      description: "Handles customer inquiries",
+      metadata: {
+        tags: ["sales", "customer-facing"],
+        capabilities: ["email", "crm-integration"],
+      },
+    },
+    agentConfig,
+    "react"
+  );
+
+  // Query agents
+  const salesAgents = registry.query({ tags: ["sales"] });
+
+  // Get statistics
+  const stats = registry.getStats();
+  ```
+
+### Patch Changes
+
+- Updated dependencies
+  - @orka-js/agent@1.2.0
+  - @orka-js/core@1.3.2
+  - @orka-js/anthropic@1.1.4
+  - @orka-js/cache@1.0.6
+  - @orka-js/chroma@1.0.6
+  - @orka-js/devtools@1.4.3
+  - @orka-js/evaluation@1.0.6
+  - @orka-js/finetuning@1.1.1
+  - @orka-js/graph@1.2.3
+  - @orka-js/mcp@1.1.1
+  - @orka-js/memory@1.0.6
+  - @orka-js/memory-store@1.1.3
+  - @orka-js/mistral@1.1.4
+  - @orka-js/observability@1.0.6
+  - @orka-js/ocr@1.1.5
+  - @orka-js/ollama@1.1.4
+  - @orka-js/openai@1.2.2
+  - @orka-js/orchestration@1.0.6
+  - @orka-js/pinecone@1.0.6
+  - @orka-js/prompts@1.0.6
+  - @orka-js/qdrant@1.0.6
+  - @orka-js/resilience@1.0.6
+  - @orka-js/tools@1.2.3
+  - @orka-js/workflow@1.0.6
+
 ## 3.5.0
 
 ### Minor Changes

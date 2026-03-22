@@ -1,5 +1,13 @@
 # @orka-js/devtools
 
+## 1.4.3
+
+### Patch Changes
+
+- Updated dependencies
+  - @orka-js/core@1.3.2
+  - @orka-js/observability@1.0.6
+
 ## 1.4.2
 
 ### Patch Changes

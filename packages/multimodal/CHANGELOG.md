@@ -1,5 +1,14 @@
 # @orka-js/multimodal
 
+## 2.0.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @orka-js/core@1.3.2
+  - @orka-js/anthropic@1.1.4
+  - @orka-js/openai@1.2.2
+
 ## 2.0.1
 
 ### Patch Changes

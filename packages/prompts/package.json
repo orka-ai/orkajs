@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/prompts",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Prompt versioning for OrkaJS - registry, diff, rollback, persistence",
   "type": "module",
   "main": "./dist/index.cjs",

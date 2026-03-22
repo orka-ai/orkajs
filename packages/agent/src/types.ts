@@ -161,3 +161,94 @@ export interface CSVToolkitConfig {
   data: string;
   separator?: string;
 }
+
+// ============================================
+// Agent Platform - Identity & Registry Types
+// ============================================
+
+/**
+ * Agent Identity - Makes agents first-class citizens
+ * Every agent has a unique identity with metadata
+ */
+export interface AgentIdentity {
+  /** Unique identifier for the agent */
+  id: string;
+  /** Human-readable name */
+  name: string;
+  /** Agent's role/purpose in the system */
+  role: string;
+  /** Detailed description of what the agent does */
+  description: string;
+  /** Semantic version (e.g., "1.0.0") */
+  version: string;
+  /** Creation timestamp */
+  createdAt: Date;
+  /** Last update timestamp */
+  updatedAt: Date;
+  /** Agent metadata for discovery and filtering */
+  metadata: AgentMetadata;
+}
+
+/**
+ * Agent Metadata - Rich information for agent discovery
+ */
+export interface AgentMetadata {
+  /** Tags for categorization (e.g., ["sales", "crm", "automation"]) */
+  tags: string[];
+  /** Agent capabilities (e.g., ["email", "calendar", "database"]) */
+  capabilities: string[];
+  /** Dependencies on other agents or services */
+  dependencies?: string[];
+  /** Author/creator information */
+  author?: string;
+  /** License (e.g., "MIT", "proprietary") */
+  license?: string;
+  /** Custom metadata fields */
+  custom?: Record<string, unknown>;
+}
+
+/**
+ * Registered Agent - Full agent with identity and configuration
+ */
+export interface RegisteredAgent {
+  /** Agent identity */
+  identity: AgentIdentity;
+  /** Agent configuration */
+  config: AgentConfig;
+  /** Agent type */
+  type: 'react' | 'plan-and-execute' | 'openai-functions' | 'structured-chat' | 'custom';
+  /** Agent instance (lazy-loaded) */
+  instance?: unknown;
+}
+
+/**
+ * Agent Registry Query Options
+ */
+export interface AgentQueryOptions {
+  /** Filter by tags */
+  tags?: string[];
+  /** Filter by capabilities */
+  capabilities?: string[];
+  /** Filter by role */
+  role?: string;
+  /** Filter by author */
+  author?: string;
+  /** Search in name/description */
+  search?: string;
+  /** Limit results */
+  limit?: number;
+}
+
+/**
+ * Agent Registry Statistics
+ */
+export interface AgentRegistryStats {
+  /** Total number of registered agents */
+  totalAgents: number;
+  /** Agents by type */
+  agentsByType: Record<string, number>;
+  /** Most used tags */
+  popularTags: Array<{ tag: string; count: number }>;
+  /** Most used capabilities */
+  popularCapabilities: Array<{ capability: string; count: number }>;
+}
