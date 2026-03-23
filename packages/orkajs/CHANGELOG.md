@@ -1,5 +1,12 @@
 # orkajs
 
+## 3.6.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @orka-js/devtools@1.5.0
+
 ## 3.6.1
 
 ### Patch Changes

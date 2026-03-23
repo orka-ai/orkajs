@@ -1,5 +1,16 @@
 # @orka-js/devtools
 
+## 1.5.0
+
+### Minor Changes
+
+- Add getTimeSeriesData() method to TraceCollector for extracting time series data for visualization
+
+  - New `getTimeSeriesData()` method extracts latency, token, and cost data points over time
+  - Supports filtering by sessionId and metric type (latency, tokens, cost, or all)
+  - Returns sorted time series data ready for chart visualization
+  - Synced @orka-js/collector version to 1.4.3 to match @orka-js/devtools
+
 ## 1.4.3
 
 ### Patch Changes

@@ -291,6 +291,73 @@ export class TraceCollector {
   }
 
   /**
+   * Get time series data for visualization
+   * Extracts latency, token, and cost data points over time
+   * 
+   * @param options - Filter options
+   * @returns Time series data for charts
+   */
+  getTimeSeriesData(options?: {
+    sessionId?: string;
+    metric?: 'latency' | 'tokens' | 'cost' | 'all';
+  }): {
+    latency: Array<{ timestamp: number; value: number }>;
+    tokens: Array<{ timestamp: number; value: number }>;
+    cost: Array<{ timestamp: number; value: number }>;
+  } {
+    const sessions = options?.sessionId
+      ? [this.sessions.get(options.sessionId)].filter(Boolean) as TraceSession[]
+      : Array.from(this.sessions.values());
+
+    const latencyData: Array<{ timestamp: number; value: number }> = [];
+    const tokenData: Array<{ timestamp: number; value: number }> = [];
+    const costData: Array<{ timestamp: number; value: number }> = [];
+
+    const processRun = (run: TraceRun) => {
+      // Extract latency data
+      if (run.latencyMs !== undefined && (!options?.metric || options.metric === 'latency' || options.metric === 'all')) {
+        latencyData.push({
+          timestamp: run.startTime,
+          value: run.latencyMs,
+        });
+      }
+
+      // Extract token data
+      if (run.metadata?.totalTokens && (!options?.metric || options.metric === 'tokens' || options.metric === 'all')) {
+        tokenData.push({
+          timestamp: run.startTime,
+          value: run.metadata.totalTokens,
+        });
+      }
+
+      // Extract cost data
+      if (run.metadata?.cost && (!options?.metric || options.metric === 'cost' || options.metric === 'all')) {
+        costData.push({
+          timestamp: run.startTime,
+          value: run.metadata.cost,
+        });
+      }
+
+      // Process children recursively
+      for (const child of run.children) {
+        processRun(child);
+      }
+    };
+
+    for (const session of sessions) {
+      for (const run of session.runs) {
+        processRun(run);
+      }
+    }
+
+    return {
+      latency: latencyData.sort((a, b) => a.timestamp - b.timestamp),
+      tokens: tokenData.sort((a, b) => a.timestamp - b.timestamp),
+      cost: costData.sort((a, b) => a.timestamp - b.timestamp),
+    };
+  }
+
+  /**
    * Subscribe to trace events
    */
   subscribe(listener: (event: TraceEvent) => void): () => void {
