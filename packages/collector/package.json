@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/collector",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Trace collector for OrkaJS - re-exports @orka-js/devtools for backward compatibility",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -27,7 +27,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@orka-js/devtools": "workspace:*"
+    "@orka-js/devtools": "^1.5.1"
   },
   "devDependencies": {
     "tsup": "^8.0.0",

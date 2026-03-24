@@ -1,5 +1,39 @@
 # orkajs
 
+## 3.6.4
+
+### Patch Changes
+
+- Fix: Replace workspace:\* dependencies with actual npm versions
+
+  This fixes a critical bug where packages were published with workspace:\*
+  dependencies that cannot be resolved when installed from npm.
+
+- Updated dependencies
+  - @orka-js/agent@1.4.1
+  - @orka-js/anthropic@1.1.5
+  - @orka-js/cache@1.0.7
+  - @orka-js/chroma@1.0.7
+  - @orka-js/devtools@1.5.1
+  - @orka-js/evaluation@1.0.7
+  - @orka-js/finetuning@1.1.2
+  - @orka-js/graph@1.2.4
+  - @orka-js/mcp@1.1.2
+  - @orka-js/memory@1.0.7
+  - @orka-js/memory-store@1.2.1
+  - @orka-js/mistral@1.1.5
+  - @orka-js/observability@1.0.7
+  - @orka-js/ocr@1.1.6
+  - @orka-js/ollama@1.1.5
+  - @orka-js/openai@1.2.3
+  - @orka-js/orchestration@1.0.7
+  - @orka-js/pinecone@1.0.7
+  - @orka-js/prompts@1.0.7
+  - @orka-js/qdrant@1.0.7
+  - @orka-js/resilience@1.0.7
+  - @orka-js/tools@1.2.4
+  - @orka-js/workflow@1.0.7
+
 ## 3.6.3
 
 ### Patch Changes

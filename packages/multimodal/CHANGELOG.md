@@ -1,5 +1,18 @@
 # @orka-js/multimodal
 
+## 2.0.3
+
+### Patch Changes
+
+- Fix: Replace workspace:\* dependencies with actual npm versions
+
+  This fixes a critical bug where packages were published with workspace:\*
+  dependencies that cannot be resolved when installed from npm.
+
+- Updated dependencies
+  - @orka-js/anthropic@1.1.5
+  - @orka-js/openai@1.2.3
+
 ## 2.0.2
 
 ### Patch Changes

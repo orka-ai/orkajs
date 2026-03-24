@@ -1,5 +1,17 @@
 # @orka-js/collector
 
+## 1.5.1
+
+### Patch Changes
+
+- Fix: Replace workspace:\* dependencies with actual npm versions
+
+  This fixes a critical bug where packages were published with workspace:\*
+  dependencies that cannot be resolved when installed from npm.
+
+- Updated dependencies
+  - @orka-js/devtools@1.5.1
+
 ## 1.5.0
 
 ### Minor Changes

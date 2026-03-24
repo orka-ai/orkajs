@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/multimodal",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Multimodal utilities and agents for OrkaJS - Vision, Audio, Cross-modal workflows",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -39,15 +39,15 @@
   "author": "OrkaJS Team",
   "license": "MIT",
   "dependencies": {
-    "@orka-js/core": "workspace:*"
+    "@orka-js/core": "^1.3.2"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {
-    "@orka-js/openai": "workspace:*",
-    "@orka-js/anthropic": "workspace:*"
+    "@orka-js/openai": "^1.2.3",
+    "@orka-js/anthropic": "^1.1.5"
   },
   "peerDependenciesMeta": {
     "@orka-js/openai": {

@@ -1,5 +1,17 @@
 # @orka-js/agent
 
+## 1.4.1
+
+### Patch Changes
+
+- Fix: Replace workspace:\* dependencies with actual npm versions
+
+  This fixes a critical bug where packages were published with workspace:\*
+  dependencies that cannot be resolved when installed from npm.
+
+- Updated dependencies
+  - @orka-js/memory-store@1.2.1
+
 ## 1.4.0
 
 ### Minor Changes

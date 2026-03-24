@@ -1,5 +1,14 @@
 # @orka-js/evaluation
 
+## 1.0.7
+
+### Patch Changes
+
+- Fix: Replace workspace:\* dependencies with actual npm versions
+
+  This fixes a critical bug where packages were published with workspace:\*
+  dependencies that cannot be resolved when installed from npm.
+
 ## 1.0.6
 
 ### Patch Changes
