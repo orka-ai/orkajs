@@ -1,5 +1,34 @@
 # @orka-js/memory-store
 
+## 1.3.0
+
+### Minor Changes
+
+- feat: Make SummaryMemory and KGMemory compatible with LLMAdapter
+
+  BREAKING CHANGE FIX: The `BaseLLM` interface now accepts both:
+
+  - Simple LLMs returning `Promise<string>`
+  - Full `LLMAdapter` returning `Promise<LLMResult>` (with `.content` property)
+
+  This allows developers to use `OpenAIAdapter`, `AnthropicAdapter`, etc. directly
+  with `SummaryMemory` and `KGMemory` without needing wrapper functions.
+
+  Before (required wrapper):
+
+  ```typescript
+  const adapter = new OpenAIAdapter({ apiKey });
+  const llm = { generate: async (p) => (await adapter.generate(p)).content };
+  const memory = new SummaryMemory({ llm });
+  ```
+
+  After (direct usage):
+
+  ```typescript
+  const llm = new OpenAIAdapter({ apiKey });
+  const memory = new SummaryMemory({ llm }); // Just works!
+  ```
+
 ## 1.2.1
 
 ### Patch Changes

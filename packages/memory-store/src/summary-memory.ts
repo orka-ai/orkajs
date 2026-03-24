@@ -198,7 +198,8 @@ export class SummaryMemory {
         prompt = DEFAULT_SUMMARY_PROMPT.replace('{conversation}', allToSummarize);
       }
 
-      const summary = await this.config.llm.generate(prompt);
+      const result = await this.config.llm.generate(prompt);
+      const summary = typeof result === 'string' ? result : result.content;
 
       const trimmedSummary = summary.length > this.config.summaryMaxLength
         ? summary.slice(0, this.config.summaryMaxLength) + '...'
@@ -279,7 +280,8 @@ export class SummaryMemory {
             .replace('{new_messages}', this.formatMessages(toSummarize))
         : DEFAULT_SUMMARY_PROMPT.replace('{conversation}', this.formatMessages(toSummarize));
 
-      const summary = await this.config.llm.generate(prompt);
+      const result = await this.config.llm.generate(prompt);
+      const summary = typeof result === 'string' ? result : result.content;
 
       const trimmedSummary = summary.length > this.config.summaryMaxLength
         ? summary.slice(0, this.config.summaryMaxLength) + '...'

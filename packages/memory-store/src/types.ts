@@ -1,7 +1,11 @@
 import type { Message } from './memory.js';
 
+/**
+ * Base LLM interface for memory-store.
+ * Compatible with both simple LLMs (returning string) and full LLMAdapter (returning LLMResult).
+ */
 export interface BaseLLM {
-  generate(prompt: string): Promise<string>;
+  generate(prompt: string, options?: unknown): Promise<string | { content: string }>;
 }
 
 export interface BaseEmbeddings {

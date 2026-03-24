@@ -149,7 +149,8 @@ export class KGMemory {
       .replace('{relations}', relationsStr)
       .replace('{query}', query);
 
-    return await this.config.llm.generate(prompt);
+    const result = await this.config.llm.generate(prompt);
+    return typeof result === 'string' ? result : result.content;
   }
 
   async getContextForQuery(query: string): Promise<Message[]> {
@@ -226,7 +227,8 @@ export class KGMemory {
       }
 
       const prompt = ENTITY_EXTRACTION_PROMPT.replace('{conversation}', conversationText);
-      const response = await this.config.llm.generate(prompt);
+      const result = await this.config.llm.generate(prompt);
+      const response = typeof result === 'string' ? result : result.content;
 
       const extracted = this.parseExtractionResponse(response);
 
