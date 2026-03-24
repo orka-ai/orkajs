@@ -1,5 +1,22 @@
 # @orka-js/agent
 
+## 1.4.0
+
+### Minor Changes
+
+- be311e8: Add compact_conversation tool for autonomous context compression
+
+  - Add `createCompactConversationTool()` factory function
+  - Agents can now autonomously decide when to compress conversation history
+  - Add `COMPACT_CONVERSATION_PROMPT_ADDITION` for system prompt guidance
+  - Tool returns detailed metrics: messages compressed, tokens saved, summary
+  - Includes comprehensive documentation and usage examples
+
+### Patch Changes
+
+- Updated dependencies [be311e8]
+  - @orka-js/memory-store@1.2.0
+
 ## 1.3.0
 
 ### Minor Changes

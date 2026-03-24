@@ -1,5 +1,17 @@
 # @orka-js/memory-store
 
+## 1.2.0
+
+### Minor Changes
+
+- be311e8: Add autonomous context compression with compress() method
+
+  - Add `compress()` method to SummaryMemory for on-demand compression
+  - Add `CompressResult` interface with detailed compression metrics
+  - Returns success status, summary, messages compressed, and tokens saved
+  - Supports progressive compression with existing summaries
+  - Handles edge cases (not enough messages, compression in progress, errors)
+
 ## 1.1.3
 
 ### Patch Changes
