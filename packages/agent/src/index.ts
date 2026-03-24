@@ -91,3 +91,11 @@ export { PermissionManager, globalPermissionManager } from './permissions.js';
 
 // Agent Platform - Audit
 export { AuditLogger, globalAuditLogger } from './audit.js';
+
+// Built-in Tools
+export {
+  createCompactConversationTool,
+  COMPACT_CONVERSATION_PROMPT_ADDITION,
+  type CompactConversationResult,
+  type CompactConversationToolConfig,
+} from './tools/index.js';

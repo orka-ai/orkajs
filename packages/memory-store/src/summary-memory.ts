@@ -11,6 +11,25 @@ export interface SummaryMemoryConfig {
   compressionRatio?: number;
 }
 
+/**
+ * Result of a compression operation.
+ * Used by the compress() method for autonomous context compression.
+ */
+export interface CompressResult {
+  /** Whether the compression was successful */
+  success: boolean;
+  /** Reason for the result (success message or error) */
+  reason: string;
+  /** Generated summary of compressed messages */
+  summary: string;
+  /** Number of messages that were compressed */
+  messagesCompressed: number;
+  /** Estimated tokens saved by the compression */
+  tokensSaved: number;
+  /** Timestamp when compression occurred */
+  compressedAt: number;
+}
+
 interface SummaryState {
   summary: string;
   messageCount: number;
@@ -211,13 +230,45 @@ export class SummaryMemory {
   }
 
   async forceSummarize(): Promise<void> {
+    await this.compress();
+  }
+
+  /**
+   * Compress the conversation history on demand.
+   * This method is designed to be called by agents autonomously
+   * when they decide the context needs compression.
+   * 
+   * @returns CompressResult with details about the compression
+   */
+  async compress(): Promise<CompressResult> {
     const nonSystemMessages = this.messages.filter(
       m => m.role !== 'system' || m.metadata?.isSummary
     );
-    if (nonSystemMessages.length < 2) return;
 
-    if (this.isSummarizing) return;
+    if (nonSystemMessages.length < 2) {
+      return {
+        success: false,
+        reason: 'Not enough messages to compress',
+        summary: this.summaryState.summary,
+        messagesCompressed: 0,
+        tokensSaved: 0,
+        compressedAt: Date.now(),
+      };
+    }
+
+    if (this.isSummarizing) {
+      return {
+        success: false,
+        reason: 'Compression already in progress',
+        summary: this.summaryState.summary,
+        messagesCompressed: 0,
+        tokensSaved: 0,
+        compressedAt: Date.now(),
+      };
+    }
+
     this.isSummarizing = true;
+    const messageCountBefore = nonSystemMessages.length;
 
     try {
       const toSummarize = nonSystemMessages;
@@ -234,6 +285,14 @@ export class SummaryMemory {
         ? summary.slice(0, this.config.summaryMaxLength) + '...'
         : summary;
 
+      // Estimate tokens saved (rough estimate: 4 chars per token)
+      const originalTokens = toSummarize.reduce(
+        (acc, m) => acc + Math.ceil(m.content.length / 4),
+        0
+      );
+      const summaryTokens = Math.ceil(trimmedSummary.length / 4);
+      const tokensSaved = Math.max(0, originalTokens - summaryTokens);
+
       this.summaryState = {
         summary: trimmedSummary,
         messageCount: this.summaryState.messageCount + toSummarize.length,
@@ -245,6 +304,25 @@ export class SummaryMemory {
         : [];
 
       this.messages = [...systemMessages];
+
+      return {
+        success: true,
+        reason: 'Compression completed successfully',
+        summary: trimmedSummary,
+        messagesCompressed: messageCountBefore,
+        tokensSaved,
+        compressedAt: Date.now(),
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return {
+        success: false,
+        reason: `Compression failed: ${errorMessage}`,
+        summary: this.summaryState.summary,
+        messagesCompressed: 0,
+        tokensSaved: 0,
+        compressedAt: Date.now(),
+      };
     } finally {
       this.isSummarizing = false;
     }
