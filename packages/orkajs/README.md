@@ -13,19 +13,19 @@
   <a href="https://www.npmjs.com/package/orkajs"><img src="https://img.shields.io/npm/dm/orkajs.svg" alt="npm downloads"></a>
   <a href="https://github.com/orkajs/orkajs/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/orkajs.svg" alt="license"></a>
   <a href="https://orkajs.com"><img src="https://img.shields.io/badge/docs-orkajs.com-blue.svg" alt="documentation"></a>
-  <a href="https://discord.gg/zUbDmJVr"><img src="https://img.shields.io/badge/discord-join%20chat-7289da.svg" alt="discord"></a>
+  <a href="https://discord.com/invite/DScfpuPysP"><img src="https://img.shields.io/badge/discord-join%20chat-7289da.svg" alt="discord"></a>
 </p>
 
 ---
 
 ## Installation
 
-**Full package (recommended):**
+**Full package :**
 ```bash
 npm install orkajs
 ```
 
-**Or install only what you need:**
+**Or install only what you need (recommended):**
 ```bash
 npm install @orka-js/core @orka-js/tools @orka-js/memory
 ```
@@ -56,32 +56,40 @@ npm install @orka-js/core @orka-js/tools @orka-js/memory
 | `@orka-js/observability` | Tracer, hooks |
 | `@orka-js/prompts` | Prompt versioning |
 | `@orka-js/memory-store` | Conversation memory |
+| `@orka-js/ocr` | OCR & document extraction |
 
 </details>
 
 ## Quick Start
 
 ```typescript
-import { createOrka, AnthropicAdapter, MemoryVectorAdapter } from 'orkajs';
+import { ReActAgent } from '@orka-js/agent';
+import { OpenAIAdapter } from '@orka-js/openai';
 
-const orka = createOrka({
-  llm: new AnthropicAdapter({ apiKey: process.env.ANTHROPIC_API_KEY! }),
-  vectorDB: new MemoryVectorAdapter(),
+const agent = new ReActAgent({
+  llm: new OpenAIAdapter({ apiKey: process.env.OPENAI_API_KEY }),
+  goal: 'Manage customer support tickets',
+  tools: [
+    {
+      name: 'search_tickets',
+      description: 'Search support tickets by status or keyword',
+      execute: async ({ query }) => searchDatabase(query)
+    },
+    {
+      name: 'send_email',
+      description: 'Send email to customer',
+      execute: async ({ to, subject, body }) => sendEmail(to, subject, body)
+    }
+  ]
 });
 
-// Create knowledge base
-await orka.knowledge.create({
-  name: 'docs',
-  source: ['OrkaJS is a TypeScript framework for LLM systems.'],
-});
+// Agent plans, executes tools, and responds autonomously
+const result = await agent.run(
+  'Find all urgent tickets from last week and send follow-up emails'
+);
 
-// Ask with RAG
-const result = await orka.ask({
-  knowledge: 'docs',
-  question: 'What is OrkaJS?',
-});
-
-console.log(result.answer);
+console.log(result.output); // "Sent 12 follow-up emails"
+console.log(result.steps);  // See the agent's reasoning
 ```
 
 ## Features
@@ -98,6 +106,8 @@ console.log(result.answer);
 | **Evaluation** | Built-in metrics: relevance, faithfulness, hallucination |
 | **Resilience** | Retry, fallback, timeouts, circuit breaker patterns |
 | **Caching** | Memory & Redis cache for LLM and embeddings |
+| **OCR** | Extract text from images, PDFs, scanned documents (Tesseract, OpenAI Vision) |
+| **PII Guard** | Detect and redact sensitive data before LLM calls (RGPD compliant) |
 
 ## Providers
 
@@ -107,7 +117,7 @@ console.log(result.answer);
 ## Documentation
 
 **📚 [orkajs.com](https://orkajs.com)**
-**💬 [Discord](https://discord.gg/KAZCesekvg)**
+**💬 [Discord](https://discord.com/invite/DScfpuPysP)**
 
 - [Getting Started](https://orkajs.com/en/getting-started/introduction)
 - [RAG & Knowledge](https://orkajs.com/en/core/knowledge)
