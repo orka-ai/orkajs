@@ -1,5 +1,11 @@
 # orkajs
 
+## 3.6.6
+
+### Patch Changes
+
+- Fix: Include README.md and LICENSE in npm package publication
+
 ## 3.6.5
 
 ### Patch Changes
