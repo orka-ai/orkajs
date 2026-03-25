@@ -20,12 +20,12 @@
 
 ## Installation
 
-**Full package (recommended):**
+**Full package :**
 ```bash
 npm install orkajs
 ```
 
-**Or install only what you need:**
+**Or install only what you need (recommended):**
 ```bash
 npm install @orka-js/core @orka-js/tools @orka-js/memory
 ```
@@ -63,26 +63,33 @@ npm install @orka-js/core @orka-js/tools @orka-js/memory
 ## Quick Start
 
 ```typescript
-import { createOrka, AnthropicAdapter, MemoryVectorAdapter } from 'orkajs';
+import { ReActAgent } from '@orka-js/agent';
+import { OpenAIAdapter } from '@orka-js/openai';
 
-const orka = createOrka({
-  llm: new AnthropicAdapter({ apiKey: process.env.ANTHROPIC_API_KEY! }),
-  vectorDB: new MemoryVectorAdapter(),
+const agent = new ReActAgent({
+  llm: new OpenAIAdapter({ apiKey: process.env.OPENAI_API_KEY }),
+  goal: 'Manage customer support tickets',
+  tools: [
+    {
+      name: 'search_tickets',
+      description: 'Search support tickets by status or keyword',
+      execute: async ({ query }) => searchDatabase(query)
+    },
+    {
+      name: 'send_email',
+      description: 'Send email to customer',
+      execute: async ({ to, subject, body }) => sendEmail(to, subject, body)
+    }
+  ]
 });
 
-// Create knowledge base
-await orka.knowledge.create({
-  name: 'docs',
-  source: ['OrkaJS is a TypeScript framework for LLM systems.'],
-});
+// Agent plans, executes tools, and responds autonomously
+const result = await agent.run(
+  'Find all urgent tickets from last week and send follow-up emails'
+);
 
-// Ask with RAG
-const result = await orka.ask({
-  knowledge: 'docs',
-  question: 'What is OrkaJS?',
-});
-
-console.log(result.answer);
+console.log(result.output); // "Sent 12 follow-up emails"
+console.log(result.steps);  // See the agent's reasoning
 ```
 
 ## Features
