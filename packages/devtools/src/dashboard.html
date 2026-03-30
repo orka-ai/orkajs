@@ -250,8 +250,10 @@
 </head>
 
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white min-h-screen transition-colors duration-300">
-  <div id="app" class="max-w-7xl mx-auto p-6">
-    <header class="flex items-center justify-between mb-8">
+  <!-- Sticky Header Container -->
+  <div class="sticky top-0 z-50 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-sm">
+    <div class="max-w-7xl mx-auto px-6 pt-4">
+      <header class="flex items-center justify-between mb-4">
       <div class="flex items-center gap-3">
         <img src="https://devtools.orkajs.com/loutre-orka.png" alt="OrkaJS DevTools" class="w-10 h-10 rounded-lg"
           onerror="this.style.display='none'" />
@@ -320,7 +322,7 @@
     </header>
 
     <!-- View Tabs -->
-    <div class="flex items-center gap-1 mb-6 border-b border-slate-200 dark:border-slate-700">
+    <div class="flex items-center gap-1 border-b-0">
       <button onclick="switchView('traces')" id="tab-traces" class="px-4 py-2 text-sm font-medium tab-active">
         <span class="flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -369,7 +371,11 @@
         </span>
       </button>
     </div>
+    </div>
+  </div>
 
+  <!-- Main Content Container -->
+  <div id="app" class="max-w-7xl mx-auto px-6 pt-6">
     <!-- Metrics -->
     <div id="metrics" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
       <div
@@ -530,26 +536,13 @@
         <!-- Latency Over Time (full width) -->
         <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
           <h3 class="text-sm font-medium text-slate-500 mb-3">Latency Over Time</h3>
-          <canvas id="latencyChart" height="100"></canvas>
+          <div class="h-48 relative">
+            <canvas id="latencyChart"></canvas>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Legacy Latency Chart Toggle (hidden, kept for compatibility) -->
-    <div class="hidden mb-6">
-      <button onclick="toggleLatencyChart()"
-        class="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 mb-2">
-        <svg id="latencyChartToggle" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor"
-          viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-        </svg>
-        Latency Over Time
-      </button>
-      <div id="latencyChartContainer"
-        class="hidden bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
-        <canvas id="latencyChart" height="120"></canvas>
-      </div>
-    </div>
 
     <!-- View: Traces (default) -->
     <div id="view-traces" class="view-content">
@@ -1292,17 +1285,6 @@
         costByModelChart.data.labels = models.map(function(m) { return m.length > 20 ? m.slice(0, 20) + '...' : m; });
         costByModelChart.data.datasets[0].data = costs;
         costByModelChart.update();
-      }
-    }
-
-    // Latency Chart (legacy toggle - kept for compatibility)
-    function toggleLatencyChart() {
-      const container = document.getElementById('latencyChartContainer');
-      const toggle = document.getElementById('latencyChartToggle');
-      container.classList.toggle('hidden');
-      toggle.classList.toggle('rotate-180');
-      if (!container.classList.contains('hidden') && !latencyChart) {
-        initLatencyChart();
       }
     }
 
