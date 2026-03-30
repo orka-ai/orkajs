@@ -1,4 +1,5 @@
 import type { LLMAdapter, LLMGenerateOptions } from '@orka-js/core';
+import { OrkaError, OrkaErrorCode } from '@orka-js/core';
 import type { RaceConfig, RaceResult } from './types.js';
 
 export class RaceLLM implements LLMAdapter {
@@ -8,7 +9,13 @@ export class RaceLLM implements LLMAdapter {
 
   constructor(config: RaceConfig) {
     if (config.adapters.length < 2) {
-      throw new Error('RaceLLM requires at least 2 adapters');
+      throw new OrkaError(
+        'RaceLLM requires at least 2 adapters',
+        OrkaErrorCode.INVALID_CONFIG,
+        'RaceLLM',
+        undefined,
+        { provided: config.adapters.length }
+      );
     }
     this.adapters = config.adapters;
     this.timeout = config.timeout ?? 30000;
@@ -23,7 +30,13 @@ export class RaceLLM implements LLMAdapter {
     });
 
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error(`Race timeout after ${this.timeout}ms`)), this.timeout);
+      setTimeout(() => reject(new OrkaError(
+        `RaceLLM generate timed out after ${this.timeout}ms`,
+        OrkaErrorCode.LLM_TIMEOUT,
+        'RaceLLM',
+        undefined,
+        { timeout: this.timeout, adapters: this.adapters.map(a => a.name) }
+      )), this.timeout);
     });
 
     const winner = await Promise.race([
@@ -40,10 +53,18 @@ export class RaceLLM implements LLMAdapter {
   }
 
   async embed(texts: string | string[]): Promise<number[][]> {
-    const racePromises = this.adapters.map(async (adapter) => {
-      return adapter.embed(texts);
+    const racePromises = this.adapters.map(adapter => adapter.embed(texts));
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new OrkaError(
+        `RaceLLM embed timed out after ${this.timeout}ms`,
+        OrkaErrorCode.LLM_TIMEOUT,
+        'RaceLLM',
+        undefined,
+        { timeout: this.timeout, adapters: this.adapters.map(a => a.name) }
+      )), this.timeout);
     });
 
-    return Promise.race(racePromises);
+    return Promise.race([...racePromises, timeoutPromise]);
   }
 }

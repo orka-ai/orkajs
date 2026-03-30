@@ -1,5 +1,16 @@
 # @orka-js/agent
 
+## 1.4.2
+
+### Patch Changes
+
+- fix: Eliminate silent failures, standardize OrkaError, add embed timeout to RaceLLM
+
+  - **agent**: Listener errors in `BaseAgent.emit()` are now logged via `console.warn` instead of being silently swallowed — failures are visible without breaking agent flow
+  - **orchestration**: `RaceLLM.embed()` now has a global timeout (was missing, could hang indefinitely); all constructors and runtime errors now throw `OrkaError` with structured codes (`INVALID_CONFIG`, `LLM_TIMEOUT`, `LLM_API_ERROR`) and metadata (adapter names, timeout value, failure details)
+  - **graph**: All `StateGraph` errors now throw `OrkaError` with proper codes (`GRAPH_INVALID_CONFIG`, `GRAPH_NODE_ERROR`, `GRAPH_MAX_ITERATIONS`, `NOT_FOUND`) and `nodeId`/`checkpointId` in metadata for easier debugging
+  - **workflow**: `Workflow` step failures now throw `OrkaError(EXTERNAL_SERVICE_ERROR)` preserving the original error as `cause` with `stepName` and `attempts` in metadata
+
 ## 1.4.1
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/agent",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Agent system for OrkaJS - ReAct, PlanAndExecute, OpenAI Functions, Structured Chat",
   "type": "module",
   "main": "./dist/index.cjs",

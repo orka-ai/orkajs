@@ -94,8 +94,9 @@ export abstract class BaseAgent {
       for (const listener of listeners) {
         try {
           listener(event);
-        } catch {
-          // Swallow listener errors to avoid breaking agent flow
+        } catch (listenerError) {
+          // Log but swallow listener errors to avoid breaking agent flow
+          console.warn(`[OrkaJS] Agent listener threw for event "${event.type}":`, listenerError);
         }
       }
     }

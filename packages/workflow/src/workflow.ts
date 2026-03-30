@@ -1,4 +1,5 @@
 import type { LLMAdapter, VectorDBAdapter } from '@orka-js/core';
+import { OrkaError, OrkaErrorCode } from '@orka-js/core';
 import type { Knowledge } from '@orka-js/core';
 import type { 
   WorkflowConfig, 
@@ -61,7 +62,13 @@ export class Workflow {
           }
 
           if (retries > maxRetries) {
-            throw new Error(`Workflow step "${step.name}" failed after ${retries} attempts: ${(error as Error).message}`);
+            throw new OrkaError(
+              `Workflow step "${step.name}" failed after ${retries} attempts: ${error instanceof Error ? error.message : String(error)}`,
+              OrkaErrorCode.EXTERNAL_SERVICE_ERROR,
+              'Workflow',
+              error instanceof Error ? error : undefined,
+              { stepName: step.name, attempts: retries }
+            );
           }
         }
       }

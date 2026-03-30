@@ -1,4 +1,4 @@
-import { generateId } from '@orka-js/core';
+import { generateId, OrkaError, OrkaErrorCode } from '@orka-js/core';
 import type {
   BaseState,
   StateAnnotation,
@@ -43,10 +43,22 @@ export class StateGraph<S extends BaseState> {
    */
   addNode(name: string, fn: StateNodeFunction<S>, metadata?: Record<string, unknown>): this {
     if (name === START || name === END) {
-      throw new Error(`Cannot use reserved node name: ${name}`);
+      throw new OrkaError(
+        `Cannot use reserved node name: ${name}`,
+        OrkaErrorCode.GRAPH_INVALID_CONFIG,
+        'StateGraph',
+        undefined,
+        { name }
+      );
     }
     if (this.nodes.has(name)) {
-      throw new Error(`Node "${name}" already exists`);
+      throw new OrkaError(
+        `Node "${name}" already exists`,
+        OrkaErrorCode.GRAPH_INVALID_CONFIG,
+        'StateGraph',
+        undefined,
+        { name }
+      );
     }
     this.nodes.set(name, { name, fn, metadata });
     return this;
@@ -105,7 +117,11 @@ export class StateGraph<S extends BaseState> {
    */
   compile(): CompiledStateGraph<S> {
     if (!this.entryPoint) {
-      throw new Error('Entry point not set. Call setEntryPoint() before compile()');
+      throw new OrkaError(
+        'Entry point not set. Call setEntryPoint() before compile()',
+        OrkaErrorCode.GRAPH_INVALID_CONFIG,
+        'StateGraph'
+      );
     }
 
     const nodes = new Map(this.nodes);
@@ -133,7 +149,13 @@ export class StateGraph<S extends BaseState> {
       ): Promise<StateGraphResult<S>> => {
         const checkpoint = await config.checkpointer.load(checkpointId);
         if (!checkpoint) {
-          throw new Error(`Checkpoint "${checkpointId}" not found`);
+          throw new OrkaError(
+            `Checkpoint "${checkpointId}" not found`,
+            OrkaErrorCode.NOT_FOUND,
+            'StateGraph',
+            undefined,
+            { checkpointId }
+          );
         }
         return this.resumeFromCheckpoint(
           nodes,
@@ -152,7 +174,13 @@ export class StateGraph<S extends BaseState> {
       ): Promise<StateGraphResult<S>> => {
         const checkpoint = await config.checkpointer.load(checkpointId);
         if (!checkpoint) {
-          throw new Error(`Checkpoint "${checkpointId}" not found`);
+          throw new OrkaError(
+            `Checkpoint "${checkpointId}" not found`,
+            OrkaErrorCode.NOT_FOUND,
+            'StateGraph',
+            undefined,
+            { checkpointId }
+          );
         }
         const updatedState = this.mergeState(stateAnnotation, checkpoint.state, stateUpdate);
         const updatedCheckpoint: Checkpoint<S> = {
@@ -198,7 +226,13 @@ export class StateGraph<S extends BaseState> {
 
   private validateNodeExists(name: string): void {
     if (name !== START && name !== END && !this.nodes.has(name)) {
-      throw new Error(`Node "${name}" does not exist`);
+      throw new OrkaError(
+        `Node "${name}" does not exist`,
+        OrkaErrorCode.GRAPH_INVALID_CONFIG,
+        'StateGraph',
+        undefined,
+        { name }
+      );
     }
   }
 
@@ -250,7 +284,13 @@ export class StateGraph<S extends BaseState> {
 
       const node = nodes.get(currentNode);
       if (!node) {
-        throw new Error(`Node "${currentNode}" not found`);
+        throw new OrkaError(
+          `Node "${currentNode}" not found`,
+          OrkaErrorCode.GRAPH_NODE_ERROR,
+          'StateGraph',
+          undefined,
+          { nodeId: currentNode }
+        );
       }
 
       path.push(currentNode);
@@ -286,7 +326,13 @@ export class StateGraph<S extends BaseState> {
           );
         }
         
-        throw new Error(`Node "${currentNode}" failed: ${(error as Error).message}`);
+        throw new OrkaError(
+          `Node "${currentNode}" failed: ${error instanceof Error ? error.message : String(error)}`,
+          OrkaErrorCode.GRAPH_NODE_ERROR,
+          'StateGraph',
+          error instanceof Error ? error : undefined,
+          { nodeId: currentNode }
+        );
       }
 
       // Check for interrupt after
@@ -331,7 +377,13 @@ export class StateGraph<S extends BaseState> {
     }
 
     if (iterations >= maxIterations) {
-      throw new Error(`StateGraph exceeded max iterations (${maxIterations})`);
+      throw new OrkaError(
+        `StateGraph exceeded max iterations (${maxIterations})`,
+        OrkaErrorCode.GRAPH_MAX_ITERATIONS,
+        'StateGraph',
+        undefined,
+        { maxIterations }
+      );
     }
 
     // Final checkpoint
@@ -408,7 +460,13 @@ export class StateGraph<S extends BaseState> {
 
       const node = nodes.get(currentNode);
       if (!node) {
-        throw new Error(`Node "${currentNode}" not found`);
+        throw new OrkaError(
+          `Node "${currentNode}" not found`,
+          OrkaErrorCode.GRAPH_NODE_ERROR,
+          'StateGraph',
+          undefined,
+          { nodeId: currentNode }
+        );
       }
 
       path.push(currentNode);
@@ -429,7 +487,13 @@ export class StateGraph<S extends BaseState> {
         config?.onNodeComplete?.(currentNode, state, stateUpdate);
       } catch (error) {
         config?.onError?.(error as Error, currentNode);
-        throw new Error(`Node "${currentNode}" failed: ${(error as Error).message}`);
+        throw new OrkaError(
+          `Node "${currentNode}" failed: ${error instanceof Error ? error.message : String(error)}`,
+          OrkaErrorCode.GRAPH_NODE_ERROR,
+          'StateGraph',
+          error instanceof Error ? error : undefined,
+          { nodeId: currentNode }
+        );
       }
 
       // Check for interrupt after
@@ -478,7 +542,13 @@ export class StateGraph<S extends BaseState> {
     }
 
     if (iterations >= maxIterations) {
-      throw new Error(`StateGraph exceeded max iterations (${maxIterations})`);
+      throw new OrkaError(
+        `StateGraph exceeded max iterations (${maxIterations})`,
+        OrkaErrorCode.GRAPH_MAX_ITERATIONS,
+        'StateGraph',
+        undefined,
+        { maxIterations }
+      );
     }
 
     // Final checkpoint
@@ -557,7 +627,13 @@ export class StateGraph<S extends BaseState> {
         yield {
           type: 'error',
           nodeId: currentNode,
-          error: new Error(`Node "${currentNode}" not found`),
+          error: new OrkaError(
+            `Node "${currentNode}" not found`,
+            OrkaErrorCode.GRAPH_NODE_ERROR,
+            'StateGraph',
+            undefined,
+            { nodeId: currentNode }
+          ),
           timestamp: Date.now(),
         };
         return;
@@ -660,7 +736,13 @@ export class StateGraph<S extends BaseState> {
     if (iterations >= maxIterations) {
       yield {
         type: 'error',
-        error: new Error(`StateGraph exceeded max iterations (${maxIterations})`),
+        error: new OrkaError(
+          `StateGraph exceeded max iterations (${maxIterations})`,
+          OrkaErrorCode.GRAPH_MAX_ITERATIONS,
+          'StateGraph',
+          undefined,
+          { maxIterations }
+        ),
         timestamp: Date.now(),
       };
       return;
@@ -686,7 +768,13 @@ export class StateGraph<S extends BaseState> {
       if (result === END) return END;
       const mapped = condEdge.pathMap[result];
       if (mapped) return mapped === END ? END : mapped;
-      throw new Error(`Conditional edge from "${currentNode}" returned unmapped value: ${result}`);
+      throw new OrkaError(
+        `Conditional edge from "${currentNode}" returned unmapped value: "${result}"`,
+        OrkaErrorCode.GRAPH_NODE_ERROR,
+        'StateGraph',
+        undefined,
+        { nodeId: currentNode, returnedValue: result }
+      );
     }
 
     // Check regular edges

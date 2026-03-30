@@ -1,5 +1,11 @@
 # orkajs
 
+## 3.6.7
+
+### Patch Changes
+
+- chore: update internal dependency versions
+
 ## 3.6.6
 
 ### Patch Changes

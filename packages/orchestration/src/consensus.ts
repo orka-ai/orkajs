@@ -1,4 +1,5 @@
 import type { LLMAdapter, LLMGenerateOptions, LLMResult } from '@orka-js/core';
+import { OrkaError, OrkaErrorCode } from '@orka-js/core';
 import type { ConsensusConfig, ConsensusResult } from './types.js';
 
 export class ConsensusLLM implements LLMAdapter {
@@ -10,7 +11,13 @@ export class ConsensusLLM implements LLMAdapter {
 
   constructor(config: ConsensusConfig) {
     if (config.adapters.length < 2) {
-      throw new Error('ConsensusLLM requires at least 2 adapters');
+      throw new OrkaError(
+        'ConsensusLLM requires at least 2 adapters',
+        OrkaErrorCode.INVALID_CONFIG,
+        'ConsensusLLM',
+        undefined,
+        { provided: config.adapters.length }
+      );
     }
     this.adapters = config.adapters;
     this.strategy = config.strategy;
@@ -32,7 +39,14 @@ export class ConsensusLLM implements LLMAdapter {
 
     const validResponses = responses.filter(r => r.result !== null);
     if (validResponses.length === 0) {
-      throw new Error('All adapters failed in consensus');
+      const failures = responses.map(r => ({ adapter: r.adapter, error: r.error }));
+      throw new OrkaError(
+        'All adapters failed in ConsensusLLM',
+        OrkaErrorCode.LLM_API_ERROR,
+        'ConsensusLLM',
+        undefined,
+        { failures }
+      );
     }
 
     let selectedContent: string;

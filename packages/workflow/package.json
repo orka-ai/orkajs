@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/workflow",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Multi-step workflows for OrkaJS",
   "type": "module",
   "main": "./dist/index.cjs",
