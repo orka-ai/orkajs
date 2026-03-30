@@ -32,6 +32,8 @@ export interface LLMResult {
   };
   model: string;
   finishReason: 'stop' | 'length' | 'tool_calls' | 'error';
+  /** Estimated cost in USD, calculated by the adapter when pricing data is available */
+  cost?: number;
 }
 
 export interface VectorDBAdapter {

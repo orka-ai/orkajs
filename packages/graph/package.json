@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/graph",
-  "version": "1.2.5",
+  "version": "1.3.0",
   "description": "Graph-based workflows for OrkaJS - nodes, edges, conditions, parallel",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -33,7 +33,8 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@orka-js/core": "^1.3.2"
+    "@orka-js/core": "^1.3.3",
+    "@orka-js/observability": "^1.0.8"
   },
   "devDependencies": {
     "tsup": "^8.0.1",

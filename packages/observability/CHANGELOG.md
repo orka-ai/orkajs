@@ -1,5 +1,11 @@
 # @orka-js/observability
 
+## 1.0.8
+
+### Patch Changes
+
+- feat(types): Add 'graph' to TraceEvent type union for StateGraph integration
+
 ## 1.0.7
 
 ### Patch Changes

@@ -95,6 +95,8 @@ export interface DoneEvent extends StreamEvent {
     completionTokens: number;
     totalTokens: number;
   };
+  /** Estimated cost in USD for this generation */
+  cost?: number;
 }
 
 /**
@@ -165,6 +167,8 @@ export interface StreamResult {
   ttft?: number;
   /** Total streaming duration in milliseconds */
   durationMs: number;
+  /** Estimated cost in USD for this generation */
+  cost?: number;
 }
 
 /**

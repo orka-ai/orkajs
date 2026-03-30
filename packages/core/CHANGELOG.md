@@ -1,5 +1,14 @@
 # @orka-js/core
 
+## 1.3.3
+
+### Patch Changes
+
+- fix(types): Ensure LLMResult.cost field is properly exported in type definitions
+- feat(graph): Add Tracer integration to StateGraph for automatic observability
+  feat(devtools): Add advanced analytics dashboard with Chart.js (type distribution, tokens/cost by model charts)
+  feat(devtools): Add /api/metrics/timeline endpoint for time series data
+
 ## 1.3.2
 
 ### Patch Changes

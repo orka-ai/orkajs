@@ -16,6 +16,29 @@ import type {
 } from '@orka-js/core';
 import { createStreamEvent } from '@orka-js/core';
 
+/** Pricing per 1M tokens in USD (input / output) — updated 2025 */
+const ANTHROPIC_PRICING: Record<string, { input: number; output: number }> = {
+  'claude-opus-4-5':              { input: 15.00, output: 75.00 },
+  'claude-opus-4-6':              { input: 15.00, output: 75.00 },
+  'claude-sonnet-4-5':            { input: 3.00,  output: 15.00 },
+  'claude-sonnet-4-6':            { input: 3.00,  output: 15.00 },
+  'claude-3-5-sonnet-20241022':   { input: 3.00,  output: 15.00 },
+  'claude-3-5-sonnet-20240620':   { input: 3.00,  output: 15.00 },
+  'claude-3-5-haiku-20241022':    { input: 0.80,  output: 4.00  },
+  'claude-haiku-4-5-20251001':    { input: 0.80,  output: 4.00  },
+  'claude-3-opus-20240229':       { input: 15.00, output: 75.00 },
+  'claude-3-sonnet-20240229':     { input: 3.00,  output: 15.00 },
+  'claude-3-haiku-20240307':      { input: 0.25,  output: 1.25  },
+};
+
+function calcAnthropicCost(model: string, promptTokens: number, completionTokens: number): number | undefined {
+  // Match by prefix for versioned models
+  const key = Object.keys(ANTHROPIC_PRICING).find(k => model.startsWith(k) || model === k);
+  if (!key) return undefined;
+  const pricing = ANTHROPIC_PRICING[key];
+  return (promptTokens * pricing.input + completionTokens * pricing.output) / 1_000_000;
+}
+
 export interface AnthropicAdapterConfig {
   apiKey: string;
   model?: string;
@@ -105,16 +128,18 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
     };
 
     const textContent = data.content.find(c => c.type === 'text');
+    const usage = {
+      promptTokens: data.usage.input_tokens,
+      completionTokens: data.usage.output_tokens,
+      totalTokens: data.usage.input_tokens + data.usage.output_tokens,
+    };
 
     return {
       content: textContent?.text ?? '',
-      usage: {
-        promptTokens: data.usage.input_tokens,
-        completionTokens: data.usage.output_tokens,
-        totalTokens: data.usage.input_tokens + data.usage.output_tokens,
-      },
+      usage,
       model: data.model,
       finishReason: this.mapStopReason(data.stop_reason),
+      cost: calcAnthropicCost(data.model, usage.promptTokens, usage.completionTokens),
     };
   }
 
@@ -257,7 +282,17 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
 
     try {
       while (true) {
-        const { done, value } = await reader.read();
+        let done: boolean;
+        let value: Uint8Array | undefined;
+        try {
+          ({ done, value } = await reader.read());
+        } catch (readErr) {
+          yield createStreamEvent<OrkaErrorEvent>('error', {
+            error: readErr instanceof Error ? readErr : new Error(String(readErr)),
+            message: readErr instanceof Error ? readErr.message : String(readErr),
+          });
+          return;
+        }
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
@@ -337,16 +372,19 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
       }
 
       // Emit done event
+      const cost = calcAnthropicCost(this.model, usage.promptTokens, usage.completionTokens);
       yield createStreamEvent<DoneEvent>('done', {
         content,
         finishReason,
         usage,
+        cost,
       });
 
       options.onEvent?.(createStreamEvent<DoneEvent>('done', {
         content,
         finishReason,
         usage,
+        cost,
       }));
 
     } finally {
@@ -365,6 +403,8 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
     let finishReason: StreamResult['finishReason'] = 'stop';
     let ttft: number | undefined;
 
+    let cost: number | undefined;
+
     for await (const event of this.stream(prompt, options)) {
       options.onEvent?.(event);
 
@@ -381,6 +421,7 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
           content = event.content;
           finishReason = event.finishReason;
           if (event.usage) usage = event.usage;
+          cost = event.cost;
           break;
         case 'error':
           throw event.error;
@@ -394,6 +435,7 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
       finishReason,
       ttft,
       durationMs: Date.now() - startTime,
+      cost,
     };
   }
 }

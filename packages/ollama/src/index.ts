@@ -96,6 +96,7 @@ export class OllamaAdapter implements LLMAdapter, StreamingLLMAdapter {
       },
       model: data.model,
       finishReason: data.done ? 'stop' : 'length',
+      cost: 0, // Ollama runs locally — no API cost
     };
   }
 
@@ -220,7 +221,17 @@ export class OllamaAdapter implements LLMAdapter, StreamingLLMAdapter {
 
     try {
       while (true) {
-        const { done, value } = await reader.read();
+        let done: boolean;
+        let value: Uint8Array | undefined;
+        try {
+          ({ done, value } = await reader.read());
+        } catch (readErr) {
+          yield createStreamEvent<OrkaErrorEvent>('error', {
+            error: readErr instanceof Error ? readErr : new Error(String(readErr)),
+            message: readErr instanceof Error ? readErr.message : String(readErr),
+          });
+          return;
+        }
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
@@ -272,12 +283,14 @@ export class OllamaAdapter implements LLMAdapter, StreamingLLMAdapter {
         content,
         finishReason: 'stop',
         usage,
+        cost: 0,
       });
 
       options.onEvent?.(createStreamEvent<DoneEvent>('done', {
         content,
         finishReason: 'stop',
         usage,
+        cost: 0,
       }));
 
     } finally {
@@ -325,6 +338,7 @@ export class OllamaAdapter implements LLMAdapter, StreamingLLMAdapter {
       finishReason,
       ttft,
       durationMs: Date.now() - startTime,
+      cost: 0,
     };
   }
 }

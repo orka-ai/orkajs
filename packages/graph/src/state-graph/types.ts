@@ -1,4 +1,5 @@
-import type { LLMAdapter, VectorDBAdapter } from '@orka-js/core';
+import type { LLMAdapter, VectorDBAdapter, CallbackManager } from '@orka-js/core';
+import type { Tracer } from '@orka-js/observability';
 
 /**
  * Base state interface - all states must extend this
@@ -333,6 +334,10 @@ export interface StateGraphRunConfig<S extends BaseState = BaseState> {
    */
   onInterrupt?: (checkpoint: Checkpoint<S>) => void;
   /**
+   * CallbackManager for centralized observability
+   */
+  callbacks?: CallbackManager;
+  /**
    * Additional metadata
    */
   metadata?: Record<string, unknown>;
@@ -401,6 +406,11 @@ export interface StateGraphConfig<S extends BaseState> {
    * Graph name
    */
   name?: string;
+  /**
+   * Tracer for automatic observability
+   * When provided, the graph will automatically emit trace events
+   */
+  tracer?: Tracer;
 }
 
 /**

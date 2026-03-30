@@ -1,4 +1,5 @@
 import { generateId, OrkaError, OrkaErrorCode } from '@orka-js/core';
+import type { Tracer } from '@orka-js/observability';
 import type {
   BaseState,
   StateAnnotation,
@@ -33,9 +34,13 @@ export class StateGraph<S extends BaseState> {
   private edges: StateEdge[] = [];
   private conditionalEdges: ConditionalEdge<S>[] = [];
   private entryPoint: string | null = null;
+  private graphName?: string;
+  private tracer?: Tracer;
 
   constructor(config: StateGraphConfig<S>) {
     this.stateAnnotation = config.stateAnnotation;
+    this.graphName = config.name;
+    this.tracer = config.tracer;
   }
 
   /**
@@ -130,6 +135,9 @@ export class StateGraph<S extends BaseState> {
     const entryPoint = this.entryPoint;
     const stateAnnotation = this.stateAnnotation;
 
+    const tracer = this.tracer;
+    const graphName = this.graphName ?? 'StateGraph';
+
     return {
       invoke: async (initialState: Partial<S>, config?: StateGraphRunConfig<S>): Promise<StateGraphResult<S>> => {
         return this.executeGraph(
@@ -139,7 +147,9 @@ export class StateGraph<S extends BaseState> {
           entryPoint,
           stateAnnotation,
           initialState,
-          config
+          config,
+          tracer,
+          graphName
         );
       },
 
@@ -206,7 +216,9 @@ export class StateGraph<S extends BaseState> {
           entryPoint,
           stateAnnotation,
           initialState,
-          config
+          config,
+          tracer,
+          graphName
         );
       },
 
@@ -243,12 +255,25 @@ export class StateGraph<S extends BaseState> {
     entryPoint: string,
     stateAnnotation: StateAnnotation<S>,
     initialState: Partial<S>,
-    config?: StateGraphRunConfig<S>
+    config?: StateGraphRunConfig<S>,
+    tracer?: Tracer,
+    graphName?: string
   ): Promise<StateGraphResult<S>> {
     const startTime = Date.now();
     const maxIterations = config?.maxIterations ?? 100;
     const threadId = config?.threadId ?? generateId();
-    
+    const cb = config?.callbacks;
+    const chainRunId = generateId();
+
+    // Start tracer trace if configured
+    const trace = tracer?.startTrace(graphName ?? 'StateGraph', {
+      threadId,
+      initialState,
+      entryPoint,
+    });
+
+    await cb?.emit({ type: 'chain_start', timestamp: Date.now(), runId: chainRunId, chainName: 'StateGraph', input: JSON.stringify(initialState) });
+
     let state = this.mergeState(stateAnnotation, stateAnnotation.default(), initialState);
     let currentNode = entryPoint;
     const path: string[] = [];
@@ -295,23 +320,51 @@ export class StateGraph<S extends BaseState> {
 
       path.push(currentNode);
       const nodeStart = Date.now();
+      const nodeRunId = generateId();
+
+      await cb?.emit({ type: 'tool_start', timestamp: Date.now(), runId: nodeRunId, parentRunId: chainRunId, toolName: currentNode, input: JSON.stringify(state) });
 
       try {
         const stateUpdate = await node.fn(state, config ?? {});
         state = this.mergeState(stateAnnotation, state, stateUpdate);
+        const nodeLatency = Date.now() - nodeStart;
 
         nodeResults.push({
           nodeId: currentNode,
           input: { ...state },
           output: stateUpdate as Record<string, unknown>,
-          latencyMs: Date.now() - nodeStart,
+          latencyMs: nodeLatency,
           timestamp: Date.now(),
         });
 
+        // Add tracer event for node completion
+        if (trace) {
+          tracer?.addEvent(trace.id, {
+            type: 'graph',
+            name: currentNode,
+            startTime: nodeStart,
+            endTime: Date.now(),
+            metadata: { stateUpdate, nodeMetadata: node.metadata },
+          });
+        }
+
+        await cb?.emit({ type: 'tool_end', timestamp: Date.now(), runId: nodeRunId, parentRunId: chainRunId, toolName: currentNode, input: JSON.stringify(state), output: JSON.stringify(stateUpdate), durationMs: nodeLatency });
         config?.onNodeComplete?.(currentNode, state, stateUpdate);
       } catch (error) {
+        // Add tracer error event
+        if (trace) {
+          tracer?.addEvent(trace.id, {
+            type: 'graph',
+            name: currentNode,
+            startTime: nodeStart,
+            endTime: Date.now(),
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+
+        await cb?.emit({ type: 'tool_error', timestamp: Date.now(), runId: nodeRunId, parentRunId: chainRunId, toolName: currentNode, input: JSON.stringify(state), error: error instanceof Error ? error : new Error(String(error)) });
         config?.onError?.(error as Error, currentNode);
-        
+
         if (config?.checkpointer) {
           await this.createCheckpoint(
             threadId,
@@ -325,14 +378,16 @@ export class StateGraph<S extends BaseState> {
             (error as Error).message
           );
         }
-        
-        throw new OrkaError(
+
+        const nodeErr = new OrkaError(
           `Node "${currentNode}" failed: ${error instanceof Error ? error.message : String(error)}`,
           OrkaErrorCode.GRAPH_NODE_ERROR,
           'StateGraph',
           error instanceof Error ? error : undefined,
           { nodeId: currentNode }
         );
+        await cb?.emit({ type: 'chain_error', timestamp: Date.now(), runId: chainRunId, chainName: 'StateGraph', error: nodeErr });
+        throw nodeErr;
       }
 
       // Check for interrupt after
@@ -377,13 +432,20 @@ export class StateGraph<S extends BaseState> {
     }
 
     if (iterations >= maxIterations) {
-      throw new OrkaError(
+      const maxErr = new OrkaError(
         `StateGraph exceeded max iterations (${maxIterations})`,
         OrkaErrorCode.GRAPH_MAX_ITERATIONS,
         'StateGraph',
         undefined,
         { maxIterations }
       );
+      // End trace with error
+      if (trace) {
+        tracer?.recordError(maxErr, { path, iterations });
+        tracer?.endTrace(trace.id);
+      }
+      await cb?.emit({ type: 'chain_error', timestamp: Date.now(), runId: chainRunId, chainName: 'StateGraph', error: maxErr });
+      throw maxErr;
     }
 
     // Final checkpoint
@@ -401,11 +463,20 @@ export class StateGraph<S extends BaseState> {
       );
     }
 
+    const totalLatencyMs = Date.now() - startTime;
+
+    // End tracer trace
+    if (trace) {
+      tracer?.endTrace(trace.id);
+    }
+
+    await cb?.emit({ type: 'chain_end', timestamp: Date.now(), runId: chainRunId, chainName: 'StateGraph', output: JSON.stringify(state), durationMs: totalLatencyMs });
+
     return {
       state,
       path,
       nodeResults,
-      totalLatencyMs: Date.now() - startTime,
+      totalLatencyMs,
       checkpoint: finalCheckpoint,
       interrupted: false,
       metadata: config?.metadata,
@@ -586,10 +657,20 @@ export class StateGraph<S extends BaseState> {
     entryPoint: string,
     stateAnnotation: StateAnnotation<S>,
     initialState: Partial<S>,
-    config?: StateGraphRunConfig<S>
+    config?: StateGraphRunConfig<S>,
+    tracer?: Tracer,
+    graphName?: string
   ): AsyncIterable<StateGraphEvent<S>> {
     const maxIterations = config?.maxIterations ?? 100;
     const threadId = config?.threadId ?? generateId();
+
+    // Start tracer trace if configured
+    const trace = tracer?.startTrace(graphName ?? 'StateGraph:stream', {
+      threadId,
+      initialState,
+      entryPoint,
+      streaming: true,
+    });
     
     let state = this.mergeState(stateAnnotation, stateAnnotation.default(), initialState);
     let currentNode = entryPoint;
@@ -669,6 +750,17 @@ export class StateGraph<S extends BaseState> {
           timestamp: Date.now(),
         });
 
+        // Add tracer event for node completion
+        if (trace) {
+          tracer?.addEvent(trace.id, {
+            type: 'graph',
+            name: currentNode,
+            startTime: nodeStart,
+            endTime: Date.now(),
+            metadata: { stateUpdate },
+          });
+        }
+
         yield {
           type: 'node_end',
           nodeId: currentNode,
@@ -678,6 +770,18 @@ export class StateGraph<S extends BaseState> {
 
         config?.onNodeComplete?.(currentNode, state, stateUpdate);
       } catch (error) {
+        // Add tracer error event
+        if (trace) {
+          tracer?.addEvent(trace.id, {
+            type: 'graph',
+            name: currentNode,
+            startTime: nodeStart,
+            endTime: Date.now(),
+            error: error instanceof Error ? error.message : String(error),
+          });
+          tracer?.endTrace(trace.id);
+        }
+
         yield {
           type: 'error',
           nodeId: currentNode,
@@ -734,18 +838,28 @@ export class StateGraph<S extends BaseState> {
     }
 
     if (iterations >= maxIterations) {
+      const maxErr = new OrkaError(
+        `StateGraph exceeded max iterations (${maxIterations})`,
+        OrkaErrorCode.GRAPH_MAX_ITERATIONS,
+        'StateGraph',
+        undefined,
+        { maxIterations }
+      );
+      if (trace) {
+        tracer?.recordError(maxErr, { path, iterations });
+        tracer?.endTrace(trace.id);
+      }
       yield {
         type: 'error',
-        error: new OrkaError(
-          `StateGraph exceeded max iterations (${maxIterations})`,
-          OrkaErrorCode.GRAPH_MAX_ITERATIONS,
-          'StateGraph',
-          undefined,
-          { maxIterations }
-        ),
+        error: maxErr,
         timestamp: Date.now(),
       };
       return;
+    }
+
+    // End tracer trace
+    if (trace) {
+      tracer?.endTrace(trace.id);
     }
 
     yield {

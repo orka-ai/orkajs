@@ -493,8 +493,50 @@
       </div>
     </div>
 
-    <!-- Latency Chart (collapsible) -->
+    <!-- Advanced Charts Section -->
     <div class="mb-6">
+      <button onclick="toggleChartsSection()"
+        class="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 mb-2">
+        <svg id="chartsSectionToggle" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+        📊 Advanced Analytics
+      </button>
+      <div id="chartsSectionContainer" class="hidden">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <!-- Run Type Distribution -->
+          <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+            <h3 class="text-sm font-medium text-slate-500 mb-3">Run Type Distribution</h3>
+            <div class="h-48">
+              <canvas id="typeDistributionChart"></canvas>
+            </div>
+          </div>
+          <!-- Tokens by Model -->
+          <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+            <h3 class="text-sm font-medium text-slate-500 mb-3">Tokens by Model</h3>
+            <div class="h-48">
+              <canvas id="tokensByModelChart"></canvas>
+            </div>
+          </div>
+          <!-- Cost by Model -->
+          <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+            <h3 class="text-sm font-medium text-slate-500 mb-3">Cost by Model</h3>
+            <div class="h-48">
+              <canvas id="costByModelChart"></canvas>
+            </div>
+          </div>
+        </div>
+        <!-- Latency Over Time (full width) -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700">
+          <h3 class="text-sm font-medium text-slate-500 mb-3">Latency Over Time</h3>
+          <canvas id="latencyChart" height="100"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legacy Latency Chart Toggle (hidden, kept for compatibility) -->
+    <div class="hidden mb-6">
       <button onclick="toggleLatencyChart()"
         class="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 mb-2">
         <svg id="latencyChartToggle" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor"
@@ -691,6 +733,10 @@
     let currentView = 'traces';
     let latencyChart = null;
     let latencyData = [];
+    let typeDistributionChart = null;
+    let tokensByModelChart = null;
+    let costByModelChart = null;
+    let chartsInitialized = false;
     let compareRunA = null;
     let compareRunB = null;
 
@@ -803,6 +849,11 @@
         document.getElementById('metric-cost').textContent = '$' + (metrics.totalCost || 0).toFixed(4);
         document.getElementById('metric-sessions').textContent = sessions.length;
         document.getElementById('sessionCount').textContent = sessions.length;
+
+        // Update advanced charts if visible
+        if (chartsInitialized) {
+          updateAdvancedCharts(metrics);
+        }
 
         allSessions = sessions;
         renderSessions(sessions);
@@ -1119,7 +1170,132 @@
       if (view === 'compare') updateCompareSelects();
     }
 
-    // Latency Chart
+    // Advanced Charts Section
+    function toggleChartsSection() {
+      const container = document.getElementById('chartsSectionContainer');
+      const toggle = document.getElementById('chartsSectionToggle');
+      container.classList.toggle('hidden');
+      toggle.classList.toggle('rotate-180');
+      if (!container.classList.contains('hidden') && !chartsInitialized) {
+        initAdvancedCharts();
+        chartsInitialized = true;
+        refreshData(); // Refresh to populate charts
+      }
+    }
+
+    function initAdvancedCharts() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const gridColor = isDark ? '#334155' : '#e2e8f0';
+      const textColor = isDark ? '#94a3b8' : '#64748b';
+
+      // Type Distribution Chart (Doughnut)
+      const typeCtx = document.getElementById('typeDistributionChart').getContext('2d');
+      typeDistributionChart = new Chart(typeCtx, {
+        type: 'doughnut',
+        data: {
+          labels: [],
+          datasets: [{
+            data: [],
+            backgroundColor: ['#8b5cf6', '#3b82f6', '#f97316', '#22c55e', '#ec4899', '#6366f1', '#06b6d4'],
+            borderWidth: 0,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { color: textColor, font: { size: 11 }, padding: 8 }
+            }
+          }
+        }
+      });
+
+      // Tokens by Model Chart (Bar)
+      const tokensCtx = document.getElementById('tokensByModelChart').getContext('2d');
+      tokensByModelChart = new Chart(tokensCtx, {
+        type: 'bar',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Tokens',
+            data: [],
+            backgroundColor: '#8b5cf6',
+            borderRadius: 4,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: gridColor }, ticks: { color: textColor } },
+            y: { grid: { display: false }, ticks: { color: textColor, font: { size: 10 } } }
+          }
+        }
+      });
+
+      // Cost by Model Chart (Bar)
+      const costCtx = document.getElementById('costByModelChart').getContext('2d');
+      costByModelChart = new Chart(costCtx, {
+        type: 'bar',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Cost ($)',
+            data: [],
+            backgroundColor: '#22c55e',
+            borderRadius: 4,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: gridColor }, ticks: { color: textColor, callback: function(v) { return '$' + v.toFixed(4); } } },
+            y: { grid: { display: false }, ticks: { color: textColor, font: { size: 10 } } }
+          }
+        }
+      });
+
+      // Initialize latency chart
+      initLatencyChart();
+    }
+
+    function updateAdvancedCharts(metrics) {
+      // Update Type Distribution
+      if (typeDistributionChart && metrics.runsByType) {
+        const types = Object.keys(metrics.runsByType);
+        const counts = Object.values(metrics.runsByType);
+        typeDistributionChart.data.labels = types.map(function(t) { return t.charAt(0).toUpperCase() + t.slice(1); });
+        typeDistributionChart.data.datasets[0].data = counts;
+        typeDistributionChart.update();
+      }
+
+      // Update Tokens by Model
+      if (tokensByModelChart && metrics.tokensByModel) {
+        const models = Object.keys(metrics.tokensByModel);
+        const tokens = Object.values(metrics.tokensByModel);
+        tokensByModelChart.data.labels = models.map(function(m) { return m.length > 20 ? m.slice(0, 20) + '...' : m; });
+        tokensByModelChart.data.datasets[0].data = tokens;
+        tokensByModelChart.update();
+      }
+
+      // Update Cost by Model
+      if (costByModelChart && metrics.costByModel) {
+        const models = Object.keys(metrics.costByModel);
+        const costs = Object.values(metrics.costByModel);
+        costByModelChart.data.labels = models.map(function(m) { return m.length > 20 ? m.slice(0, 20) + '...' : m; });
+        costByModelChart.data.datasets[0].data = costs;
+        costByModelChart.update();
+      }
+    }
+
+    // Latency Chart (legacy toggle - kept for compatibility)
     function toggleLatencyChart() {
       const container = document.getElementById('latencyChartContainer');
       const toggle = document.getElementById('latencyChartToggle');

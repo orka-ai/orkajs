@@ -138,6 +138,14 @@ export class DevToolsServer {
       res.json(metrics);
     });
 
+    // Get time series data for charts
+    app.get('/api/metrics/timeline', (req: Request, res: Response) => {
+      const sessionId = req.query.sessionId as string | undefined;
+      const metric = req.query.metric as 'latency' | 'tokens' | 'cost' | 'all' | undefined;
+      const data = this.collector.getTimeSeriesData({ sessionId, metric });
+      res.json(data);
+    });
+
     // Find a run
     app.get('/api/runs/:id', (req: Request, res: Response) => {
       const sessionId = req.query.sessionId as string | undefined;

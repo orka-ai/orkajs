@@ -1,12 +1,12 @@
-import type { LLMAdapter, VectorDBAdapter } from '@orka-js/core';
+import type { LLMAdapter, VectorDBAdapter, CallbackManager } from '@orka-js/core';
 import type { Knowledge } from '@orka-js/core';
 import type { Memory } from '@orka-js/memory-store';
 
-export interface Tool {
+export interface Tool<TInput extends Record<string, unknown> = Record<string, unknown>> {
   name: string;
   description: string;
   parameters?: ToolParameter[];
-  execute(input: Record<string, unknown>): Promise<ToolResult>;
+  execute(input: TInput): Promise<ToolResult>;
 }
 
 export interface ToolParameter {
@@ -30,6 +30,8 @@ export interface AgentConfig {
   systemPrompt?: string;
   maxSteps?: number;
   temperature?: number;
+  /** CallbackManager for centralized observability */
+  callbacks?: CallbackManager;
 }
 
 export interface AgentPolicy {

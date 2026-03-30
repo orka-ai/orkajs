@@ -1,5 +1,19 @@
 # @orka-js/devtools
 
+## 1.6.0
+
+### Minor Changes
+
+- feat(graph): Add Tracer integration to StateGraph for automatic observability
+  feat(devtools): Add advanced analytics dashboard with Chart.js (type distribution, tokens/cost by model charts)
+  feat(devtools): Add /api/metrics/timeline endpoint for time series data
+
+### Patch Changes
+
+- Updated dependencies
+- Updated dependencies
+  - @orka-js/core@1.3.3
+
 ## 1.5.1
 
 ### Patch Changes

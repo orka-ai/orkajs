@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/core",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Core types, interfaces and classes for OrkaJS - TypeScript LLM framework",
   "type": "module",
   "main": "./dist/index.cjs",

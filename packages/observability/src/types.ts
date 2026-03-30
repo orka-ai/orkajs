@@ -3,7 +3,7 @@ export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 export interface TraceEvent {
   id: string;
   traceId: string;
-  type: 'llm' | 'retrieval' | 'workflow' | 'agent' | 'tool' | 'custom';
+  type: 'llm' | 'retrieval' | 'workflow' | 'agent' | 'tool' | 'graph' | 'custom';
   name: string;
   startTime: number;
   endTime?: number;

@@ -14,6 +14,25 @@ import type {
 } from '@orka-js/core';
 import { createStreamEvent } from '@orka-js/core';
 
+/** Pricing per 1M tokens in USD (input / output) — updated 2025 */
+const MISTRAL_PRICING: Record<string, { input: number; output: number }> = {
+  'mistral-large-latest':   { input: 2.00,  output: 6.00  },
+  'mistral-large-2411':     { input: 2.00,  output: 6.00  },
+  'mistral-medium-latest':  { input: 2.70,  output: 8.10  },
+  'mistral-small-latest':   { input: 0.20,  output: 0.60  },
+  'mistral-small-2409':     { input: 0.20,  output: 0.60  },
+  'open-mistral-7b':        { input: 0.25,  output: 0.25  },
+  'open-mixtral-8x7b':      { input: 0.70,  output: 0.70  },
+  'open-mixtral-8x22b':     { input: 2.00,  output: 6.00  },
+  'codestral-latest':       { input: 0.30,  output: 0.90  },
+};
+
+function calcMistralCost(model: string, promptTokens: number, completionTokens: number): number | undefined {
+  const pricing = MISTRAL_PRICING[model];
+  if (!pricing) return undefined;
+  return (promptTokens * pricing.input + completionTokens * pricing.output) / 1_000_000;
+}
+
 export interface MistralAdapterConfig {
   apiKey: string;
   model?: string;
@@ -88,15 +107,18 @@ export class MistralAdapter implements LLMAdapter, StreamingLLMAdapter {
       model: string;
     };
 
+    const usage = {
+      promptTokens: data.usage.prompt_tokens,
+      completionTokens: data.usage.completion_tokens,
+      totalTokens: data.usage.total_tokens,
+    };
+
     return {
       content: data.choices[0]?.message?.content ?? '',
-      usage: {
-        promptTokens: data.usage.prompt_tokens,
-        completionTokens: data.usage.completion_tokens,
-        totalTokens: data.usage.total_tokens,
-      },
+      usage,
       model: data.model,
       finishReason: this.mapFinishReason(data.choices[0]?.finish_reason),
+      cost: calcMistralCost(data.model, usage.promptTokens, usage.completionTokens),
     };
   }
 
@@ -235,7 +257,17 @@ export class MistralAdapter implements LLMAdapter, StreamingLLMAdapter {
 
     try {
       while (true) {
-        const { done, value } = await reader.read();
+        let done: boolean;
+        let value: Uint8Array | undefined;
+        try {
+          ({ done, value } = await reader.read());
+        } catch (readErr) {
+          yield createStreamEvent<OrkaErrorEvent>('error', {
+            error: readErr instanceof Error ? readErr : new Error(String(readErr)),
+            message: readErr instanceof Error ? readErr.message : String(readErr),
+          });
+          return;
+        }
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
@@ -290,16 +322,19 @@ export class MistralAdapter implements LLMAdapter, StreamingLLMAdapter {
         }
       }
 
+      const cost = calcMistralCost(this.model, usage.promptTokens, usage.completionTokens);
       yield createStreamEvent<DoneEvent>('done', {
         content,
         finishReason,
         usage,
+        cost,
       });
 
       options.onEvent?.(createStreamEvent<DoneEvent>('done', {
         content,
         finishReason,
         usage,
+        cost,
       }));
 
     } finally {
@@ -318,6 +353,8 @@ export class MistralAdapter implements LLMAdapter, StreamingLLMAdapter {
     let finishReason: StreamResult['finishReason'] = 'stop';
     let ttft: number | undefined;
 
+    let cost: number | undefined;
+
     for await (const event of this.stream(prompt, options)) {
       options.onEvent?.(event);
 
@@ -334,6 +371,7 @@ export class MistralAdapter implements LLMAdapter, StreamingLLMAdapter {
           content = event.content;
           finishReason = event.finishReason;
           if (event.usage) usage = event.usage;
+          cost = event.cost;
           break;
         case 'error':
           throw event.error;
@@ -347,6 +385,7 @@ export class MistralAdapter implements LLMAdapter, StreamingLLMAdapter {
       finishReason,
       ttft,
       durationMs: Date.now() - startTime,
+      cost,
     };
   }
 }

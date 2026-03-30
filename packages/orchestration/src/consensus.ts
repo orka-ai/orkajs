@@ -1,5 +1,5 @@
-import type { LLMAdapter, LLMGenerateOptions, LLMResult } from '@orka-js/core';
-import { OrkaError, OrkaErrorCode } from '@orka-js/core';
+import type { LLMAdapter, LLMGenerateOptions, LLMResult, CallbackManager } from '@orka-js/core';
+import { OrkaError, OrkaErrorCode, generateId } from '@orka-js/core';
 import type { ConsensusConfig, ConsensusResult } from './types.js';
 
 export class ConsensusLLM implements LLMAdapter {
@@ -8,6 +8,7 @@ export class ConsensusLLM implements LLMAdapter {
   private strategy: ConsensusConfig['strategy'];
   private judge?: LLMAdapter;
   private temperature: number;
+  private callbacks?: CallbackManager;
 
   constructor(config: ConsensusConfig) {
     if (config.adapters.length < 2) {
@@ -23,9 +24,12 @@ export class ConsensusLLM implements LLMAdapter {
     this.strategy = config.strategy;
     this.judge = config.judge ?? config.adapters[0];
     this.temperature = config.temperature ?? 0;
+    this.callbacks = config.callbacks;
   }
 
   async generate(prompt: string, options?: LLMGenerateOptions): Promise<ConsensusResult> {
+    const cb = this.callbacks;
+    const runId = (await cb?.emitLLMStart(prompt, 'consensus')) ?? generateId();
     const responses = await Promise.all(
       this.adapters.map(async (adapter) => {
         try {
@@ -40,13 +44,15 @@ export class ConsensusLLM implements LLMAdapter {
     const validResponses = responses.filter(r => r.result !== null);
     if (validResponses.length === 0) {
       const failures = responses.map(r => ({ adapter: r.adapter, error: r.error }));
-      throw new OrkaError(
+      const err = new OrkaError(
         'All adapters failed in ConsensusLLM',
         OrkaErrorCode.LLM_API_ERROR,
         'ConsensusLLM',
         undefined,
         { failures }
       );
+      await cb?.emitLLMError(runId, err, 'consensus');
+      throw err;
     }
 
     let selectedContent: string;
@@ -88,7 +94,7 @@ export class ConsensusLLM implements LLMAdapter {
       { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
     );
 
-    return {
+    const result: ConsensusResult = {
       content: selectedContent,
       usage: totalUsage,
       model: `consensus/${selectedAdapter}`,
@@ -96,6 +102,9 @@ export class ConsensusLLM implements LLMAdapter {
       responses: scoredResponses,
       selectedAdapter,
     };
+
+    await cb?.emitLLMEnd(runId, result.content, result.model, result.usage, 0);
+    return result;
   }
 
   async embed(texts: string | string[]): Promise<number[][]> {

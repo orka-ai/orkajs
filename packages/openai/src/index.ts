@@ -16,6 +16,29 @@ import type {
 } from '@orka-js/core';
 import { createStreamEvent } from '@orka-js/core';
 
+/** Pricing per 1M tokens in USD (input / output) — updated 2025 */
+const OPENAI_PRICING: Record<string, { input: number; output: number }> = {
+  'gpt-4o':                    { input: 2.50,  output: 10.00 },
+  'gpt-4o-2024-11-20':         { input: 2.50,  output: 10.00 },
+  'gpt-4o-2024-08-06':         { input: 2.50,  output: 10.00 },
+  'gpt-4o-mini':               { input: 0.15,  output: 0.60  },
+  'gpt-4o-mini-2024-07-18':    { input: 0.15,  output: 0.60  },
+  'gpt-4-turbo':               { input: 10.00, output: 30.00 },
+  'gpt-4-turbo-2024-04-09':    { input: 10.00, output: 30.00 },
+  'gpt-4':                     { input: 30.00, output: 60.00 },
+  'gpt-3.5-turbo':             { input: 0.50,  output: 1.50  },
+  'gpt-3.5-turbo-0125':        { input: 0.50,  output: 1.50  },
+  'o1':                        { input: 15.00, output: 60.00 },
+  'o1-mini':                   { input: 3.00,  output: 12.00 },
+  'o3-mini':                   { input: 1.10,  output: 4.40  },
+};
+
+function calcOpenAICost(model: string, promptTokens: number, completionTokens: number): number | undefined {
+  const pricing = OPENAI_PRICING[model];
+  if (!pricing) return undefined;
+  return (promptTokens * pricing.input + completionTokens * pricing.output) / 1_000_000;
+}
+
 export interface OpenAIAdapterConfig {
   apiKey: string;
   model?: string;
@@ -160,15 +183,18 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter, AudioAdap
       model: string;
     };
 
+    const usage = {
+      promptTokens: data.usage.prompt_tokens,
+      completionTokens: data.usage.completion_tokens,
+      totalTokens: data.usage.total_tokens,
+    };
+
     return {
       content: data.choices[0]?.message?.content ?? '',
-      usage: {
-        promptTokens: data.usage.prompt_tokens,
-        completionTokens: data.usage.completion_tokens,
-        totalTokens: data.usage.total_tokens,
-      },
+      usage,
       model: data.model,
       finishReason: this.mapFinishReason(data.choices[0]?.finish_reason),
+      cost: calcOpenAICost(data.model, usage.promptTokens, usage.completionTokens),
     };
   }
 
@@ -342,7 +368,17 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter, AudioAdap
 
     try {
       while (true) {
-        const { done, value } = await reader.read();
+        let done: boolean;
+        let value: Uint8Array | undefined;
+        try {
+          ({ done, value } = await reader.read());
+        } catch (readErr) {
+          yield createStreamEvent<OrkaErrorEvent>('error', {
+            error: readErr instanceof Error ? readErr : new Error(String(readErr)),
+            message: readErr instanceof Error ? readErr.message : String(readErr),
+          });
+          return;
+        }
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
@@ -417,10 +453,12 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter, AudioAdap
       }
 
       // Emit done event
+      const cost = calcOpenAICost(this.model, usage.promptTokens, usage.completionTokens);
       yield createStreamEvent<DoneEvent>('done', {
         content,
         finishReason,
         usage,
+        cost,
       });
 
       // Call onEvent callback for done
@@ -428,6 +466,7 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter, AudioAdap
         content,
         finishReason,
         usage,
+        cost,
       }));
 
     } finally {
@@ -446,6 +485,8 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter, AudioAdap
     let finishReason: StreamResult['finishReason'] = 'stop';
     let ttft: number | undefined;
 
+    let cost: number | undefined;
+
     for await (const event of this.stream(prompt, options)) {
       // Call event handler
       options.onEvent?.(event);
@@ -463,6 +504,7 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter, AudioAdap
           content = event.content;
           finishReason = event.finishReason;
           if (event.usage) usage = event.usage;
+          cost = event.cost;
           break;
         case 'error':
           throw event.error;
@@ -476,6 +518,7 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter, AudioAdap
       finishReason,
       ttft,
       durationMs: Date.now() - startTime,
+      cost,
     };
   }
 

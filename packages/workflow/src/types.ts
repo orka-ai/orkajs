@@ -1,4 +1,4 @@
-import type { LLMAdapter, VectorDBAdapter, RetrievedContext } from '@orka-js/core';
+import type { LLMAdapter, VectorDBAdapter, RetrievedContext, CallbackManager } from '@orka-js/core';
 import type { Knowledge } from '@orka-js/core';
 
 export interface WorkflowContext {
@@ -35,6 +35,8 @@ export interface WorkflowConfig {
   onStepComplete?: (result: WorkflowStepResult, ctx: WorkflowContext) => void;
   onError?: (error: Error, stepName: string, ctx: WorkflowContext) => void;
   maxRetries?: number;
+  /** CallbackManager for centralized observability */
+  callbacks?: CallbackManager;
 }
 
 export interface WorkflowResult {

@@ -4,6 +4,7 @@
  */
 
 import type { LLMStreamEvent } from './streaming.js';
+import type { LLMGenerateOptions } from './types.js';
 
 /**
  * Callback event types
@@ -190,7 +191,7 @@ export interface LLMStartEvent extends CallbackEvent {
   type: 'llm_start';
   prompt: string;
   model: string;
-  options?: Record<string, unknown>;
+  options?: LLMGenerateOptions;
 }
 
 /**
@@ -206,6 +207,7 @@ export interface LLMEndEvent extends CallbackEvent {
     totalTokens: number;
   };
   durationMs: number;
+  cost?: number;
 }
 
 /**
@@ -763,7 +765,7 @@ export class CallbackManager {
     model: string,
     usage: { promptTokens: number; completionTokens: number; totalTokens: number },
     durationMs: number,
-    options?: { parentRunId?: string; metadata?: Record<string, unknown> }
+    options?: { parentRunId?: string; metadata?: Record<string, unknown>; cost?: number }
   ): Promise<void> {
     await this.emit({
       type: 'llm_end',
@@ -774,6 +776,7 @@ export class CallbackManager {
       model,
       usage,
       durationMs,
+      cost: options?.cost,
       metadata: options?.metadata,
     });
   }
