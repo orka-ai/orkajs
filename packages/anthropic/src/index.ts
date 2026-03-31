@@ -13,6 +13,7 @@ import type {
   UsageEvent,
   DoneEvent,
   ErrorEvent as OrkaErrorEvent,
+  ToolCallEvent,
 } from '@orka-js/core';
 import { createStreamEvent } from '@orka-js/core';
 
@@ -280,6 +281,9 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
     let usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
     let finishReason: LLMResult['finishReason'] = 'stop';
 
+    // Track in-flight tool_use blocks by index
+    const toolBlocks = new Map<number, { id: string; name: string; input: string }>();
+
     try {
       while (true) {
         let done: boolean;
@@ -315,15 +319,19 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
                 break;
 
               case 'content_block_start':
-                // Handle thinking blocks (Claude extended thinking)
                 if (json.content_block?.type === 'thinking') {
                   _thinking = '';
+                } else if (json.content_block?.type === 'tool_use') {
+                  toolBlocks.set(json.index, {
+                    id: json.content_block.id || '',
+                    name: json.content_block.name || '',
+                    input: '',
+                  });
                 }
                 break;
 
               case 'content_block_delta':
                 if (json.delta?.type === 'thinking_delta') {
-                  // Extended thinking content
                   const thinkingDelta = json.delta.thinking || '';
                   _thinking += thinkingDelta;
                   yield createStreamEvent<ThinkingEvent>('thinking', {
@@ -331,7 +339,6 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
                     delta: thinkingDelta,
                   });
                 } else if (json.delta?.type === 'text_delta') {
-                  // Regular text content
                   const token = json.delta.text || '';
                   content += token;
 
@@ -347,8 +354,24 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
                     delta: token,
                     index: tokenIndex - 1,
                   });
+                } else if (json.delta?.type === 'input_json_delta') {
+                  const block = toolBlocks.get(json.index);
+                  if (block) block.input += json.delta.partial_json || '';
                 }
                 break;
+
+              case 'content_block_stop': {
+                const block = toolBlocks.get(json.index);
+                if (block) {
+                  yield createStreamEvent<ToolCallEvent>('tool_call', {
+                    toolCallId: block.id,
+                    name: block.name,
+                    arguments: block.input,
+                  });
+                  toolBlocks.delete(json.index);
+                }
+                break;
+              }
 
               case 'message_delta':
                 if (json.delta?.stop_reason) {
@@ -362,7 +385,6 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
                 break;
 
               case 'message_stop':
-                // Stream complete
                 break;
             }
           } catch {

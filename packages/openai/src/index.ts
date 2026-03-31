@@ -321,6 +321,13 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter, AudioAdap
           stop: options.stopSequences,
           stream: true,
           stream_options: { include_usage: true },
+          ...(options.tools?.length ? {
+            tools: options.tools.map(t => ({
+              type: 'function',
+              function: { name: t.name, description: t.description, parameters: t.parameters ?? { type: 'object', properties: {} } },
+            })),
+            tool_choice: options.toolChoice ?? 'auto',
+          } : {}),
         }),
       });
     } catch (error) {
@@ -365,6 +372,9 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter, AudioAdap
     let tokenIndex = 0;
     let usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
     let finishReason: LLMResult['finishReason'] = 'stop';
+
+    // Accumulate tool call deltas by index
+    const toolCallAccum = new Map<number, { id: string; name: string; arguments: string }>();
 
     try {
       while (true) {
@@ -434,22 +444,32 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter, AudioAdap
               });
             }
 
-            // Handle tool calls
+            // Accumulate tool call deltas (OpenAI sends args incrementally)
             if (delta?.tool_calls) {
               for (const toolCall of delta.tool_calls) {
-                if (toolCall.function) {
-                  yield createStreamEvent<ToolCallEvent>('tool_call', {
-                    toolCallId: toolCall.id || '',
-                    name: toolCall.function.name || '',
-                    arguments: toolCall.function.arguments || '',
-                  });
+                const idx: number = toolCall.index ?? 0;
+                if (!toolCallAccum.has(idx)) {
+                  toolCallAccum.set(idx, { id: toolCall.id || '', name: toolCall.function?.name || '', arguments: '' });
                 }
+                const acc = toolCallAccum.get(idx)!;
+                if (toolCall.id) acc.id = toolCall.id;
+                if (toolCall.function?.name) acc.name = toolCall.function.name;
+                if (toolCall.function?.arguments) acc.arguments += toolCall.function.arguments;
               }
             }
           } catch {
             // Skip malformed JSON lines
           }
         }
+      }
+
+      // Emit complete tool_call events (accumulated from incremental deltas)
+      for (const acc of toolCallAccum.values()) {
+        yield createStreamEvent<ToolCallEvent>('tool_call', {
+          toolCallId: acc.id,
+          name: acc.name,
+          arguments: acc.arguments,
+        });
       }
 
       // Emit done event

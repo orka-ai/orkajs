@@ -92,7 +92,7 @@ export class GitHubLoader implements DocumentLoader {
       let content: string;
 
       if (file.content && file.encoding === 'base64') {
-        content = Buffer.from(file.content, 'base64').toString('utf-8');
+        content = new TextDecoder().decode(Uint8Array.from(atob(file.content), c => c.charCodeAt(0)));
       } else if (file.download_url) {
         const response = await fetch(file.download_url, {
           headers: this.getHeaders(),

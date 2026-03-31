@@ -70,6 +70,7 @@ export {
   type LLMStreamEvent,
   type StreamEventHandler,
   type TokenHandler,
+  type StreamToolDefinition,
   type StreamGenerateOptions,
   type StreamResult,
   type StreamingLLMAdapter,

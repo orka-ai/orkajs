@@ -10,3 +10,11 @@ export {
 } from './metrics.js';
 export * from './assertions.js';
 export * from './reporters.js';
+export {
+  ragasMetrics,
+  contextPrecision,
+  contextRecall,
+  answerRelevance,
+  semanticSimilarity,
+  cosineSimilarity,
+} from './ragas.js';

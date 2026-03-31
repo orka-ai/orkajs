@@ -132,6 +132,19 @@ export type StreamEventHandler = (event: LLMStreamEvent) => void;
 export type TokenHandler = (token: string, index: number) => void;
 
 /**
+ * Tool definition for streaming requests
+ */
+export interface StreamToolDefinition {
+  name: string;
+  description: string;
+  parameters?: {
+    type: 'object';
+    properties?: Record<string, { type: string; description?: string; enum?: unknown[] }>;
+    required?: string[];
+  };
+}
+
+/**
  * Options for streaming generation
  */
 export interface StreamGenerateOptions {
@@ -143,6 +156,10 @@ export interface StreamGenerateOptions {
     role: 'system' | 'user' | 'assistant';
     content: string | unknown[];
   }>;
+  /** Tools available for the model to call */
+  tools?: StreamToolDefinition[];
+  /** Tool choice strategy */
+  toolChoice?: 'auto' | 'none' | 'required';
   /** Callback for each token */
   onToken?: TokenHandler;
   /** Callback for each stream event */

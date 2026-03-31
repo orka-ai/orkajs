@@ -1,4 +1,5 @@
 export { Agent } from './agent.js';
+export { StreamingToolAgent, type StreamingToolAgentConfig } from './streaming-tool-agent.js';
 export { BaseAgent, type BaseAgentConfig, type AgentEvent, type AgentEventType, type AgentEventListener } from './base-agent.js';
 export { ReActAgent } from './react-agent.js';
 export { PlanAndExecuteAgent } from './plan-and-execute-agent.js';

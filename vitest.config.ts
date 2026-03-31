@@ -25,6 +25,7 @@ export default defineConfig({
       '@orka-js/prompts': resolve(__dirname, 'packages/prompts/src/index.ts'),
       '@orka-js/memory-store': resolve(__dirname, 'packages/memory-store/src/index.ts'),
       '@orka-js/pgvector': resolve(__dirname, 'packages/pgvector/src/index.ts'),
+      '@orka-js/otel': resolve(__dirname, 'packages/otel/src/index.ts'),
     },
   },
   test: {

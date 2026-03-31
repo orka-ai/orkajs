@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import type { LLMAdapter } from '@orka-js/core';
 import type { Memory } from '@orka-js/memory-store';
 import type { AgentStepResult } from '../types.js';
@@ -364,7 +363,8 @@ ${this.systemPrompt ?? ''}`;
 
   private generateId(): string {
     const timestamp = Date.now().toString(36);
-    const random = crypto.randomBytes(4).toString('hex');
+    const bytes = crypto.getRandomValues(new Uint8Array(4));
+    const random = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
     return `${timestamp}-${random}`;
   }
 }
