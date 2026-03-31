@@ -1,5 +1,21 @@
 # @orka-js/tools
 
+## 1.2.5
+
+### Patch Changes
+
+- Add structured outputs with `ZodLikeSchema<T>`, typed `generate<T>()` and `ask<T>()` overloads, `PostgresCheckpointStore` and `RedisCheckpointStore` for StateGraph persistent checkpointing
+- Updated dependencies
+  - @orka-js/core@1.4.0
+
+## 1.2.5
+
+### Patch Changes
+
+- Add structured outputs with `ZodLikeSchema<T>`, typed `generate<T>()` and `ask<T>()` overloads, `PostgresCheckpointStore` and `RedisCheckpointStore` for StateGraph persistent checkpointing
+- Updated dependencies
+  - @orka-js/core@1.4.0
+
 ## 1.2.4
 
 ### Patch Changes
