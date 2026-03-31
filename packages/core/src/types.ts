@@ -108,6 +108,20 @@ export type KnowledgeSource =
   | { path: string }
   | { url: string };
 
+export interface ZodLikeSchema<T = unknown> {
+  parse(data: unknown): T;
+  safeParse(data: unknown): {
+    success: boolean;
+    data?: T;
+    error?: {
+      message: string;
+      issues?: Array<{ path: (string | number)[]; message: string }>;
+    };
+  };
+  shape?: Record<string, unknown>;
+  description?: string;
+}
+
 export interface AskOptions {
   knowledge?: string;
   question: string;
@@ -116,10 +130,11 @@ export interface AskOptions {
   temperature?: number;
   maxTokens?: number;
   includeContext?: boolean;
+  schema?: ZodLikeSchema<unknown>;
 }
 
-export interface AskResult {
-  answer: string;
+export interface AskResult<T = string> {
+  answer: T;
   context?: RetrievedContext[];
   usage: {
     promptTokens: number;

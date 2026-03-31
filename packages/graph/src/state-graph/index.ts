@@ -1,5 +1,9 @@
 export { StateGraph, createStateAnnotation, Reducers } from './state-graph.js';
 export { MemoryCheckpointStore } from './memory-checkpoint-store.js';
+export { PostgresCheckpointStore } from './postgres-checkpoint-store.js';
+export { RedisCheckpointStore } from './redis-checkpoint-store.js';
+export type { PostgresCheckpointStoreConfig } from './postgres-checkpoint-store.js';
+export type { RedisCheckpointStoreConfig } from './redis-checkpoint-store.js';
 export { StateGraphTimeTravel, createTimeTravel } from './time-travel.js';
 export { START, END } from './types.js';
 export type {

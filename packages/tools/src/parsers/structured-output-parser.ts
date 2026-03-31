@@ -1,4 +1,5 @@
-import type { OutputParser, StructuredOutputParserOptions, ZodLikeSchema } from './types.js';
+import type { OutputParser, StructuredOutputParserOptions } from './types.js';
+import type { ZodLikeSchema } from '@orka-js/core';
 
 export class StructuredOutputParser<T> implements OutputParser<T> {
   private schema: ZodLikeSchema<T>;

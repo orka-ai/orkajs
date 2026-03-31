@@ -6,7 +6,9 @@ import type {
   AskOptions,
   AskResult,
   RetrievedContext,
+  ZodLikeSchema,
 } from './types.js';
+import { OrkaError, OrkaErrorCode } from './errors.js';
 import type {
   StreamingLLMAdapter,
   StreamGenerateOptions,
@@ -55,17 +57,23 @@ export class Orka {
     }
   }
 
-  async ask(options: AskOptions): Promise<AskResult> {
+  async ask(options: AskOptions & { schema?: undefined }): Promise<AskResult<string>>;
+  async ask<T>(options: AskOptions & { schema: ZodLikeSchema<T> }): Promise<AskResult<T>>;
+  async ask<T = string>(options: AskOptions & { schema?: ZodLikeSchema<T> }): Promise<AskResult<T>> {
     const startTime = Date.now();
     const {
       knowledge,
       question,
-      systemPrompt,
       topK = this.defaults.topK ?? 5,
       temperature = this.defaults.temperature ?? 0.7,
       maxTokens = this.defaults.maxTokens ?? 1024,
       includeContext = false,
+      schema,
     } = options;
+
+    const systemPrompt = schema
+      ? `${options.systemPrompt ?? ''}\n\nRespond with valid JSON only. No text before or after the JSON.`.trim()
+      : options.systemPrompt;
 
     let context: RetrievedContext[] = [];
     let prompt = question;
@@ -90,8 +98,12 @@ export class Orka {
       maxTokens,
     });
 
+    const answer = schema
+      ? this.parseAndValidate<T>(result.content, schema)
+      : result.content as unknown as T;
+
     return {
-      answer: result.content,
+      answer,
       context: includeContext ? context : undefined,
       usage: result.usage,
       latencyMs: Date.now() - startTime,
@@ -239,13 +251,53 @@ export class Orka {
     };
   }
 
-  async generate(prompt: string, options?: { temperature?: number; maxTokens?: number; systemPrompt?: string }): Promise<string> {
+  async generate(prompt: string, options?: { temperature?: number; maxTokens?: number; systemPrompt?: string }): Promise<string>;
+  async generate<T>(prompt: string, options: { temperature?: number; maxTokens?: number; systemPrompt?: string; schema: ZodLikeSchema<T> }): Promise<T>;
+  async generate<T = string>(prompt: string, options?: { temperature?: number; maxTokens?: number; systemPrompt?: string; schema?: ZodLikeSchema<T> }): Promise<string | T> {
+    const { schema, ...llmOptions } = options ?? {};
+    const systemPrompt = schema
+      ? `${llmOptions.systemPrompt ?? ''}\n\nRespond with valid JSON only. No text before or after the JSON.`.trim()
+      : llmOptions.systemPrompt;
+
     const result = await this.llm.generate(prompt, {
-      temperature: options?.temperature ?? this.defaults.temperature ?? 0.7,
-      maxTokens: options?.maxTokens ?? this.defaults.maxTokens ?? 1024,
-      systemPrompt: options?.systemPrompt,
+      temperature: llmOptions.temperature ?? this.defaults.temperature ?? 0.7,
+      maxTokens: llmOptions.maxTokens ?? this.defaults.maxTokens ?? 1024,
+      systemPrompt,
     });
+
+    if (schema) return this.parseAndValidate<T>(result.content, schema);
     return result.content;
+  }
+
+  private extractJSON(content: string): string {
+    const codeBlock = content.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+    if (codeBlock) return codeBlock[1].trim();
+    const obj = content.match(/\{[\s\S]*\}/);
+    if (obj) return obj[0];
+    return content.trim();
+  }
+
+  private parseAndValidate<T>(content: string, schema: ZodLikeSchema<T>): T {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(this.extractJSON(content));
+    } catch (e) {
+      throw new OrkaError(
+        `Failed to parse JSON from LLM response: ${(e as Error).message}`,
+        OrkaErrorCode.PARSE_ERROR,
+        'core/orka',
+      );
+    }
+    const r = schema.safeParse(parsed);
+    if (!r.success) {
+      const detail = r.error?.issues?.map(i => `${i.path.join('.')}: ${i.message}`).join(', ') ?? r.error?.message ?? 'unknown';
+      throw new OrkaError(
+        `Schema validation failed: ${detail}`,
+        OrkaErrorCode.VALIDATION_ERROR,
+        'core/orka',
+      );
+    }
+    return r.data!;
   }
 
   async *stream(prompt: string, options?: StreamGenerateOptions): AsyncIterable<LLMStreamEvent> {

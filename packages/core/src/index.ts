@@ -20,6 +20,7 @@ export type {
   Chunk,
   ChatMessage,
   ContentPart,
+  ZodLikeSchema,
 } from './types.js';
 
 // Errors

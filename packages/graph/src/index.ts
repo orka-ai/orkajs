@@ -19,14 +19,17 @@ export type {
 } from './types.js';
 
 // StateGraph exports
-export { 
-  StateGraph, 
-  createStateAnnotation, 
+export {
+  StateGraph,
+  createStateAnnotation,
   Reducers,
   MemoryCheckpointStore as GraphCheckpointStore,
+  PostgresCheckpointStore,
+  RedisCheckpointStore,
   START,
   END,
 } from './state-graph/index.js';
+export type { PostgresCheckpointStoreConfig, RedisCheckpointStoreConfig } from './state-graph/index.js';
 export type {
   BaseState,
   StateAnnotation,

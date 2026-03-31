@@ -12,12 +12,8 @@ export interface StructuredOutputParserOptions<T> {
   strict?: boolean;
 }
 
-export interface ZodLikeSchema<T = unknown> {
-  parse(data: unknown): T;
-  safeParse(data: unknown): { success: boolean; data?: T; error?: { message: string; issues?: Array<{ path: (string | number)[]; message: string }> } };
-  shape?: Record<string, unknown>;
-  description?: string;
-}
+// Re-exported from core so users can import from either package without breaking changes
+export type { ZodLikeSchema } from '@orka-js/core';
 
 export interface ListParserOptions {
   separator?: string;
