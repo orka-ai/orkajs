@@ -1,5 +1,11 @@
 # @orka-js/agent
 
+## 1.5.1
+
+### Patch Changes
+
+- Fix StreamingToolAgent memory: runStream() now loads conversation history from Memory before building the LLM messages array, and saves the exchange (input + final response) to memory after each completion. Previously, every runStream() call was stateless — the agent had no context of prior turns even when a Memory was provided.
+
 ## 1.5.0
 
 ### Minor Changes

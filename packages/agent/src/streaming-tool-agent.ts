@@ -80,11 +80,23 @@ export class StreamingToolAgent extends BaseAgent {
     const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
     const systemPrompt = this.buildSystemPrompt();
     if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+
+    // Load conversation history from memory so the agent has context across requests
+    if (this.memory) {
+      for (const msg of this.memory.getHistory()) {
+        if (msg.role === 'user' || msg.role === 'assistant') {
+          messages.push({ role: msg.role, content: msg.content });
+        }
+      }
+    }
+
     messages.push({ role: 'user', content: input });
 
     const tools = this.buildStreamTools();
 
     this.emit({ type: 'step:start', agentType: this.agentType, input });
+
+    let lastFinalContent = '';
 
     for (let step = 0; step < this.maxSteps; step++) {
       const bufferedToolCalls: Array<{ id: string; name: string; arguments: string }> = [];
@@ -111,6 +123,7 @@ export class StreamingToolAgent extends BaseAgent {
           case 'done':
             finalContent = event.content || finalContent;
             finishReason = event.finishReason;
+            lastFinalContent = finalContent;
             break;
           case 'error':
             yield event;
@@ -119,7 +132,8 @@ export class StreamingToolAgent extends BaseAgent {
       }
 
       if (bufferedToolCalls.length === 0) {
-        // No tool calls — emit final done and stop
+        // No tool calls — save to memory and emit final done
+        this.saveToMemory(input, finalContent);
         yield createStreamEvent<LLMStreamEvent & { type: 'done' }>('done', {
           content: finalContent,
           finishReason: finishReason as 'stop' | 'length' | 'tool_calls' | 'error',
@@ -157,9 +171,10 @@ export class StreamingToolAgent extends BaseAgent {
       });
     }
 
-    // Max steps reached
+    // Max steps reached — save what we have to memory
+    this.saveToMemory(input, lastFinalContent);
     yield createStreamEvent<LLMStreamEvent & { type: 'done' }>('done', {
-      content: `Reached max steps (${this.maxSteps})`,
+      content: lastFinalContent || `Reached max steps (${this.maxSteps})`,
       finishReason: 'stop',
     } as never);
   }

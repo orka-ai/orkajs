@@ -140,6 +140,37 @@ describe('StreamingToolAgent', () => {
     expect(result.steps[0].observation).toBe('Sunny, 22°C');
   });
 
+  it('loads conversation history from memory and saves exchange after completion', async () => {
+    const { Memory } = await import('@orka-js/memory-store');
+    const memory = new Memory();
+    memory.addMessage({ role: 'user', content: 'je cherche un casque' });
+    memory.addMessage({ role: 'assistant', content: 'Voici le Sony WH-1000XM5 à 279€.' });
+
+    const llm = makeStreamingLLM([[
+      createStreamEvent('token', { token: 'Budget max ?', index: 0 }),
+      createStreamEvent('done', { content: 'Budget max ?', finishReason: 'stop' }),
+    ]]);
+
+    const agent = new StreamingToolAgent(config, llm as never, memory);
+    const events: LLMStreamEvent[] = [];
+    for await (const e of agent.runStream('200€')) events.push(e);
+
+    // LLM must have received the full conversation history
+    const streamCall = (llm.stream as ReturnType<typeof vi.fn>).mock.calls[0];
+    const messages = streamCall[1].messages as Array<{ role: string; content: string }>;
+    const userMsgs = messages.filter(m => m.role === 'user').map(m => m.content);
+    const assistantMsgs = messages.filter(m => m.role === 'assistant').map(m => m.content);
+    expect(userMsgs).toContain('je cherche un casque');
+    expect(assistantMsgs).toContain('Voici le Sony WH-1000XM5 à 279€.');
+    expect(userMsgs).toContain('200€');
+
+    // After runStream, memory must have the new exchange saved
+    const history = memory.getHistory();
+    const lastTwo = history.slice(-2);
+    expect(lastTwo[0]).toMatchObject({ role: 'user', content: '200€' });
+    expect(lastTwo[1]).toMatchObject({ role: 'assistant', content: 'Budget max ?' });
+  });
+
   it('throws when LLM does not support streaming', async () => {
     const nonStreamingLLM = {
       name: 'static',
