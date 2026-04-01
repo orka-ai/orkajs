@@ -39,15 +39,15 @@
   "author": "OrkaJS Team",
   "license": "MIT",
   "dependencies": {
-    "@orka-js/core": "workspace:*"
+    "@orka-js/core": "^1.5.0"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {
-    "@orka-js/openai": "workspace:*",
-    "@orka-js/anthropic": "workspace:*"
+    "@orka-js/openai": "^1.3.0",
+    "@orka-js/anthropic": "^1.2.0"
   },
   "peerDependenciesMeta": {
     "@orka-js/openai": {
