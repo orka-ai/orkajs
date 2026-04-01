@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/openai",
-  "version": "1.2.3",
+  "version": "1.3.0",
   "description": "OpenAI adapter for OrkaJS",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -40,7 +40,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@orka-js/core": "^1.3.3"
+    "@orka-js/core": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.1",

@@ -27,7 +27,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@orka-js/devtools": "^1.5.1"
+    "@orka-js/devtools": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
