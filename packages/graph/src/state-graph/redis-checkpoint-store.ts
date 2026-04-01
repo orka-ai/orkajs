@@ -58,10 +58,10 @@ export class RedisCheckpointStore<S extends BaseState = BaseState>
 
   private async getClient(): Promise<RedisClient> {
     if (!this.client) {
-      const { createClient } = await import('redis') as {
-        createClient(opts: { url: string }): RedisClient & { connect(): Promise<void> };
+      const redisModule = await import('redis') as unknown as {
+        createClient(opts: { url: string }): RedisClient & { connect(): Promise<unknown> };
       };
-      const c = createClient({ url: this.config.url });
+      const c = redisModule.createClient({ url: this.config.url });
       await c.connect();
       this.client = c;
     }

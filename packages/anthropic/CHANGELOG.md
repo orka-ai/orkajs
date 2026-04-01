@@ -1,5 +1,22 @@
 # @orka-js/anthropic
 
+## 1.2.0
+
+### Minor Changes
+
+- e4c8e29: feat(streaming): streaming tool call support across adapters + StreamingToolAgent
+
+  - `@orka-js/core`: new `StreamToolDefinition` interface + `tools`/`toolChoice` on `StreamGenerateOptions`
+  - `@orka-js/anthropic`: accumulate `content_block` deltas and emit `tool_call` events during stream
+  - `@orka-js/openai`: accumulate incremental `tool_calls` deltas and emit `tool_call` events before `done`
+  - `@orka-js/agent`: new `StreamingToolAgent` — streams tokens in real time, executes tools in parallel, yields `tool_result` events, continues streaming
+
+### Patch Changes
+
+- Updated dependencies [e4c8e29]
+- Updated dependencies [e4c8e29]
+  - @orka-js/core@1.5.0
+
 ## 1.1.5
 
 ### Patch Changes

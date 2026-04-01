@@ -1,5 +1,25 @@
 # @orka-js/core
 
+## 1.5.0
+
+### Minor Changes
+
+- e4c8e29: feat(edge): replace Node.js crypto/Buffer with Web APIs for Edge runtime compatibility
+
+  - `@orka-js/core` utils: `crypto.getRandomValues` instead of `randomBytes`
+  - `@orka-js/cache` cached-llm: FNV-1a hash instead of `createHash('sha256')`
+  - `@orka-js/agent` hitl-agent: `crypto.getRandomValues` instead of `crypto.randomBytes`
+  - `@orka-js/tools` github-loader: `atob` + `TextDecoder` instead of `Buffer.from`
+
+  All four packages now run in Vercel Edge and Cloudflare Workers without Node.js polyfills.
+
+- e4c8e29: feat(streaming): streaming tool call support across adapters + StreamingToolAgent
+
+  - `@orka-js/core`: new `StreamToolDefinition` interface + `tools`/`toolChoice` on `StreamGenerateOptions`
+  - `@orka-js/anthropic`: accumulate `content_block` deltas and emit `tool_call` events during stream
+  - `@orka-js/openai`: accumulate incremental `tool_calls` deltas and emit `tool_call` events before `done`
+  - `@orka-js/agent`: new `StreamingToolAgent` — streams tokens in real time, executes tools in parallel, yields `tool_result` events, continues streaming
+
 ## 1.4.0
 
 ### Minor Changes

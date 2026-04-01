@@ -1,5 +1,22 @@
 # @orka-js/tools
 
+## 1.2.6
+
+### Patch Changes
+
+- e4c8e29: feat(edge): replace Node.js crypto/Buffer with Web APIs for Edge runtime compatibility
+
+  - `@orka-js/core` utils: `crypto.getRandomValues` instead of `randomBytes`
+  - `@orka-js/cache` cached-llm: FNV-1a hash instead of `createHash('sha256')`
+  - `@orka-js/agent` hitl-agent: `crypto.getRandomValues` instead of `crypto.randomBytes`
+  - `@orka-js/tools` github-loader: `atob` + `TextDecoder` instead of `Buffer.from`
+
+  All four packages now run in Vercel Edge and Cloudflare Workers without Node.js polyfills.
+
+- Updated dependencies [e4c8e29]
+- Updated dependencies [e4c8e29]
+  - @orka-js/core@1.5.0
+
 ## 1.2.5
 
 ### Patch Changes

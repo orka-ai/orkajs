@@ -12,8 +12,9 @@ export interface StructuredOutputParserOptions<T> {
   strict?: boolean;
 }
 
-// Re-exported from core so users can import from either package without breaking changes
-export type { ZodLikeSchema } from '@orka-js/core';
+// Imported and re-exported from core so users can import from either package without breaking changes
+import type { ZodLikeSchema } from '@orka-js/core';
+export type { ZodLikeSchema };
 
 export interface ListParserOptions {
   separator?: string;
