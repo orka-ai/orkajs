@@ -116,6 +116,7 @@ export class StreamingToolAgent extends BaseAgent {
             break;
           case 'tool_call':
             bufferedToolCalls.push({ id: event.toolCallId, name: event.name, arguments: event.arguments });
+            yield event; // forward to caller so tool_start/tracking logic in consumers works
             if (this.verbose) {
               console.log(`[StreamingToolAgent] Tool call: ${event.name}(${event.arguments})`);
             }
