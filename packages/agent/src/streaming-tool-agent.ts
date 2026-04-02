@@ -10,17 +10,39 @@ export interface StreamingToolAgentConfig extends BaseAgentConfig {
 }
 
 /**
- * An agent that streams LLM responses while processing tool calls.
+ * An agent that streams LLM responses while processing tool calls in real time.
  *
  * Unlike ReActAgent (which waits for the full response), StreamingToolAgent
- * yields token events in real time and executes tool calls when detected,
- * then continues streaming with the results.
+ * yields `token` events as they arrive, executes tool calls when detected
+ * (in parallel), injects results back into the conversation, and continues
+ * streaming until the model has a final answer.
+ *
+ * Memory is loaded at the start of each `runStream()` call and saved after
+ * completion, so the agent maintains conversational context across requests.
+ *
+ * Requires an LLM adapter that implements `StreamingLLMAdapter`
+ * (`supportsStreaming === true` + `stream()` method).
  *
  * @example
- * const agent = new StreamingToolAgent({ goal: '...', tools: [...] }, streamingLLM);
- * for await (const event of agent.runStream('What is the weather in Paris?')) {
+ * ```typescript
+ * import { StreamingToolAgent } from '@orka-js/agent';
+ * import { OpenAIAdapter } from '@orka-js/openai';
+ *
+ * const llm = new OpenAIAdapter({ apiKey: process.env.OPENAI_API_KEY! });
+ *
+ * const agent = new StreamingToolAgent({
+ *   goal: 'Answer questions using available tools',
+ *   tools: [weatherTool],
+ * }, llm);
+ *
+ * for await (const event of agent.runStream('Weather in Paris?')) {
  *   if (event.type === 'token') process.stdout.write(event.token);
+ *   if (event.type === 'tool_result') console.log('[Tool]', event.result);
+ *   if (event.type === 'done') console.log('\nDone:', event.content);
  * }
+ * ```
+ *
+ * @since 1.5.0
  */
 export class StreamingToolAgent extends BaseAgent {
   private streamingLlm: (LLMAdapter & StreamingLLMAdapter) | null;
