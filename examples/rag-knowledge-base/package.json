@@ -1,0 +1,19 @@
+{
+  "name": "example-rag-knowledge-base",
+  "version": "0.1.0",
+  "description": "RAG knowledge base example with OrkaJS",
+  "type": "module",
+  "scripts": {
+    "ingest": "tsx src/ingest.ts",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@orka-js/agent": "workspace:*",
+    "@orka-js/core": "workspace:*",
+    "@orka-js/memory": "workspace:*",
+    "@orka-js/openai": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.2"
+  }
+}

@@ -1,5 +1,25 @@
+/**
+ * Schema interface for generateObject() — compatible with Zod schemas.
+ * Pass a Zod schema directly (it has .parse() and .jsonSchema can be inferred)
+ * or implement this interface manually.
+ */
+export interface OrkaSchema<T> {
+  /** JSON Schema object describing the expected shape (for the LLM) */
+  jsonSchema?: object;
+  /** Parse and validate the data, throwing on invalid input */
+  parse(data: unknown): T;
+  /** Safe parse — returns success/failure without throwing */
+  safeParse(data: unknown): { success: true; data: T } | { success: false; error: unknown };
+}
+
 export interface LLMAdapter {
   generate(prompt: string, options?: LLMGenerateOptions): Promise<LLMResult>;
+  /**
+   * Generate a structured object matching the given schema.
+   * Uses native structured output (e.g. OpenAI json_schema) where available,
+   * falls back to prompt engineering + JSON extraction + retry.
+   */
+  generateObject<T>(schema: OrkaSchema<T>, prompt: string, options?: LLMGenerateOptions): Promise<T>;
   embed(text: string | string[]): Promise<number[][]>;
   readonly name: string;
 }

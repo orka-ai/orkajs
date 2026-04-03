@@ -1,0 +1,70 @@
+{
+  "name": "@orka-js/test",
+  "version": "1.0.0",
+  "description": "Testing utilities for OrkaJS agents — mock LLM, AgentTestBed, Vitest matchers",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "orkajs",
+    "orka",
+    "testing",
+    "mock",
+    "llm",
+    "ai",
+    "test",
+    "vitest"
+  ],
+  "author": "OrkaJS Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/orka-js/orkajs.git",
+    "directory": "packages/test"
+  },
+  "bugs": {
+    "url": "https://github.com/orka-js/orkajs/issues"
+  },
+  "homepage": "https://orkajs.com/en/test",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@orka-js/core": "workspace:*",
+    "@orka-js/agent": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.6.0"
+  },
+  "peerDependencies": {
+    "vitest": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

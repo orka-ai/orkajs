@@ -21,6 +21,7 @@ export type {
   ChatMessage,
   ContentPart,
   ZodLikeSchema,
+  OrkaSchema,
 } from './types.js';
 
 // Errors

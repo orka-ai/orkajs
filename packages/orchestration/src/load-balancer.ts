@@ -1,4 +1,4 @@
-import type { LLMAdapter, LLMGenerateOptions, LLMResult, CallbackManager } from '@orka-js/core';
+import type { LLMAdapter, LLMGenerateOptions, LLMResult, CallbackManager, OrkaSchema } from '@orka-js/core';
 import { OrkaError, OrkaErrorCode, generateId } from '@orka-js/core';
 import type { LoadBalancerConfig } from './types.js';
 
@@ -54,6 +54,11 @@ export class LoadBalancerLLM implements LLMAdapter {
   async embed(texts: string | string[]): Promise<number[][]> {
     const adapter = this.selectAdapter();
     return adapter.embed(texts);
+  }
+
+  async generateObject<T>(schema: OrkaSchema<T>, prompt: string, options?: LLMGenerateOptions): Promise<T> {
+    const adapter = this.selectAdapter();
+    return adapter.generateObject(schema, prompt, options);
   }
 
   getStats(): Record<string, number> {

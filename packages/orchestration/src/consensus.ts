@@ -1,4 +1,4 @@
-import type { LLMAdapter, LLMGenerateOptions, LLMResult, CallbackManager } from '@orka-js/core';
+import type { LLMAdapter, LLMGenerateOptions, LLMResult, CallbackManager, OrkaSchema } from '@orka-js/core';
 import { OrkaError, OrkaErrorCode, generateId } from '@orka-js/core';
 import type { ConsensusConfig, ConsensusResult } from './types.js';
 
@@ -109,6 +109,10 @@ export class ConsensusLLM implements LLMAdapter {
 
   async embed(texts: string | string[]): Promise<number[][]> {
     return this.adapters[0].embed(texts);
+  }
+
+  async generateObject<T>(schema: OrkaSchema<T>, prompt: string, options?: LLMGenerateOptions): Promise<T> {
+    return this.adapters[0].generateObject(schema, prompt, options);
   }
 
   private async scoreResponses(

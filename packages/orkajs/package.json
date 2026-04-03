@@ -82,7 +82,14 @@
     "@orka-js/ocr": "^1.1.6",
     "@orka-js/devtools": "^1.6.2",
     "@orka-js/mcp": "^1.1.2",
-    "@orka-js/finetuning": "^1.1.2"
+    "@orka-js/finetuning": "^1.1.2",
+    "@orka-js/test": "workspace:*",
+    "@orka-js/durable": "workspace:*",
+    "@orka-js/express": "workspace:*",
+    "@orka-js/hono": "workspace:*",
+    "@orka-js/realtime": "workspace:*",
+    "@orka-js/server": "workspace:*",
+    "@orka-js/a2a": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.1",

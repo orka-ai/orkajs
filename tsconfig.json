@@ -41,7 +41,16 @@
       "@orka-js/evaluation": ["./packages/evaluation/src/index.ts"],
       "@orka-js/observability": ["./packages/observability/src/index.ts"],
       "@orka-js/prompts": ["./packages/prompts/src/index.ts"],
-      "@orka-js/memory-store": ["./packages/memory-store/src/index.ts"]
+      "@orka-js/memory-store": ["./packages/memory-store/src/index.ts"],
+      "@orka-js/test": ["./packages/test/src/index.ts"],
+      "@orka-js/durable": ["./packages/durable/src/index.ts"],
+      "@orka-js/express": ["./packages/express/src/index.ts"],
+      "@orka-js/hono": ["./packages/hono/src/index.ts"],
+      "@orka-js/realtime": ["./packages/realtime/src/index.ts"],
+      "@orka-js/server": ["./packages/server/src/index.ts"],
+      "@orka-js/react": ["./packages/react/src/index.ts"],
+      "@orka-js/a2a": ["./packages/a2a/src/index.ts"],
+      "@orka-js/cli": ["./packages/cli/src/cli.ts"]
     }
   },
   "include": ["src/**/*", "tests/**/*", "packages/*/src/**/*"],

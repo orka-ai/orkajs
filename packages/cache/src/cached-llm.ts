@@ -1,4 +1,4 @@
-import type { LLMAdapter, LLMGenerateOptions, LLMResult } from '@orka-js/core';
+import type { LLMAdapter, LLMGenerateOptions, LLMResult, OrkaSchema } from '@orka-js/core';
 import type { CacheStore, LLMCacheOptions } from './types.js';
 
 export class CachedLLM implements LLMAdapter {
@@ -32,6 +32,10 @@ export class CachedLLM implements LLMAdapter {
 
   async embed(texts: string | string[]): Promise<number[][]> {
     return this.llm.embed(texts);
+  }
+
+  async generateObject<T>(schema: OrkaSchema<T>, prompt: string, options?: LLMGenerateOptions): Promise<T> {
+    return this.llm.generateObject(schema, prompt, options);
   }
 
   async clearCache(): Promise<void> {

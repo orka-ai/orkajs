@@ -2,6 +2,7 @@ import type {
   LLMAdapter,
   LLMGenerateOptions,
   LLMResult,
+  OrkaSchema,
   StreamingLLMAdapter,
   StreamGenerateOptions,
   StreamResult,
@@ -340,5 +341,37 @@ export class OllamaAdapter implements LLMAdapter, StreamingLLMAdapter {
       durationMs: Date.now() - startTime,
       cost: 0,
     };
+  }
+
+  async generateObject<T>(schema: OrkaSchema<T>, prompt: string, options?: LLMGenerateOptions): Promise<T> {
+    const schemaStr = schema.jsonSchema ? JSON.stringify(schema.jsonSchema, null, 2) : 'a valid JSON object';
+    const systemWithSchema = [
+      options?.systemPrompt ?? '',
+      `\nRespond ONLY with valid JSON matching this schema:\n${schemaStr}`,
+    ].filter(Boolean).join('\n');
+
+    const maxRetries = 3;
+    let lastError: Error | undefined;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      const result = await this.generate(prompt, { ...options, systemPrompt: systemWithSchema });
+      const jsonMatch = result.content.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        lastError = new Error(`No JSON found in response: ${result.content.slice(0, 200)}`);
+        continue;
+      }
+      let parsed: unknown;
+      try { parsed = JSON.parse(jsonMatch[0]); } catch {
+        lastError = new Error(`Invalid JSON: ${jsonMatch[0].slice(0, 200)}`);
+        continue;
+      }
+      const r = schema.safeParse(parsed);
+      if (!r.success) {
+        lastError = new Error(`Validation failed: ${JSON.stringify((r as { error: unknown }).error)}`);
+        continue;
+      }
+      return (r as { success: true; data: T }).data;
+    }
+    throw lastError ?? new Error('generateObject failed');
   }
 }

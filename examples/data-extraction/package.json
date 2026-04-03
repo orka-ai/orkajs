@@ -1,0 +1,18 @@
+{
+  "name": "example-data-extraction",
+  "version": "0.1.0",
+  "description": "Structured data extraction with generateObject() + Zod",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "batch": "tsx src/batch.ts"
+  },
+  "dependencies": {
+    "@orka-js/core": "workspace:*",
+    "@orka-js/openai": "workspace:*",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.2"
+  }
+}

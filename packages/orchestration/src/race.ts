@@ -1,4 +1,4 @@
-import type { LLMAdapter, LLMGenerateOptions } from '@orka-js/core';
+import type { LLMAdapter, LLMGenerateOptions, OrkaSchema } from '@orka-js/core';
 import { OrkaError, OrkaErrorCode, generateId } from '@orka-js/core';
 import type { CallbackManager } from '@orka-js/core';
 import type { RaceConfig, RaceResult } from './types.js';
@@ -63,6 +63,10 @@ export class RaceLLM implements LLMAdapter {
       await cb?.emitLLMError(runId, err instanceof Error ? err : new Error(String(err)), 'race');
       throw err;
     }
+  }
+
+  async generateObject<T>(schema: OrkaSchema<T>, prompt: string, options?: LLMGenerateOptions): Promise<T> {
+    return this.adapters[0].generateObject(schema, prompt, options);
   }
 
   async embed(texts: string | string[]): Promise<number[][]> {

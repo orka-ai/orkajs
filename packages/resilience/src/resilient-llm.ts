@@ -1,4 +1,4 @@
-import type { LLMAdapter, LLMGenerateOptions, LLMResult } from '@orka-js/core';
+import type { LLMAdapter, LLMGenerateOptions, LLMResult, OrkaSchema } from '@orka-js/core';
 import { withRetry, type RetryOptions } from './retry.js';
 
 export interface ResilientLLMConfig {
@@ -51,6 +51,13 @@ export class ResilientLLM implements LLMAdapter {
   async embed(texts: string | string[]): Promise<number[][]> {
     return withRetry(
       () => this.llm.embed(texts),
+      this.retryOptions,
+    );
+  }
+
+  async generateObject<T>(schema: OrkaSchema<T>, prompt: string, options?: LLMGenerateOptions): Promise<T> {
+    return withRetry(
+      () => this.llm.generateObject(schema, prompt, options),
       this.retryOptions,
     );
   }

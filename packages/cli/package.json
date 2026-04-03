@@ -1,0 +1,24 @@
+{
+  "name": "@orka-js/cli",
+  "version": "1.5.0",
+  "description": "CLI for OrkaJS — npx orka init, orka dev",
+  "type": "module",
+  "bin": {
+    "orka": "./dist/cli.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.7.0",
+    "fs-extra": "^11.2.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "vitest": "^1.6.0"
+  }
+}

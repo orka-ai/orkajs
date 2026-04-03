@@ -1,4 +1,4 @@
-import type { LLMAdapter, LLMGenerateOptions, LLMResult } from '@orka-js/core';
+import type { LLMAdapter, LLMGenerateOptions, LLMResult, OrkaSchema } from '@orka-js/core';
 import type { RouterConfig } from './types.js';
 
 export class RouterLLM implements LLMAdapter {
@@ -22,6 +22,11 @@ export class RouterLLM implements LLMAdapter {
 
   async embed(texts: string | string[]): Promise<number[][]> {
     return this.defaultAdapter.embed(texts);
+  }
+
+  async generateObject<T>(schema: OrkaSchema<T>, prompt: string, options?: LLMGenerateOptions): Promise<T> {
+    const adapter = this.resolve(prompt, options);
+    return adapter.generateObject(schema, prompt, options);
   }
 
   private resolve(prompt: string, options?: LLMGenerateOptions): LLMAdapter {

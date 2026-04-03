@@ -3,6 +3,7 @@ import type {
   LLMGenerateOptions,
   LLMResult,
   ContentPart,
+  OrkaSchema,
   StreamingLLMAdapter,
   StreamGenerateOptions,
   StreamResult,
@@ -196,6 +197,79 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter, AudioAdap
       finishReason: this.mapFinishReason(data.choices[0]?.finish_reason),
       cost: calcOpenAICost(data.model, usage.promptTokens, usage.completionTokens),
     };
+  }
+
+  async generateObject<T>(schema: OrkaSchema<T>, prompt: string, options?: LLMGenerateOptions): Promise<T> {
+    const messages: Array<{ role: 'system' | 'user'; content: string }> = [];
+
+    if (options?.systemPrompt) {
+      messages.push({ role: 'system', content: options.systemPrompt });
+    }
+    if (options?.messages) {
+      for (const msg of options.messages) {
+        if (msg.role === 'system' || msg.role === 'user' || msg.role === 'assistant') {
+          messages.push({ role: msg.role as 'system' | 'user', content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content) });
+        }
+      }
+    }
+    messages.push({ role: 'user', content: prompt });
+
+    const body: Record<string, unknown> = {
+      model: this.model,
+      messages,
+      temperature: options?.temperature ?? 0,
+    };
+
+    if (options?.maxTokens) body.max_tokens = options.maxTokens;
+
+    // Use native JSON schema mode if schema.jsonSchema is provided
+    if (schema.jsonSchema) {
+      body.response_format = {
+        type: 'json_schema',
+        json_schema: {
+          name: 'response',
+          strict: true,
+          schema: schema.jsonSchema,
+        },
+      };
+    } else {
+      // Fallback: instruct model to return JSON
+      body.response_format = { type: 'json_object' };
+      if (messages.length > 0 && messages[messages.length - 1].role === 'user') {
+        messages[messages.length - 1].content += '\n\nRespond with valid JSON only.';
+      }
+    }
+
+    const response = await fetch(`${this.baseURL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(this.timeoutMs),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({})) as { error?: { message?: string } };
+      throw new Error(`OpenAI generateObject error: ${err.error?.message ?? response.statusText}`);
+    }
+
+    const data = await response.json() as { choices: Array<{ message: { content: string } }> };
+    const content = data.choices[0]?.message?.content ?? '{}';
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      throw new Error(`OpenAI returned invalid JSON: ${content.slice(0, 200)}`);
+    }
+
+    const result = schema.safeParse(parsed);
+    if (!result.success) {
+      throw new Error(`Schema validation failed: ${JSON.stringify((result as { error: unknown }).error)}`);
+    }
+    return (result as { success: true; data: T }).data;
   }
 
   async embed(texts: string | string[]): Promise<number[][]> {

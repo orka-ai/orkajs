@@ -100,3 +100,22 @@ export {
   type DatasetEntry,
   type FeedbackEntry,
 } from '@orka-js/finetuning';
+
+// Testing utilities
+export * from '@orka-js/test';
+
+// Durable agents (persistent, resumable, schedulable)
+export * from '@orka-js/durable';
+
+// Framework adapters
+export * from '@orka-js/express';
+export * from '@orka-js/hono';
+
+// Voice / Realtime
+export * from '@orka-js/realtime';
+
+// Dev server
+export { createOrkaServer, type OrkaServerConfig, type OrkaServerInstance } from '@orka-js/server';
+
+// A2A Protocol
+export * from '@orka-js/a2a';

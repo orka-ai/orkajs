@@ -3,6 +3,7 @@ import type {
   LLMGenerateOptions,
   LLMResult,
   ContentPart,
+  OrkaSchema,
   StreamingLLMAdapter,
   StreamGenerateOptions,
   StreamResult,
@@ -110,6 +111,74 @@ export class GoogleAdapter implements LLMAdapter, StreamingLLMAdapter {
       model: this.model,
       finishReason: this.mapFinishReason(data.candidates[0]?.finishReason),
     };
+  }
+
+  async generateObject<T>(schema: OrkaSchema<T>, prompt: string, options?: LLMGenerateOptions): Promise<T> {
+    const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
+
+    if (options?.messages) {
+      for (const msg of options.messages) {
+        if (msg.role === 'user' || msg.role === 'assistant') {
+          contents.push({
+            role: msg.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content) }],
+          });
+        }
+      }
+    }
+    contents.push({ role: 'user', parts: [{ text: prompt }] });
+
+    const generationConfig: Record<string, unknown> = {
+      temperature: options?.temperature ?? 0,
+      responseMimeType: 'application/json',
+    };
+
+    if (schema.jsonSchema) {
+      generationConfig.responseSchema = schema.jsonSchema;
+    }
+
+    if (options?.maxTokens) generationConfig.maxOutputTokens = options.maxTokens;
+
+    const body: Record<string, unknown> = {
+      contents,
+      generationConfig,
+    };
+
+    if (options?.systemPrompt) {
+      body.systemInstruction = { parts: [{ text: options.systemPrompt }] };
+    }
+
+    const response = await fetch(
+      `${this.baseURL}/models/${this.model}:generateContent?key=${this.apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({})) as { error?: { message?: string } };
+      throw new Error(`Google generateObject error: ${err.error?.message ?? response.statusText}`);
+    }
+
+    const data = await response.json() as {
+      candidates: Array<{ content: { parts: Array<{ text: string }> } }>
+    };
+    const content = data.candidates[0]?.content?.parts[0]?.text ?? '{}';
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      throw new Error(`Google returned invalid JSON: ${content.slice(0, 200)}`);
+    }
+
+    const result = schema.safeParse(parsed);
+    if (!result.success) {
+      throw new Error(`Schema validation failed: ${JSON.stringify((result as { error: unknown }).error)}`);
+    }
+    return (result as { success: true; data: T }).data;
   }
 
   async embed(texts: string | string[]): Promise<number[][]> {
