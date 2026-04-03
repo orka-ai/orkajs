@@ -1,4 +1,4 @@
-import type { LLMAdapter, LLMGenerateOptions, LLMResult } from '@orka-js/core';
+import type { LLMAdapter, LLMGenerateOptions, LLMResult, OrkaSchema } from '@orka-js/core';
 
 export interface FallbackConfig {
   adapters: LLMAdapter[];
@@ -28,6 +28,31 @@ export class FallbackLLM implements LLMAdapter {
           ...result,
           model: `${this.adapters[i].name}/${result.model}`,
         };
+      } catch (error) {
+        lastError = error as Error;
+
+        if (i < this.adapters.length - 1 && this.onFallback) {
+          this.onFallback(
+            lastError,
+            this.adapters[i].name,
+            this.adapters[i + 1].name,
+          );
+        }
+      }
+    }
+
+    throw new Error(
+      `All LLM adapters failed. Last error: ${lastError?.message}. ` +
+      `Tried: ${this.adapters.map(a => a.name).join(', ')}`,
+    );
+  }
+
+  async generateObject<T>(schema: OrkaSchema<T>, prompt: string, options?: LLMGenerateOptions): Promise<T> {
+    let lastError: Error | undefined;
+
+    for (let i = 0; i < this.adapters.length; i++) {
+      try {
+        return await this.adapters[i].generateObject(schema, prompt, options);
       } catch (error) {
         lastError = error as Error;
 

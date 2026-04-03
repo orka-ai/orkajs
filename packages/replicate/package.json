@@ -27,7 +27,7 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "@orka-js/core": "^1.5.0"
+    "@orka-js/core": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.0",

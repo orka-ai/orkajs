@@ -1,5 +1,18 @@
 # orkajs
 
+## 3.6.8
+
+### Patch Changes
+
+- Updated dependencies
+  - @orka-js/a2a@1.6.0
+  - @orka-js/durable@1.1.0
+  - @orka-js/express@1.1.0
+  - @orka-js/hono@1.1.0
+  - @orka-js/realtime@1.6.0
+  - @orka-js/server@1.6.0
+  - @orka-js/test@1.1.0
+
 ## 3.6.7
 
 ### Patch Changes

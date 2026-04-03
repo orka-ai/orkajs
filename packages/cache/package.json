@@ -33,7 +33,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@orka-js/core": "^1.5.0"
+    "@orka-js/core": "workspace:*"
   },
   "peerDependencies": {
     "redis": "^4.6.0"
