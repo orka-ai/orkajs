@@ -11,6 +11,13 @@ export {
 export * from './assertions.js';
 export * from './reporters.js';
 export {
+  SuiteRunTrendAnalyzer,
+  type SuiteRunSummary,
+  type MetricTrend,
+  type SuiteRunTrendReport,
+  type TrendAnalyzeOptions,
+} from './trend.js';
+export {
   ragasMetrics,
   contextPrecision,
   contextRecall,

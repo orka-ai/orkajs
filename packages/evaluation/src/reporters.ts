@@ -79,6 +79,29 @@ export class JsonReporter implements Reporter {
   }
 }
 
+export class FileReporter implements Reporter {
+  private outputDir: string;
+
+  constructor(outputDir: string) {
+    this.outputDir = outputDir;
+  }
+
+  async report(suite: TestSuiteReport): Promise<void> {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+
+    await fs.mkdir(this.outputDir, { recursive: true });
+
+    const timestamp = suite.timestamp.replace(/[:.]/g, '-');
+    const safeName = suite.name.replace(/[^a-zA-Z0-9-_]/g, '_');
+    const filename = `${timestamp}-${safeName}.json`;
+    const outputPath = path.join(this.outputDir, filename);
+
+    await fs.writeFile(outputPath, JSON.stringify(suite, null, 2), 'utf-8');
+    console.log(`Report written to ${outputPath}`);
+  }
+}
+
 export class JUnitReporter implements Reporter {
   private outputPath: string;
 
