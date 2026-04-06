@@ -58,11 +58,11 @@ importers:
   packages/agent:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
       '@orka-js/memory-store':
-        specifier: ^1.3.0
-        version: 1.3.0
+        specifier: workspace:*
+        version: link:../memory-store
     devDependencies:
       tsup:
         specifier: ^8.0.1
@@ -74,8 +74,8 @@ importers:
   packages/anthropic:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsup:
         specifier: ^8.0.1
@@ -103,8 +103,8 @@ importers:
   packages/chroma:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsup:
         specifier: ^8.0.1
@@ -145,8 +145,8 @@ importers:
   packages/collector:
     dependencies:
       '@orka-js/devtools':
-        specifier: ^1.6.2
-        version: 1.6.2(express@4.22.1)
+        specifier: workspace:*
+        version: link:../devtools
     devDependencies:
       tsup:
         specifier: ^8.0.0
@@ -167,11 +167,11 @@ importers:
   packages/devtools:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
       '@orka-js/observability':
-        specifier: ^1.0.8
-        version: 1.0.8
+        specifier: workspace:*
+        version: link:../observability
       express:
         specifier: ^4.18.0
         version: 4.22.1
@@ -220,8 +220,8 @@ importers:
   packages/evaluation:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsup:
         specifier: ^8.0.1
@@ -258,8 +258,8 @@ importers:
   packages/finetuning:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
       form-data:
         specifier: ^4.0.0
         version: 4.0.5
@@ -274,8 +274,8 @@ importers:
   packages/google:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsup:
         specifier: ^8.0.0
@@ -287,11 +287,11 @@ importers:
   packages/graph:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
       '@orka-js/observability':
-        specifier: ^1.0.8
-        version: 1.0.8
+        specifier: workspace:*
+        version: link:../observability
       pg:
         specifier: ^8.11.0
         version: 8.20.0
@@ -334,8 +334,8 @@ importers:
   packages/mcp:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsup:
         specifier: ^8.0.1
@@ -347,8 +347,8 @@ importers:
   packages/memory:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsup:
         specifier: ^8.0.1
@@ -360,8 +360,8 @@ importers:
   packages/memory-store:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsup:
         specifier: ^8.0.1
@@ -386,14 +386,14 @@ importers:
   packages/multimodal:
     dependencies:
       '@orka-js/anthropic':
-        specifier: ^1.2.0
-        version: 1.2.0
+        specifier: workspace:*
+        version: link:../anthropic
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
       '@orka-js/openai':
-        specifier: ^1.3.0
-        version: 1.3.0
+        specifier: workspace:*
+        version: link:../openai
     devDependencies:
       tsup:
         specifier: ^8.0.0
@@ -405,8 +405,8 @@ importers:
   packages/observability:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsup:
         specifier: ^8.0.1
@@ -418,8 +418,8 @@ importers:
   packages/ocr:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
       tesseract.js:
         specifier: ^5.0.0
         version: 5.1.1
@@ -450,8 +450,8 @@ importers:
   packages/openai:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsup:
         specifier: ^8.0.1
@@ -479,83 +479,83 @@ importers:
         specifier: workspace:*
         version: link:../a2a
       '@orka-js/agent':
-        specifier: ^1.5.0
-        version: 1.5.2
+        specifier: workspace:*
+        version: link:../agent
       '@orka-js/anthropic':
-        specifier: ^1.2.0
-        version: 1.2.0
+        specifier: workspace:*
+        version: link:../anthropic
       '@orka-js/cache':
-        specifier: ^1.0.8
-        version: 1.0.8(redis@5.11.0)
+        specifier: workspace:*
+        version: link:../cache
       '@orka-js/chroma':
-        specifier: ^1.0.7
-        version: 1.0.7
+        specifier: workspace:*
+        version: link:../chroma
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
       '@orka-js/devtools':
-        specifier: ^1.6.2
-        version: 1.6.2(express@4.22.1)
+        specifier: workspace:*
+        version: link:../devtools
       '@orka-js/durable':
         specifier: workspace:*
         version: link:../durable
       '@orka-js/evaluation':
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: workspace:*
+        version: link:../evaluation
       '@orka-js/express':
         specifier: workspace:*
         version: link:../express
       '@orka-js/finetuning':
-        specifier: ^1.1.2
-        version: 1.1.2(typescript@5.9.3)
+        specifier: workspace:*
+        version: link:../finetuning
       '@orka-js/graph':
-        specifier: ^1.4.0
-        version: 1.4.0(pg@8.20.0)(redis@5.11.0)
+        specifier: workspace:*
+        version: link:../graph
       '@orka-js/hono':
         specifier: workspace:*
         version: link:../hono
       '@orka-js/mcp':
-        specifier: ^1.1.2
-        version: 1.1.2(typescript@5.9.3)
+        specifier: workspace:*
+        version: link:../mcp
       '@orka-js/memory':
-        specifier: ^1.0.7
-        version: 1.0.7
+        specifier: workspace:*
+        version: link:../memory
       '@orka-js/memory-store':
-        specifier: ^1.3.0
-        version: 1.3.0
+        specifier: workspace:*
+        version: link:../memory-store
       '@orka-js/mistral':
-        specifier: ^1.1.5
-        version: 1.1.5
+        specifier: workspace:*
+        version: link:../mistral
       '@orka-js/observability':
-        specifier: ^1.0.8
-        version: 1.0.8
+        specifier: workspace:*
+        version: link:../observability
       '@orka-js/ocr':
-        specifier: ^1.1.6
-        version: 1.1.6(tesseract.js@5.1.1)
+        specifier: workspace:*
+        version: link:../ocr
       '@orka-js/ollama':
-        specifier: ^1.1.5
-        version: 1.1.5
+        specifier: workspace:*
+        version: link:../ollama
       '@orka-js/openai':
-        specifier: ^1.3.0
-        version: 1.3.0
+        specifier: workspace:*
+        version: link:../openai
       '@orka-js/orchestration':
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: workspace:*
+        version: link:../orchestration
       '@orka-js/pinecone':
-        specifier: ^1.0.7
-        version: 1.0.7
+        specifier: workspace:*
+        version: link:../pinecone
       '@orka-js/prompts':
-        specifier: ^1.0.7
-        version: 1.0.7
+        specifier: workspace:*
+        version: link:../prompts
       '@orka-js/qdrant':
-        specifier: ^1.0.7
-        version: 1.0.7
+        specifier: workspace:*
+        version: link:../qdrant
       '@orka-js/realtime':
         specifier: workspace:*
         version: link:../realtime
       '@orka-js/resilience':
-        specifier: ^1.0.7
-        version: 1.0.7
+        specifier: workspace:*
+        version: link:../resilience
       '@orka-js/server':
         specifier: workspace:*
         version: link:../server
@@ -563,11 +563,11 @@ importers:
         specifier: workspace:*
         version: link:../test
       '@orka-js/tools':
-        specifier: ^1.2.6
-        version: 1.2.6(pdf-parse@1.1.4)(zod@3.25.76)
+        specifier: workspace:*
+        version: link:../tools
       '@orka-js/workflow':
-        specifier: ^1.0.8
-        version: 1.0.8
+        specifier: workspace:*
+        version: link:../workflow
     devDependencies:
       tsup:
         specifier: ^8.0.1
@@ -588,8 +588,8 @@ importers:
   packages/pgvector:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
       pg:
         specifier: ^8.11.0
         version: 8.20.0
@@ -607,8 +607,8 @@ importers:
   packages/pinecone:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsup:
         specifier: ^8.0.1
@@ -620,8 +620,8 @@ importers:
   packages/prompts:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsup:
         specifier: ^8.0.1
@@ -633,8 +633,8 @@ importers:
   packages/qdrant:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsup:
         specifier: ^8.0.1
@@ -787,8 +787,8 @@ importers:
   packages/tools:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
       pdf-parse:
         specifier: ^1.1.1
         version: 1.1.4
@@ -806,8 +806,8 @@ importers:
   packages/workflow:
     dependencies:
       '@orka-js/core':
-        specifier: ^1.5.0
-        version: 1.5.0
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsup:
         specifier: ^8.0.1
@@ -1308,138 +1308,6 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
-
-  '@orka-js/agent@1.5.2':
-    resolution: {integrity: sha512-UD4ajxuhIXuRRhHVtV/APgmgU4syiuAKHrmusUNHRWKjsGLJah+xecoXcqTdz8hUWGqfMwnitb+W/NaO8kIeMA==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/anthropic@1.2.0':
-    resolution: {integrity: sha512-wfhQ6ATtwh3aa3zZ0nPYHdoNLWB7xT8vqBPyIBgmBHkMBvgW5QhGojSAxecM1IpWxyJzkuqn5q7DM6E3VJrlFg==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/cache@1.0.8':
-    resolution: {integrity: sha512-N+BGRuiNU3WocfiG4aUAZxJbE1PyQYY9/WOf4urAz8coGEMjHsap7eLUFOYD5gF2SsqeIeVkv0oEoUwNMwYj7g==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      redis: ^4.6.0
-    peerDependenciesMeta:
-      redis:
-        optional: true
-
-  '@orka-js/chroma@1.0.7':
-    resolution: {integrity: sha512-SD3DbPfBhiYoWPcWpgdlV9KDxUlUUIQjiEcx99chqflDZNO50VjgHSCIq3vHHcIrezcaTwEJKN5sfTmCsX75lg==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/core@1.5.0':
-    resolution: {integrity: sha512-u5cHY5oDKIT0ZyrDISWu9TZkzfdIJlN0oBi3XgXn1OOMJG3QOgCNCK2KbvGjWJriQmMq7M+g8/92wiWWuNEq8Q==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/devtools@1.6.2':
-    resolution: {integrity: sha512-H9ifI8GlYcLX/ULk248P6S4E4KbhbSXJhy5NwYHNiCBouE12Y0tnwXTLn1HKwk7HG8NcJ2GGy65rXTt652MObg==}
-    peerDependencies:
-      express: ^4.18.0
-    peerDependenciesMeta:
-      express:
-        optional: true
-
-  '@orka-js/evaluation@1.1.0':
-    resolution: {integrity: sha512-KH5NSKreH3WGIU4D6AOBnCXaxMc794Wlf0XwsXR6inw3nPKHfinRbHw2iunISOVE3xvC7PrmbBYdv+pRKeO8rA==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/finetuning@1.1.2':
-    resolution: {integrity: sha512-bwlr+IZzJfxjfYGlwWZZN0caox05mRCYffiF2YJYgS8jBBlFVj0sQoXJkkzISj4f7Gz3YrX2NNMWba9e76sg0g==}
-    peerDependencies:
-      typescript: '>=5.0.0'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-
-  '@orka-js/graph@1.4.0':
-    resolution: {integrity: sha512-shvhu6BZir57YUHaQyww6XIfpDDqBbTfpoP/GUZgZBEmujan2cRAn6PvuA3j/y2vHCAjccinBW0L4cW3/qdoOg==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      pg: ^8.11.0
-      redis: ^4.6.0
-    peerDependenciesMeta:
-      pg:
-        optional: true
-
-  '@orka-js/mcp@1.1.2':
-    resolution: {integrity: sha512-JYj1UMfnnVM2qdXv7gCtUU1OXCv5TukdKyy0gJLojV8pYTcZWtZtmsID4o3p/9s9RmSLrpielWE++jyl59Hx4w==}
-    peerDependencies:
-      typescript: '>=5.0.0'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-
-  '@orka-js/memory-store@1.3.0':
-    resolution: {integrity: sha512-MjsLSzsCdedPVC15HYmBmbwgRzFlNOojPMHgFsAKDGdAAChZGa+CV2qIJrLQaju5D1O/bWb07oXl3qHjgX+Acw==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/memory@1.0.7':
-    resolution: {integrity: sha512-USmgA3ejXwBwEtEeAb9J3UCGeet9On6EITehjc9l1wZZt7yDFjGWzHcIY6Y7xE8PS6OeQxhhrXdtgCTJqN2wQw==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/mistral@1.1.5':
-    resolution: {integrity: sha512-BbF0pGgCVhX++t2mN7SHlFpaVC2BYZrxKVxRGjCggmaT7J31WQmtKBzv+hiLFzJlEFYANwhhCllvk4PKMF44Hg==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/observability@1.0.8':
-    resolution: {integrity: sha512-aVvJuxvRrMDgMXlsnJygPW7oMKUUuqi0lToSB3uRJxVRMEZ7DMXwQMWIHQ5cYekpTAxylAI3nhXYweOJtzA3kA==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/ocr@1.1.6':
-    resolution: {integrity: sha512-65hpZtm05KoIfVWSCHfeBdwdtnJHAEA3Q2MYdfXWOmle9paSi2d2QG2hT653qZpmtpwjDp587xayhcQDIQ8ySA==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      tesseract.js: ^5.0.0
-    peerDependenciesMeta:
-      tesseract.js:
-        optional: true
-
-  '@orka-js/ollama@1.1.5':
-    resolution: {integrity: sha512-0y7Jg66KO4i1TuV9YA2r1yOFeYXMj2Os90uVrBSXtbguEUS/Qbl5aJH5T9ZK+dAIjX5yt6f/7QfBw9F2E/08Rg==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/openai@1.3.0':
-    resolution: {integrity: sha512-Ml1bkxRcqjYiCtpN8Bm5bjGUVq5ZLV0OXKO39dgjQixwOS1PaAFvop+6wNozeL3YnonxOfgmBGjXVmIMBtlKWA==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/orchestration@1.1.0':
-    resolution: {integrity: sha512-OosR+PaUbQvhhYzimfXK+HgyF9Ltvh6h92wZmK6FCoIBYWeY5zFADcaGCRrBs+8yRmvg+glzm2or1q+rjxo2tw==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/pinecone@1.0.7':
-    resolution: {integrity: sha512-PsbxcNJIsj4DPU/cxlVbrotakaw3al60g/ZzdLEAayHcSbvcy3W4ZYX4ce4CrgYUpiX3JVnmXJZYPp4WZrYLTg==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/prompts@1.0.7':
-    resolution: {integrity: sha512-2mHJdj6ZhyEqTVmG3nlYo4EwOB9YE2SYYkISoSJXAXVW6kDMEbOSo7Xe6PA3etaEiUvctQTvdXhvXP+O5li9pw==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/qdrant@1.0.7':
-    resolution: {integrity: sha512-VHaqKsb0HBEHainCCfiM7X6xKZHRQTPNqPAjC8fqSOnkcN13YDhBJecnezuCtVHqMZ2KWn0uT1b6oTU9hT4k/w==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/resilience@1.0.7':
-    resolution: {integrity: sha512-/GGNeybzT2AL7gnKI10OTRPeyUTXG0+XhkEWdmjc/OX/021R3qvymtvfXGRIm8AkZqWH/bqJ6JccYn5WJY8Faw==}
-    engines: {node: '>=18.0.0'}
-
-  '@orka-js/tools@1.2.6':
-    resolution: {integrity: sha512-xMZI+fJpa+3ufx+yhzoQZ3tAj52T4TIrbr95BmcdKEPJdwL5m7fouxjdax0jwyMS8ER+cemtJzhtMx4/vJ5zTA==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      pdf-parse: ^1.1.1
-      zod: ^3.22.0
-    peerDependenciesMeta:
-      pdf-parse:
-        optional: true
-      zod:
-        optional: true
-
-  '@orka-js/workflow@1.0.8':
-    resolution: {integrity: sha512-5BByQfaVpYrGqUuId9dyJcySelUVa4Sz6g+L5FEJ9Y6eeC+tDGcJMBmzhVtZYNcosW3JZRGC6A+SoSAHBafUpg==}
-    engines: {node: '>=18.0.0'}
 
   '@redis/bloom@1.2.0':
     resolution: {integrity: sha512-HG2DFjYKbpNmVXsa0keLHp/3leGJz1mjh09f2RLGGLQZzSHpkmZWuwJbAvo3QcRY8p80m5+ZdXZdYOSBLlp7Cg==}
@@ -3558,120 +3426,6 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
-
-  '@orka-js/agent@1.5.2':
-    dependencies:
-      '@orka-js/core': 1.5.0
-      '@orka-js/memory-store': 1.3.0
-
-  '@orka-js/anthropic@1.2.0':
-    dependencies:
-      '@orka-js/core': 1.5.0
-
-  '@orka-js/cache@1.0.8(redis@5.11.0)':
-    dependencies:
-      '@orka-js/core': 1.5.0
-    optionalDependencies:
-      redis: 5.11.0
-
-  '@orka-js/chroma@1.0.7':
-    dependencies:
-      '@orka-js/core': 1.5.0
-
-  '@orka-js/core@1.5.0': {}
-
-  '@orka-js/devtools@1.6.2(express@4.22.1)':
-    dependencies:
-      '@orka-js/core': 1.5.0
-      '@orka-js/observability': 1.0.8
-    optionalDependencies:
-      express: 4.22.1
-
-  '@orka-js/evaluation@1.1.0':
-    dependencies:
-      '@orka-js/core': 1.5.0
-
-  '@orka-js/finetuning@1.1.2(typescript@5.9.3)':
-    dependencies:
-      '@orka-js/core': 1.5.0
-      form-data: 4.0.5
-    optionalDependencies:
-      typescript: 5.9.3
-
-  '@orka-js/graph@1.4.0(pg@8.20.0)(redis@5.11.0)':
-    dependencies:
-      '@orka-js/core': 1.5.0
-      '@orka-js/observability': 1.0.8
-      redis: 5.11.0
-    optionalDependencies:
-      pg: 8.20.0
-
-  '@orka-js/mcp@1.1.2(typescript@5.9.3)':
-    dependencies:
-      '@orka-js/core': 1.5.0
-    optionalDependencies:
-      typescript: 5.9.3
-
-  '@orka-js/memory-store@1.3.0':
-    dependencies:
-      '@orka-js/core': 1.5.0
-
-  '@orka-js/memory@1.0.7':
-    dependencies:
-      '@orka-js/core': 1.5.0
-
-  '@orka-js/mistral@1.1.5':
-    dependencies:
-      '@orka-js/core': 1.5.0
-
-  '@orka-js/observability@1.0.8':
-    dependencies:
-      '@orka-js/core': 1.5.0
-
-  '@orka-js/ocr@1.1.6(tesseract.js@5.1.1)':
-    dependencies:
-      '@orka-js/core': 1.5.0
-    optionalDependencies:
-      tesseract.js: 5.1.1
-
-  '@orka-js/ollama@1.1.5':
-    dependencies:
-      '@orka-js/core': 1.5.0
-
-  '@orka-js/openai@1.3.0':
-    dependencies:
-      '@orka-js/core': 1.5.0
-
-  '@orka-js/orchestration@1.1.0':
-    dependencies:
-      '@orka-js/core': 1.5.0
-
-  '@orka-js/pinecone@1.0.7':
-    dependencies:
-      '@orka-js/core': 1.5.0
-
-  '@orka-js/prompts@1.0.7':
-    dependencies:
-      '@orka-js/core': 1.5.0
-
-  '@orka-js/qdrant@1.0.7':
-    dependencies:
-      '@orka-js/core': 1.5.0
-
-  '@orka-js/resilience@1.0.7':
-    dependencies:
-      '@orka-js/core': 1.5.0
-
-  '@orka-js/tools@1.2.6(pdf-parse@1.1.4)(zod@3.25.76)':
-    dependencies:
-      '@orka-js/core': 1.5.0
-    optionalDependencies:
-      pdf-parse: 1.1.4
-      zod: 3.25.76
-
-  '@orka-js/workflow@1.0.8':
-    dependencies:
-      '@orka-js/core': 1.5.0
 
   '@redis/bloom@1.2.0(@redis/client@1.6.1)':
     dependencies:
