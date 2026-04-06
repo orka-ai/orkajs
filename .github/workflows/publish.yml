@@ -11,6 +11,8 @@ jobs:
   publish:
     name: Publish to npm & JSR
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     permissions:
       contents: write      # needed for changesets to push version commits
       pull-requests: write # needed for changesets to create Version PRs
