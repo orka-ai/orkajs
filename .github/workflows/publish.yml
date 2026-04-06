@@ -60,13 +60,17 @@ jobs:
         if: steps.changesets.outputs.published == 'true'
         run: git restore packages/*/package.json
 
-      # Publish to JSR — only packages that have a jsr.json file
+      # Publish to JSR — runs on every push to main, independent of npm publish.
+      # Only packages with a jsr.json are published. JSR handles version deduplication.
       - name: Publish to JSR
-        if: steps.changesets.outputs.published == 'true'
         run: |
+          published=0
           for dir in packages/*/; do
             if [ -f "${dir}jsr.json" ]; then
               echo "→ Publishing ${dir} to JSR"
-              (cd "$dir" && npx jsr publish --allow-dirty)
+              (cd "$dir" && npx jsr publish --allow-dirty) && published=$((published + 1))
             fi
           done
+          if [ $published -eq 0 ]; then
+            echo "No packages with jsr.json found — skipping JSR publish"
+          fi
