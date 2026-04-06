@@ -1,0 +1,69 @@
+{
+  "name": "@orka-js/nestjs",
+  "version": "1.0.0",
+  "description": "NestJS integration for OrkaJS agents — DI, modules, SSE streaming, guards, pipes, CQRS, microservices",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./cqrs": {
+      "types": "./dist/cqrs.d.ts",
+      "import": "./dist/cqrs.js",
+      "require": "./dist/cqrs.cjs"
+    },
+    "./microservice": {
+      "types": "./dist/microservice.d.ts",
+      "import": "./dist/microservice.js",
+      "require": "./dist/microservice.cjs"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "keywords": ["orkajs", "orka", "nestjs", "nest", "ai", "agent", "sse", "streaming", "cqrs", "microservice", "di", "dependency-injection"],
+  "author": "OrkaJS Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/orka-js/orkajs.git",
+    "directory": "packages/nestjs"
+  },
+  "engines": { "node": ">=18.0.0" },
+  "dependencies": {
+    "@orka-js/core": "workspace:*",
+    "@orka-js/agent": "workspace:*"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/cqrs": "^10.0.0",
+    "@nestjs/microservices": "^10.0.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.0.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.6.0"
+  },
+  "peerDependencies": {
+    "@nestjs/common": ">=10.0.0",
+    "@nestjs/core": ">=10.0.0",
+    "reflect-metadata": ">=0.1.13",
+    "rxjs": ">=7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@nestjs/cqrs": { "optional": true },
+    "@nestjs/microservices": { "optional": true }
+  },
+  "publishConfig": { "access": "public" }
+}

@@ -33,6 +33,7 @@ export default defineConfig({
       '@orka-js/realtime': resolve(__dirname, 'packages/realtime/src/index.ts'),
       '@orka-js/server': resolve(__dirname, 'packages/server/src/index.ts'),
       '@orka-js/a2a': resolve(__dirname, 'packages/a2a/src/index.ts'),
+      '@orka-js/nestjs': resolve(__dirname, 'packages/nestjs/src/index.ts'),
     },
   },
   test: {
