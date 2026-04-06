@@ -1,7 +1,8 @@
 {
   "name": "@orka-js/core",
   "version": "1.5.0",
+  "license": "MIT",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./src/index.ts"
   }
 }
