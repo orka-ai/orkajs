@@ -1,0 +1,71 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  publish:
+    name: Publish to npm & JSR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # needed for changesets to push version commits
+      pull-requests: write # needed for changesets to create Version PRs
+      id-token: write      # needed for JSR OIDC authentication
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history needed by changesets
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm build
+
+      # Creates a "Version Packages" PR when changesets are pending,
+      # or publishes to npm when that PR is merged.
+      - name: Create Release PR or Publish to npm
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          publish: node scripts/fix-workspace-deps.js && pnpm changeset publish
+          commit: "chore: release packages"
+          title: "chore: release packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Restore workspace:* deps after npm publish to keep local dev working
+      - name: Restore workspace dependencies
+        if: steps.changesets.outputs.published == 'true'
+        run: git restore packages/*/package.json
+
+      # Publish to JSR — only packages that have a jsr.json file
+      - name: Publish to JSR
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          for dir in packages/*/; do
+            if [ -f "${dir}jsr.json" ]; then
+              echo "→ Publishing ${dir} to JSR"
+              (cd "$dir" && npx jsr publish --allow-dirty)
+            fi
+          done
