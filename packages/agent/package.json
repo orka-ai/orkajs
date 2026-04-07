@@ -42,5 +42,18 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "keywords": [
+    "orkajs",
+    "orka",
+    "agent",
+    "react",
+    "plan-execute",
+    "hitl",
+    "streaming",
+    "tools",
+    "llm",
+    "ai",
+    "typescript"
+  ]
 }

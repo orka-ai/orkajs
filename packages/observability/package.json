@@ -41,5 +41,16 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "keywords": [
+    "orkajs",
+    "orka",
+    "observability",
+    "tracing",
+    "monitoring",
+    "hooks",
+    "llm",
+    "ai",
+    "typescript"
+  ]
 }

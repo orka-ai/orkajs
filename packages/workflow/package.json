@@ -41,5 +41,19 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "keywords": [
+    "orkajs",
+    "orka",
+    "workflow",
+    "pipeline",
+    "rag",
+    "steps",
+    "plan",
+    "generate",
+    "verify",
+    "llm",
+    "ai",
+    "typescript"
+  ]
 }

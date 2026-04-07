@@ -41,5 +41,17 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "keywords": [
+    "orkajs",
+    "orka",
+    "resilience",
+    "retry",
+    "fallback",
+    "budget",
+    "fault-tolerance",
+    "llm",
+    "ai",
+    "typescript"
+  ]
 }

@@ -41,5 +41,16 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "keywords": [
+    "orkajs",
+    "orka",
+    "prompts",
+    "prompt-management",
+    "versioning",
+    "templates",
+    "llm",
+    "ai",
+    "typescript"
+  ]
 }

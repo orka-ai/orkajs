@@ -52,5 +52,18 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "keywords": [
+    "orkajs",
+    "orka",
+    "graph",
+    "workflow",
+    "langgraph",
+    "state-machine",
+    "branching",
+    "parallel",
+    "llm",
+    "ai",
+    "typescript"
+  ]
 }

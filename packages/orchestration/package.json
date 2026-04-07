@@ -41,5 +41,18 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "keywords": [
+    "orkajs",
+    "orka",
+    "orchestration",
+    "router",
+    "consensus",
+    "load-balancer",
+    "race",
+    "multi-model",
+    "llm",
+    "ai",
+    "typescript"
+  ]
 }

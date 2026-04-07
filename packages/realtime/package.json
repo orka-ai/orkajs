@@ -13,7 +13,9 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -28,10 +30,26 @@
     "ws": ">=8.0.0"
   },
   "peerDependenciesMeta": {
-    "ws": { "optional": true }
+    "ws": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/ws": "^8.5.10",
     "vitest": "^1.6.0"
-  }
+  },
+  "keywords": [
+    "orkajs",
+    "orka",
+    "realtime",
+    "voice",
+    "stt",
+    "tts",
+    "whisper",
+    "speech",
+    "streaming",
+    "llm",
+    "ai",
+    "typescript"
+  ]
 }

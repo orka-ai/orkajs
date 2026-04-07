@@ -6,7 +6,9 @@
   "bin": {
     "orka": "./dist/cli.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -20,5 +22,14 @@
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
     "vitest": "^1.6.0"
-  }
+  },
+  "keywords": [
+    "orkajs",
+    "orka",
+    "cli",
+    "command-line",
+    "scaffold",
+    "typescript",
+    "ai"
+  ]
 }

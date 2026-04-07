@@ -68,7 +68,7 @@ jobs:
           for dir in packages/*/; do
             if [ -f "${dir}jsr.json" ]; then
               echo "→ Publishing ${dir} to JSR"
-              (cd "$dir" && npx jsr publish --allow-dirty) && published=$((published + 1))
+              (cd "$dir" && npx jsr publish --allow-dirty --allow-slow-types) && published=$((published + 1))
             fi
           done
           if [ $published -eq 0 ]; then

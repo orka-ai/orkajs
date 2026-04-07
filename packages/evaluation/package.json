@@ -41,5 +41,17 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "keywords": [
+    "orkajs",
+    "orka",
+    "evaluation",
+    "ragas",
+    "rag",
+    "metrics",
+    "testing",
+    "llm",
+    "ai",
+    "typescript"
+  ]
 }

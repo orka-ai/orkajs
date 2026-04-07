@@ -49,5 +49,16 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "keywords": [
+    "orkajs",
+    "orka",
+    "cache",
+    "redis",
+    "memory",
+    "llm",
+    "ai",
+    "performance",
+    "typescript"
+  ]
 }

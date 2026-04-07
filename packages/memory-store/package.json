@@ -41,5 +41,18 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "keywords": [
+    "orkajs",
+    "orka",
+    "memory",
+    "conversation",
+    "history",
+    "summary",
+    "vector",
+    "knowledge-graph",
+    "llm",
+    "ai",
+    "typescript"
+  ]
 }

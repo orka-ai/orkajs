@@ -13,7 +13,9 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "vite build --config vite.config.ts && tsup",
     "build:ui": "vite build --config vite.config.ts",
@@ -40,5 +42,19 @@
     "@types/react-dom": "^18.3.0",
     "vite": "^5.2.11",
     "vitest": "^1.6.0"
-  }
+  },
+  "keywords": [
+    "orkajs",
+    "orka",
+    "server",
+    "http",
+    "rest",
+    "api",
+    "agent",
+    "sse",
+    "streaming",
+    "llm",
+    "ai",
+    "typescript"
+  ]
 }
