@@ -14,15 +14,15 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     permissions:
-      contents: write      # needed for changesets to push version commits
-      pull-requests: write # needed for changesets to create Version PRs
-      id-token: write      # needed for JSR OIDC authentication
+      contents: write  # needed to push version bump commits & tags
+      id-token: write  # needed for JSR OIDC authentication
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # full history needed by changesets
+          fetch-depth: 0        # full history needed to compare against tags
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -41,36 +41,65 @@ jobs:
       - name: Build all packages
         run: pnpm build
 
-      # Creates a "Version Packages" PR when changesets are pending,
-      # or publishes to npm when that PR is merged.
-      - name: Create Release PR or Publish to npm
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          publish: node scripts/fix-workspace-deps.js && pnpm changeset publish
-          commit: "chore: release packages"
-          title: "chore: release packages"
+      # ── npm publish ──────────────────────────────────────────────────────────
+      # 1. Auto-génère un patch changeset pour tout package modifié depuis son
+      #    dernier tag git (skip si le package est déjà couvert par un changeset
+      #    manuel, ex. major/minor créé avec `pnpm changeset`).
+      # 2. Applique les bumps de version (pnpm changeset version).
+      # 3. Commit les package.json mis à jour + [skip ci] pour éviter la boucle.
+      # 4. Publie sur npm, restaure workspace:*, pousse commits + tags.
+      - name: Auto-version & Publish to npm
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Auto-détecter les packages changés et créer un patch changeset si nécessaire
+          node scripts/auto-changeset.js
+
+          # Compter les changesets en attente
+          CS=$(find .changeset -maxdepth 1 -name "*.md" ! -name "README.md" | wc -l | tr -d ' ')
+          echo "Changesets en attente : $CS"
+
+          if [ "$CS" -gt 0 ]; then
+            # Appliquer les bumps de version et générer les CHANGELOGs
+            pnpm changeset version
+
+            # Committer les mises à jour de version ([skip ci] évite la boucle de workflow)
+            git add .
+            git diff --staged --quiet || git commit -m "chore: release packages [skip ci]"
+
+            # Publier sur npm (remplace workspace:* par les vraies versions d'abord)
+            node scripts/fix-workspace-deps.js && pnpm changeset publish
+
+            # Restaurer workspace:* pour le dev local
+            git restore packages/*/package.json
+
+            # Pousser le commit de version + les tags de release
+            git push --follow-tags origin HEAD:main
+          else
+            echo "Aucun changement détecté — publication ignorée."
+          fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Restore workspace:* deps after npm publish to keep local dev working
-      - name: Restore workspace dependencies
-        if: steps.changesets.outputs.published == 'true'
-        run: git restore packages/*/package.json
-
-      # Publish to JSR — runs on every push to main, independent of npm publish.
-      # Only packages with a jsr.json are published. JSR handles version deduplication.
+      # ── JSR publish ──────────────────────────────────────────────────────────
+      # Publie sur JSR tous les packages ayant un jsr.json.
+      # JSR gère la déduplication des versions (skip si déjà publié).
+      # Les erreurs individuelles sont loggées sans faire échouer le job.
       - name: Publish to JSR
         run: |
           published=0
+          failed=0
           for dir in packages/*/; do
             if [ -f "${dir}jsr.json" ]; then
               echo "→ Publishing ${dir} to JSR"
-              (cd "$dir" && npx jsr publish --allow-dirty --allow-slow-types) && published=$((published + 1))
+              if (cd "$dir" && npx jsr publish --allow-dirty --allow-slow-types); then
+                published=$((published + 1))
+              else
+                echo "⚠  JSR publish failed for ${dir} (voir erreur ci-dessus)"
+                failed=$((failed + 1))
+              fi
             fi
           done
-          if [ $published -eq 0 ]; then
-            echo "No packages with jsr.json found — skipping JSR publish"
-          fi
+          echo "JSR : $published publiés, $failed échoués"
