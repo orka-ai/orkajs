@@ -1,0 +1,8 @@
+{
+  "name": "@orka-js/collector",
+  "version": "1.5.1",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

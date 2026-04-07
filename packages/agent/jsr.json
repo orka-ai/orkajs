@@ -1,0 +1,8 @@
+{
+  "name": "@orka-js/agent",
+  "version": "1.5.2",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

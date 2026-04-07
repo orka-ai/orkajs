@@ -1,0 +1,8 @@
+{
+  "name": "orkajs",
+  "version": "3.6.7",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@orka-js/realtime",
+  "version": "1.5.0",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

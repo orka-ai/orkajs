@@ -1,0 +1,8 @@
+{
+  "name": "@orka-js/nestjs",
+  "version": "2.0.0",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

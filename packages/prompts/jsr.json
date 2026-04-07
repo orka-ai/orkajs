@@ -1,0 +1,8 @@
+{
+  "name": "@orka-js/prompts",
+  "version": "1.0.7",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
