@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/pgvector",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "pgvector adapter for OrkaJS — works with PostgreSQL and Supabase",
   "type": "module",
   "main": "./dist/index.cjs",

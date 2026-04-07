@@ -1,5 +1,13 @@
 # @orka-js/collector
 
+## 1.5.2
+
+### Patch Changes
+
+- chore: update packages
+- Updated dependencies
+  - @orka-js/devtools@1.6.3
+
 ## 1.5.1
 
 ### Patch Changes

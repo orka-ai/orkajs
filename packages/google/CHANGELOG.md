@@ -1,5 +1,13 @@
 # @orka-js/google
 
+## 1.0.6
+
+### Patch Changes
+
+- chore: update packages
+- Updated dependencies
+  - @orka-js/core@1.5.1
+
 ## 1.0.5
 
 ### Patch Changes

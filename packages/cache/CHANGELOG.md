@@ -1,5 +1,13 @@
 # @orka-js/cache
 
+## 1.0.9
+
+### Patch Changes
+
+- chore: update packages
+- Updated dependencies
+  - @orka-js/core@1.5.1
+
 ## 1.0.8
 
 ### Patch Changes

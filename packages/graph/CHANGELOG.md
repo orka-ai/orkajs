@@ -1,5 +1,14 @@
 # @orka-js/graph
 
+## 1.4.1
+
+### Patch Changes
+
+- chore: update packages
+- Updated dependencies
+  - @orka-js/core@1.5.1
+  - @orka-js/observability@1.0.9
+
 ## 1.4.0
 
 ### Minor Changes

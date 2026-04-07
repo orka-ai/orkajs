@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/observability",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Observability for OrkaJS - tracing, logging, hooks",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/hono",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Hono middleware for OrkaJS agents — edge-compatible AI agent HTTP endpoints",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -13,7 +13,9 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
@@ -21,7 +23,17 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
-  "keywords": ["orkajs", "orka", "hono", "edge", "cloudflare", "middleware", "ai", "agent", "sse"],
+  "keywords": [
+    "orkajs",
+    "orka",
+    "hono",
+    "edge",
+    "cloudflare",
+    "middleware",
+    "ai",
+    "agent",
+    "sse"
+  ],
   "author": "OrkaJS Team",
   "license": "MIT",
   "repository": {
@@ -29,7 +41,9 @@
     "url": "https://github.com/orka-js/orkajs.git",
     "directory": "packages/hono"
   },
-  "engines": { "node": ">=18.0.0" },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@orka-js/core": "workspace:*",
     "@orka-js/agent": "workspace:*"
@@ -43,5 +57,7 @@
   "peerDependencies": {
     "hono": ">=4.0.0"
   },
-  "publishConfig": { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  }
 }

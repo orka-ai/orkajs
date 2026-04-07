@@ -1,5 +1,13 @@
 # @orka-js/finetuning
 
+## 1.1.3
+
+### Patch Changes
+
+- chore: update packages
+- Updated dependencies
+  - @orka-js/core@1.5.1
+
 ## 1.1.2
 
 ### Patch Changes

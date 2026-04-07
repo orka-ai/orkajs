@@ -1,5 +1,14 @@
 # @orka-js/a2a
 
+## 1.5.1
+
+### Patch Changes
+
+- chore: update packages
+- Updated dependencies
+  - @orka-js/agent@1.5.3
+  - @orka-js/core@1.5.1
+
 ## 1.6.0
 
 ### Minor Changes

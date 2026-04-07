@@ -1,5 +1,13 @@
 # @orka-js/pgvector
 
+## 0.2.1
+
+### Patch Changes
+
+- chore: update packages
+- Updated dependencies
+  - @orka-js/core@1.5.1
+
 ## 0.2.0
 
 ### Minor Changes

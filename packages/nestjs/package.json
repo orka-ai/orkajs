@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/nestjs",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "NestJS integration for OrkaJS agents — DI, modules, SSE streaming, guards, pipes, CQRS, microservices",
   "type": "module",
   "main": "./dist/index.cjs",

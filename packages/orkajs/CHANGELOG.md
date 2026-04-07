@@ -4,6 +4,44 @@
 
 ### Patch Changes
 
+- chore: update packages
+- Updated dependencies
+  - @orka-js/a2a@1.5.1
+  - @orka-js/agent@1.5.3
+  - @orka-js/anthropic@1.2.1
+  - @orka-js/cache@1.0.9
+  - @orka-js/chroma@1.0.8
+  - @orka-js/core@1.5.1
+  - @orka-js/devtools@1.6.3
+  - @orka-js/durable@1.0.1
+  - @orka-js/evaluation@1.1.1
+  - @orka-js/express@1.0.1
+  - @orka-js/finetuning@1.1.3
+  - @orka-js/graph@1.4.1
+  - @orka-js/hono@1.0.1
+  - @orka-js/mcp@1.1.3
+  - @orka-js/memory@1.0.8
+  - @orka-js/memory-store@1.3.1
+  - @orka-js/mistral@1.1.6
+  - @orka-js/observability@1.0.9
+  - @orka-js/ocr@1.1.7
+  - @orka-js/ollama@1.1.6
+  - @orka-js/openai@1.3.1
+  - @orka-js/orchestration@1.1.1
+  - @orka-js/pinecone@1.0.8
+  - @orka-js/prompts@1.0.8
+  - @orka-js/qdrant@1.0.8
+  - @orka-js/realtime@1.5.1
+  - @orka-js/resilience@1.0.8
+  - @orka-js/server@1.5.1
+  - @orka-js/test@1.0.1
+  - @orka-js/tools@1.2.7
+  - @orka-js/workflow@1.0.9
+
+## 3.6.8
+
+### Patch Changes
+
 - Updated dependencies
   - @orka-js/a2a@1.6.0
   - @orka-js/durable@1.1.0

@@ -1,5 +1,11 @@
 # @orka-js/core
 
+## 1.5.1
+
+### Patch Changes
+
+- chore: update packages
+
 ## 1.5.0
 
 ### Minor Changes

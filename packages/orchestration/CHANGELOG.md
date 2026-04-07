@@ -1,5 +1,13 @@
 # @orka-js/orchestration
 
+## 1.1.1
+
+### Patch Changes
+
+- chore: update packages
+- Updated dependencies
+  - @orka-js/core@1.5.1
+
 ## 1.1.0
 
 ### Minor Changes

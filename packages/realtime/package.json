@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/realtime",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Voice agent for OrkaJS — STT → LLM → TTS pipeline with WebSocket support",
   "type": "module",
   "main": "./dist/index.cjs",
