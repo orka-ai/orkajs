@@ -54,7 +54,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           # Auto-détecter les packages changés et créer un patch changeset si nécessaire
-          node scripts/auto-changeset.js
+          node scripts/auto-changeset.mjs
 
           # Compter les changesets en attente
           CS=$(find .changeset -maxdepth 1 -name "*.md" ! -name "README.md" | wc -l | tr -d ' ')
