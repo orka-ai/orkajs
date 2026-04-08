@@ -1,16 +1,15 @@
 #!/usr/bin/env node
 /**
- * auto-changeset.js
- *
- * Détecte automatiquement les packages modifiés depuis leur dernier tag git
- * et crée un patch changeset pour eux.
- *
- * Logique :
- * - Pour chaque package, cherche le tag git `<name>@<version>`
- * - Si le tag existe et que des fichiers ont changé dans packages/<dir>/ → patch
- * - Si le tag n'existe pas (jamais publié ou tag manquant) → patch
- * - Si un package est déjà couvert par un changeset existant → skip
- */
+* auto-changeset.js
+* Automatically detects packages modified since their last Git tag
+* and creates a patch changeset for them.
+* Logic:
+* - For each package, searches for the Git tag `<name>@<version>`
+* - If the tag exists and files have changed in packages/<dir>/ → patch
+* - If the tag does not exist (never published or missing tag) → patch
+* - If a package is already covered by an existing changeset → skip
+
+*/
 
 import { execSync } from 'child_process';
 import { readdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
@@ -21,7 +20,7 @@ const root = process.cwd();
 const pkgsDir = join(root, 'packages');
 const csDir = join(root, '.changeset');
 
-// ── 1. Lire les changesets existants pour savoir quels packages sont déjà couverts ──
+// ── 1. Read the existing changesets to see which packages are already covered. ──
 const existingCsFiles = readdirSync(csDir)
   .filter(f => f.endsWith('.md') && f !== 'README.md' && f !== 'config.json');
 
@@ -38,10 +37,10 @@ for (const file of existingCsFiles) {
 }
 
 if (existingCsFiles.length > 0) {
-  console.log(`ℹ  ${existingCsFiles.length} changeset(s) existant(s), packages déjà couverts : ${[...coveredPackages].join(', ') || '(aucun)'}`);
+  console.log(`ℹ  ${existingCsFiles.length} changeset(s) exist, packages already covered: ${[...coveredPackages].join(', ') || '(none)'}`);
 }
 
-// ── 2. Lister tous les packages ──
+// ── 2. List all packages ──
 const allPackages = readdirSync(pkgsDir)
   .filter(dir => existsSync(join(pkgsDir, dir, 'package.json')))
   .map(dir => {
@@ -50,7 +49,7 @@ const allPackages = readdirSync(pkgsDir)
   })
   .filter(p => p.name && p.version && !coveredPackages.has(p.name));
 
-// ── 3. Détecter les packages modifiés depuis leur dernier tag publié ──
+// ── 3. Detect packages modified since their last published tag ──
 const changedPackages = [];
 
 for (const pkg of allPackages) {
@@ -58,37 +57,37 @@ for (const pkg of allPackages) {
   const refTag = `refs/tags/${tag}`;
 
   try {
-    // Vérifie que le tag existe
+    // Check if the tag exists
     execSync(`git rev-parse "${refTag}"`, { stdio: 'pipe' });
 
-    // Cherche des changements depuis ce tag dans le dossier du package
+    // Look for changes since this tag in the package folder
     const diff = execSync(
       `git diff --name-only "${refTag}" HEAD -- "packages/${pkg.dir}/"`,
       { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
     ).trim();
 
     if (diff) {
-      console.log(`📦 ${pkg.name}@${pkg.version} — changements détectés`);
+      console.log(`📦 ${pkg.name}@${pkg.version} — changes detected`);
       changedPackages.push(pkg);
     }
   } catch {
-    // Tag introuvable → package jamais publié ou tag manquant
-    console.log(`📦 ${pkg.name} — tag "${tag}" introuvable, ajout au bump`);
+    // Tag not found → package never published or tag missing
+    console.log(`📦 ${pkg.name} — tag "${tag}" not found, adding to bump`);
     changedPackages.push(pkg);
   }
 }
 
 if (changedPackages.length === 0) {
-  console.log('✅ Tous les packages sont à jour, aucun changeset nécessaire.');
+  console.log('✅ All packages are up to date, no changeset needed.');
   process.exit(0);
 }
 
-// ── 4. Créer un patch changeset pour les packages modifiés ──
+// ── 4. Create a patch changeset for the modified packages ──
 const id = randomBytes(4).toString('hex');
 const frontmatter = changedPackages.map(p => `"${p.name}": patch`).join('\n');
 const content = `---\n${frontmatter}\n---\n\nchore: update packages\n`;
 
 writeFileSync(join(csDir, `auto-${id}.md`), content);
 
-console.log(`\n✅ Changeset créé : auto-${id}.md (${changedPackages.length} package(s))`);
+console.log(`\n✅ Changeset created: auto-${id}.md (${changedPackages.length} package(s))`);
 changedPackages.forEach(p => console.log(`   - ${p.name}`));
