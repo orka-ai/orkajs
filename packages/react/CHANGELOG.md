@@ -1,5 +1,11 @@
 # @orka-js/react
 
+## 1.6.0
+
+### Minor Changes
+
+- 327ef79: update react component observer
+
 ## 1.5.1
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # orkajs
 
+## 3.6.9
+
+### Patch Changes
+
+- chore: update packages
+
 ## 3.6.8
 
 ### Patch Changes
