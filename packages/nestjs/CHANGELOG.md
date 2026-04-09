@@ -1,5 +1,11 @@
 # @orka-js/nestjs
 
+## 2.0.2
+
+### Patch Changes
+
+- chore: update packages
+
 ## 2.0.1
 
 ### Patch Changes

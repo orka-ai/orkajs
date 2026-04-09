@@ -1,5 +1,16 @@
 # orkajs
 
+## 3.6.10
+
+### Patch Changes
+
+- chore: update packages
+- Updated dependencies
+  - @orka-js/a2a@1.5.2
+  - @orka-js/devtools@1.6.4
+  - @orka-js/hono@1.0.2
+  - @orka-js/server@1.5.2
+
 ## 3.6.9
 
 ### Patch Changes

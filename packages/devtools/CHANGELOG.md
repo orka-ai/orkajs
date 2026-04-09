@@ -1,5 +1,11 @@
 # @orka-js/devtools
 
+## 1.6.4
+
+### Patch Changes
+
+- chore: update packages
+
 ## 1.6.3
 
 ### Patch Changes

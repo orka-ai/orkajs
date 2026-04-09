@@ -1,6 +1,6 @@
 {
   "name": "@orka-js/a2a",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Google A2A (Agent-to-Agent) protocol implementation for OrkaJS",
   "type": "module",
   "main": "./dist/index.cjs",

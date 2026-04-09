@@ -1,5 +1,11 @@
 # @orka-js/hono
 
+## 1.0.2
+
+### Patch Changes
+
+- chore: update packages
+
 ## 1.0.1
 
 ### Patch Changes
