@@ -1,9 +1,11 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
   Controls,
   MiniMap,
+  useNodesState,
+  useEdgesState,
   type NodeMouseHandler,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -59,13 +61,20 @@ export function OrkaKnowledgeGraph({
   className,
   refreshKey,
 }: OrkaKnowledgeGraphProps) {
-  const { nodes, edges } = useKnowledgeGraph(
+  const { nodes: computedNodes, edges: computedEdges } = useKnowledgeGraph(
     memory,
     entitiesProp,
     relationsProp,
     theme,
     refreshKey,
   );
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(computedNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(computedEdges);
+
+  // Sync when data changes (new entities extracted)
+  useEffect(() => { setNodes(computedNodes); }, [computedNodes, setNodes]);
+  useEffect(() => { setEdges(computedEdges); }, [computedEdges, setEdges]);
 
   const handleNodeClick = useCallback<NodeMouseHandler>(
     (_event, node) => {
@@ -107,6 +116,8 @@ export function OrkaKnowledgeGraph({
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
         fitView
         fitViewOptions={{ padding: 0.3 }}
