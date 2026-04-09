@@ -1,5 +1,11 @@
 # @orka-js/react
 
+## 1.6.2
+
+### Patch Changes
+
+- 9d413d1: fix(react): enable node dragging in OrkaKnowledgeGraph by wiring onNodesChange/onEdgesChange
+
 ## 1.6.1
 
 ### Patch Changes
