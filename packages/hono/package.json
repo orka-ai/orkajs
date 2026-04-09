@@ -49,13 +49,13 @@
     "@orka-js/agent": "workspace:*"
   },
   "devDependencies": {
-    "hono": "^4.4.0",
+    "hono": "^4.12.12",
     "tsup": "^8.0.1",
     "typescript": "^5.3.3",
     "vitest": "^1.6.0"
   },
   "peerDependencies": {
-    "hono": ">=4.0.0"
+    "hono": ">=4.12.12"
   },
   "publishConfig": {
     "access": "public"

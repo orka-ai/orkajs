@@ -15,7 +15,7 @@
 
 import { Injectable, applyDecorators } from '@nestjs/common';
 import { QueryHandler, CommandHandler } from '@nestjs/cqrs';
-import type { IQueryHandler, ICommandHandler, IQuery, ICommand } from '@nestjs/cqrs';
+import type { IQuery, ICommand } from '@nestjs/cqrs';
 import type { Type } from '@nestjs/common';
 import type { BaseAgent } from '@orka-js/agent';
 import type { AgentResult } from '@orka-js/agent';
@@ -45,9 +45,7 @@ import type { AgentResult } from '@orka-js/agent';
  * }
  * ```
  */
-export abstract class OrkaQueryHandler<Q extends IQuery = IQuery>
-  implements IQueryHandler<Q, AgentResult>
-{
+export abstract class OrkaQueryHandler<Q extends IQuery = IQuery> {
   protected abstract agent: BaseAgent;
 
   async execute(query: Q): Promise<AgentResult> {
@@ -80,9 +78,7 @@ export abstract class OrkaQueryHandler<Q extends IQuery = IQuery>
  * }
  * ```
  */
-export abstract class OrkaCommandHandler<C extends ICommand = ICommand>
-  implements ICommandHandler<C, AgentResult>
-{
+export abstract class OrkaCommandHandler<C extends ICommand = ICommand> {
   protected abstract agent: BaseAgent;
 
   async execute(command: C): Promise<AgentResult> {
