@@ -88,6 +88,13 @@ export abstract class BaseAgent {
   }
 
   protected emit(event: AgentEvent): void {
+    // A run begins on its first step:start. Assign a stable runId here so that
+    // paired tool:start / tool:end / tool:error events share one correlation id
+    // (otherwise emitToCallbackManager fabricates a new agent_<now> per event).
+    if (event.type === 'step:start') {
+      this.startRun();
+    }
+
     // Emit to local listeners
     const listeners = this.listeners.get(event.type);
     if (listeners) {

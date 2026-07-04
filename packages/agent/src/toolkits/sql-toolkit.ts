@@ -149,6 +149,12 @@ export class SQLToolkit implements AgentToolkit {
       return 'Multiple SQL statements are not allowed in read-only mode.';
     }
 
+    // SELECT ... INTO (Postgres / SQL Server) creates and writes a new table while
+    // starting with SELECT and using no blacklisted keyword. INTO is not needed for reads.
+    if (/\bINTO\b/i.test(query)) {
+      return 'INTO clause is not allowed in read-only mode.';
+    }
+
     const dangerousKeywords = ['INSERT', 'UPDATE', 'DELETE', 'DROP', 'ALTER', 'TRUNCATE', 'CREATE', 'GRANT', 'REVOKE', 'EXEC', 'EXECUTE'];
     for (const keyword of dangerousKeywords) {
       const regex = new RegExp(`\\b${keyword}\\b`, 'i');

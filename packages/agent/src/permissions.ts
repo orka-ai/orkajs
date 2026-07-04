@@ -111,7 +111,19 @@ export class PermissionManager {
    * Check if a principal has permission to perform an action on an agent
    */
   check(request: PermissionCheckRequest): PermissionCheckResult {
+    return this.checkWithVisited(request, new Set());
+  }
+
+  /**
+   * Internal permission check that tracks visited agentIds to guard against
+   * inheritFrom cycles causing infinite recursion.
+   */
+  private checkWithVisited(
+    request: PermissionCheckRequest,
+    visited: Set<string>
+  ): PermissionCheckResult {
     const { principal, action, agentId, context } = request;
+    visited.add(agentId);
     const config = this.permissions.get(agentId);
 
     // No permissions configured - deny by default
@@ -183,12 +195,15 @@ export class PermissionManager {
       }
     }
 
-    // Check inherited permissions
-    if (config.inheritFrom) {
-      const inheritedResult = this.check({
-        ...request,
-        agentId: config.inheritFrom,
-      });
+    // Check inherited permissions (skip already-visited agents to break cycles)
+    if (config.inheritFrom && !visited.has(config.inheritFrom)) {
+      const inheritedResult = this.checkWithVisited(
+        {
+          ...request,
+          agentId: config.inheritFrom,
+        },
+        visited,
+      );
       if (inheritedResult.allowed) {
         return {
           ...inheritedResult,
@@ -350,19 +365,53 @@ export class PermissionManager {
     config: Record<string, unknown>,
     context?: Record<string, unknown>
   ): boolean {
-    if (!context?.ipAddress) return true; // No IP to check
-    
     const whitelist = config.ips as string[] | undefined;
     if (!whitelist || whitelist.length === 0) return true;
 
+    // A whitelist is being enforced but the caller provided no client IP.
+    // Deny rather than fail open on a security condition.
+    if (!context?.ipAddress) return false;
+
     const clientIp = context.ipAddress as string;
     return whitelist.some(ip => {
+      if (ip === '*') return true;
       if (ip.includes('/')) {
-        // CIDR notation - simplified check
-        return clientIp.startsWith(ip.split('/')[0].split('.').slice(0, 3).join('.'));
+        return this.ipInCidr(clientIp, ip);
       }
-      return ip === clientIp || ip === '*';
+      return ip === clientIp;
     });
+  }
+
+  /**
+   * Convert an IPv4 address to a 32-bit unsigned integer, or null if invalid
+   */
+  private ipToInt(ip: string): number | null {
+    const parts = ip.split('.');
+    if (parts.length !== 4) return null;
+    let result = 0;
+    for (const part of parts) {
+      const octet = Number(part);
+      if (!Number.isInteger(octet) || octet < 0 || octet > 255) return null;
+      result = (result << 8) | octet;
+    }
+    return result >>> 0;
+  }
+
+  /**
+   * Check whether an IPv4 address falls within a CIDR range, honouring the prefix length
+   */
+  private ipInCidr(clientIp: string, cidr: string): boolean {
+    const [range, prefixStr] = cidr.split('/');
+    const prefixLen = Number(prefixStr);
+    if (!Number.isInteger(prefixLen) || prefixLen < 0 || prefixLen > 32) return false;
+
+    const clientInt = this.ipToInt(clientIp);
+    const rangeInt = this.ipToInt(range);
+    if (clientInt === null || rangeInt === null) return false;
+
+    if (prefixLen === 0) return true;
+    const mask = (0xffffffff << (32 - prefixLen)) >>> 0;
+    return (clientInt & mask) === (rangeInt & mask);
   }
 
   /**

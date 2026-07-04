@@ -82,7 +82,8 @@ export class StreamingToolAgent extends BaseAgent {
       }
     }
 
-    this.saveToMemory(input, finalContent);
+    // runStream() already persists the turn to memory on its terminal paths;
+    // saving again here would duplicate the user/assistant pair in history.
     return this.buildResult(input, finalContent, steps, startTime);
   }
 

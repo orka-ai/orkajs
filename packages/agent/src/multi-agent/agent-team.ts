@@ -317,6 +317,9 @@ export class AgentTeam {
     let proposals: Map<string, string> = new Map();
 
     while (!consensus && round < this.maxRounds) {
+      // Snapshot the prior round's proposals before clearing so agents can see the
+      // full previous set rather than an empty (or partially-filled) map.
+      const previousRound = new Map(proposals);
       proposals.clear();
 
       // Each agent proposes a solution
@@ -324,7 +327,7 @@ export class AgentTeam {
         const startTime = Date.now();
 
         const previousProposals = round > 0
-          ? Array.from(proposals.entries())
+          ? Array.from(previousRound.entries())
               .map(([id, p]) => `${id}: ${p}`)
               .join('\n')
           : '';
@@ -465,9 +468,11 @@ Be specific about what each agent should do.`;
         const agent = this.agents.get(agentId);
         if (!agent) continue;
 
+        const escapedRoleName = agent.role.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapedAgentId = agentId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const patterns = [
-          new RegExp(`^${agent.role.name}:\\s*(.+)`, 'i'),
-          new RegExp(`^${agentId}:\\s*(.+)`, 'i'),
+          new RegExp(`^${escapedRoleName}:\\s*(.+)`, 'i'),
+          new RegExp(`^${escapedAgentId}:\\s*(.+)`, 'i'),
         ];
 
         for (const pattern of patterns) {

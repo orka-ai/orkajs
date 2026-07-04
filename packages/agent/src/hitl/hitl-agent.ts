@@ -97,8 +97,8 @@ export class HITLAgent extends BaseAgent {
 
       const approvalResult = await this.handleToolApproval(parsed.action, parsed.actionInput, step, parsed.thought);
       
-      if (approvalResult.status === 'rejected') {
-        const rejectionMessage = `Tool "${parsed.action}" was rejected by human reviewer. Feedback: ${approvalResult.feedback ?? 'No feedback provided'}`;
+      if (approvalResult.status !== 'approved' && approvalResult.status !== 'modified') {
+        const rejectionMessage = `Tool "${parsed.action}" was not approved by human reviewer (status: ${approvalResult.status}). Feedback: ${approvalResult.feedback ?? 'No feedback provided'}`;
         
         steps.push({
           thought: parsed.thought,
@@ -223,6 +223,14 @@ export class HITLAgent extends BaseAgent {
         status: 'approved',
         respondedAt: new Date(),
       };
+    }
+
+    // Approval is required for this tool but no reviewer is wired up. Fail loudly
+    // instead of silently auto-approving, which would defeat the approval gate.
+    if (!this.hitlConfig.onInterrupt) {
+      throw new Error(
+        `HITL misconfiguration: tool "${toolName}" requires human approval but no onInterrupt handler is configured.`,
+      );
     }
 
     return this.interrupt('tool_approval', `Approve tool "${toolName}"?`, {

@@ -339,6 +339,25 @@ export class AgentRegistry {
         continue;
       }
 
+      // JSON cannot represent functions, so any tool implementation is silently
+      // dropped on export. Importing such a config would yield an agent that throws
+      // at the first tool call. Fail loudly so the caller re-binds tool implementations.
+      if (Array.isArray(config?.tools)) {
+        const brokenTool = config.tools.find(
+          (t: { execute?: unknown }) => typeof t?.execute !== 'function'
+        );
+        if (brokenTool) {
+          throw new OrkaError(
+            `Agent "${identity.id}" has tool "${brokenTool.name}" without an executable implementation. ` +
+              'Tool functions cannot be serialized to JSON; re-bind tool implementations before importing.',
+            OrkaErrorCode.INVALID_INPUT,
+            'AgentRegistry',
+            undefined,
+            { agentId: identity.id }
+          );
+        }
+      }
+
       // Convert ISO strings back to Date objects
       const fullIdentity: AgentIdentity = {
         ...identity,

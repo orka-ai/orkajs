@@ -158,12 +158,21 @@ ${this.systemPrompt ?? ''}`;
           : (parsed.action_input ?? {});
 
         if (action === 'final_answer') {
+          // When outputSchema is set the model returns a schema-conforming object in
+          // action_input (usually without an "answer" key). Preserve it by serialising
+          // the whole object rather than discarding it and falling back to the thought.
+          const answer = actionInput.answer;
+          const content = typeof answer === 'string'
+            ? answer
+            : Object.keys(actionInput).length > 0
+              ? JSON.stringify(actionInput)
+              : thought;
           return {
             type: 'final',
             thought,
             action,
             actionInput,
-            content: actionInput.answer ?? thought,
+            content,
           };
         }
 
