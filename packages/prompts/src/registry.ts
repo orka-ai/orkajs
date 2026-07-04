@@ -70,14 +70,20 @@ export class PromptRegistry {
       throw new Error(`Prompt "${name}" not found`);
     }
 
-    let result = template.template;
-    for (const [key, value] of Object.entries(options.variables)) {
-      result = result.replace(new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), value);
-    }
+    const missing = new Set<string>();
+    const result = template.template.replace(
+      /\{\{\s*(\w+)\s*\}\}/g,
+      (match, key: string) => {
+        if (Object.prototype.hasOwnProperty.call(options.variables, key)) {
+          return options.variables[key];
+        }
+        missing.add(key);
+        return match;
+      }
+    );
 
-    const missing = this.extractVariables(result);
-    if (missing.length > 0) {
-      throw new Error(`Missing variables in prompt "${name}": ${missing.join(', ')}`);
+    if (missing.size > 0) {
+      throw new Error(`Missing variables in prompt "${name}": ${[...missing].join(', ')}`);
     }
 
     return result;

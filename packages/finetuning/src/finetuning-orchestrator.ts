@@ -281,14 +281,21 @@ export class FineTuningOrchestrator {
     const apiKey = this.config.apiKey || process.env.MISTRAL_API_KEY;
     if (!apiKey) throw new OrkaError('Mistral API key required', OrkaErrorCode.INVALID_CONFIG, 'finetuning');
 
+    // Upload files first; Mistral expects previously-uploaded file ids, not paths
+    const trainingFileId = await this.uploadMistralFile(datasetPath, apiKey);
+    let validationFileId: string | undefined;
+    if (validationPath) {
+      validationFileId = await this.uploadMistralFile(validationPath, apiKey);
+    }
+
     // Mistral fine-tuning API
     const response = await fetch('https://api.mistral.ai/v1/fine_tuning/jobs', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: this.config.baseModel,
-        training_files: [{ file_id: datasetPath }],
-        validation_files: validationPath ? [{ file_id: validationPath }] : undefined,
+        training_files: [{ file_id: trainingFileId }],
+        validation_files: validationFileId ? [{ file_id: validationFileId }] : undefined,
         hyperparameters: this.config.hyperparameters,
       }),
     });
@@ -309,6 +316,26 @@ export class FineTuningOrchestrator {
       trainingFile: datasetPath,
       hyperparameters: this.config.hyperparameters || {},
     };
+  }
+
+  private async uploadMistralFile(filePath: string, apiKey: string): Promise<string> {
+    const fs = await import('fs');
+    const FormData = (await import('form-data')).default;
+
+    const form = new FormData();
+    form.append('purpose', 'fine-tune');
+    form.append('file', fs.createReadStream(filePath));
+
+    const response = await fetch('https://api.mistral.ai/v1/files', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      body: form as unknown as BodyInit,
+    });
+
+    if (!response.ok) throw new OrkaError('Failed to upload file to Mistral', OrkaErrorCode.EXTERNAL_SERVICE_ERROR, 'finetuning');
+
+    const data = await response.json();
+    return data.id;
   }
 
   private async createGenericJob(datasetPath: string): Promise<FineTuningJob> {

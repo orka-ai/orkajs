@@ -191,23 +191,31 @@ export class DurableAgent {
    * @param schedule - Cron expression, e.g. '0 9 * * MON'
    * @param inputFn - Function returning the input for each run
    */
-  startScheduler(): void {
+  async startScheduler(): Promise<void> {
     if (!this.config.schedule) throw new Error('DurableAgent: no schedule configured');
     if (!this.config.onSchedule) throw new Error('DurableAgent: no onSchedule handler configured');
 
-    import('node-cron').then(cron => {
-      this.schedulerHandle = (cron as {
-        schedule(expr: string, fn: () => void): unknown;
-      }).schedule(this.config.schedule!, async () => {
-        const input = await this.config.onSchedule!();
-        const jobId = generateId();
-        await this.run(jobId, input);
-      });
-    }).catch(() => {
+    let cron: { schedule(expr: string, fn: () => void): unknown };
+    try {
+      cron = (await import('node-cron')) as { schedule(expr: string, fn: () => void): unknown };
+    } catch {
       throw new Error(
         '@orka-js/durable: startScheduler() requires the "node-cron" package.\n' +
         'Install it with: npm install node-cron'
       );
+    }
+
+    this.schedulerHandle = cron.schedule(this.config.schedule!, async () => {
+      try {
+        const input = await this.config.onSchedule!();
+        const jobId = generateId();
+        await this.run(jobId, input);
+      } catch (error) {
+        console.error(
+          '@orka-js/durable: scheduled run failed:',
+          (error as Error).message,
+        );
+      }
     });
   }
 

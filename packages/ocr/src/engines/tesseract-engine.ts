@@ -144,6 +144,7 @@ export class TesseractEngine implements OCREngine {
     // Tesseract returns flat structure, we need to build hierarchy
     const blocks: OCRBlock[] = [];
     let currentBlock: OCRBlock | null = null;
+    let currentBlockNum: number | null = null;
     let currentLine: OCRLine | null = null;
 
     for (const word of data.words || []) {
@@ -166,7 +167,7 @@ export class TesseractEngine implements OCREngine {
       const lineNum = (word as unknown as { line_num?: number }).line_num ?? 0;
       const blockNum = (word as unknown as { block_num?: number }).block_num ?? 0;
 
-      if (!currentBlock || (word as unknown as { block_num?: number }).block_num !== blockNum) {
+      if (!currentBlock || blockNum !== currentBlockNum) {
         // New block
         if (currentLine && currentBlock) {
           currentLine.text = currentLine.words.map(w => w.text).join(' ');
@@ -183,6 +184,7 @@ export class TesseractEngine implements OCREngine {
           confidence: 0,
           type: 'text',
         };
+        currentBlockNum = blockNum;
         currentLine = {
           text: '',
           words: [ocrWord],

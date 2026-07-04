@@ -169,6 +169,20 @@ export class BudgetedLLM implements LLMAdapter {
     throw new BudgetExceededError(reason, this.state);
   }
 
+  /** Rough heuristic (~4 chars/token) used to estimate usage where the adapter reports none. */
+  private estimateTokens(chars: number): number {
+    return Math.ceil(chars / 4);
+  }
+
+  private serializedLength(value: unknown): number {
+    try {
+      return JSON.stringify(value)?.length ?? 0;
+    } catch {
+      // Non-serializable value (e.g. circular) — fall back to its string form.
+      return String(value).length;
+    }
+  }
+
   async generate(prompt: string, options?: LLMGenerateOptions): Promise<LLMResult> {
     this.checkPreCallBudget();
     const result = await this.inner.generate(prompt, options);
@@ -179,8 +193,21 @@ export class BudgetedLLM implements LLMAdapter {
   async generateObject<T>(schema: OrkaSchema<T>, prompt: string, options?: LLMGenerateOptions): Promise<T> {
     this.checkPreCallBudget();
     const result = await this.inner.generateObject(schema, prompt, options);
-    // Can't easily get token usage from generateObject, so just track call count
-    this.state.callCount++;
+    // The LLMAdapter.generateObject contract returns only the parsed object (no
+    // usage/cost), so estimate token usage from the prompt and serialized output
+    // and route it through the same accounting/limits as generate().
+    let promptChars = prompt.length + (options?.systemPrompt?.length ?? 0);
+    for (const msg of options?.messages ?? []) {
+      promptChars += typeof msg.content === 'string' ? msg.content.length : this.serializedLength(msg.content);
+    }
+    const promptTokens = this.estimateTokens(promptChars);
+    const completionTokens = this.estimateTokens(this.serializedLength(result));
+    this.checkPostCallBudget({
+      content: '',
+      usage: { promptTokens, completionTokens, totalTokens: promptTokens + completionTokens },
+      model: this.inner.name,
+      finishReason: 'stop',
+    });
     return result;
   }
 
