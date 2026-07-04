@@ -60,6 +60,7 @@ export class GraphWorkflow {
     const path: string[] = [];
     const maxIterations = this.config.maxIterations ?? 50;
     let iterations = 0;
+    let completed = false;
 
     const startNode = this.findStartNode();
     let currentNodeId: string | undefined = startNode;
@@ -72,6 +73,7 @@ export class GraphWorkflow {
       path.push(currentNodeId);
 
       if (node.type === 'end') {
+        completed = true;
         break;
       }
 
@@ -114,6 +116,10 @@ export class GraphWorkflow {
             }
             continue;
           }
+          const availableLabels = condEdges.map(e => e.label ?? '(unlabeled)').join(', ');
+          throw new Error(
+            `Condition node "${currentNodeId}" returned branch "${branch}" but no outgoing edge matches it. Available branch labels: ${availableLabels}`
+          );
         } else if (node.type === 'start') {
           nodeResults.push({
             nodeId: currentNodeId,
@@ -135,12 +141,13 @@ export class GraphWorkflow {
 
       const nextEdges: Array<{ to: string; label?: string }> = this.adjacency.get(currentNodeId) ?? [];
       if (nextEdges.length === 0) {
+        completed = true;
         break;
       }
       currentNodeId = nextEdges[0].to;
     }
 
-    if (iterations >= maxIterations) {
+    if (!completed && iterations >= maxIterations) {
       throw new Error(`Graph workflow "${this.config.name}" exceeded max iterations (${maxIterations})`);
     }
 
@@ -162,18 +169,31 @@ export class GraphWorkflow {
         if (!node || !node.execute) {
           throw new Error(`Parallel node "${nodeId}" not found or has no execute function`);
         }
+        // Each branch gets its own copies so branches cannot race on shared
+        // references (context was previously spread shallowly and shared).
+        const branchContext = [...ctx.context];
         const clonedCtx: GraphContext = {
           ...ctx,
           nodeOutputs: { ...ctx.nodeOutputs },
+          context: branchContext,
           metadata: { ...ctx.metadata },
         };
         const result = await node.execute(clonedCtx);
-        return { nodeId, output: result.output, ctx: result };
+        // A branch signals new context by replacing the array reference (as the
+        // built-in retrieve node does); an untouched clone is not re-appended.
+        const contextChanged = result.context !== branchContext;
+        return { nodeId, output: result.output, ctx: result, contextChanged };
       })
     );
 
+    // Merge branch results back deterministically (in nodeIds order): node
+    // outputs, metadata (union of keys) and any context the branches produced.
     for (const result of results) {
       ctx.nodeOutputs[result.nodeId] = result.output;
+      Object.assign(ctx.metadata, result.ctx.metadata);
+      if (result.contextChanged) {
+        ctx.context = [...ctx.context, ...result.ctx.context];
+      }
     }
     ctx.output = results.map(r => r.output).join('\n\n');
 

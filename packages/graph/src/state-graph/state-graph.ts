@@ -129,6 +129,36 @@ export class StateGraph<S extends BaseState> {
       );
     }
 
+    // Execution follows a single successor per node (getNextNode returns one
+    // target and there is no fan-out). Reject configurations that would silently
+    // drop edges: more than one regular edge from a node, or a node that mixes a
+    // conditional edge with a regular edge (conditional edges take precedence,
+    // making the regular edge dead).
+    const conditionalFroms = new Set(this.conditionalEdges.map(e => e.from));
+    const regularEdgeCounts = new Map<string, number>();
+    for (const edge of this.edges) {
+      const count = (regularEdgeCounts.get(edge.from) ?? 0) + 1;
+      regularEdgeCounts.set(edge.from, count);
+      if (count > 1) {
+        throw new OrkaError(
+          `Node "${edge.from}" has multiple outgoing edges; StateGraph follows a single successor per node. Use addConditionalEdges() to branch.`,
+          OrkaErrorCode.GRAPH_INVALID_CONFIG,
+          'StateGraph',
+          undefined,
+          { from: edge.from }
+        );
+      }
+      if (conditionalFroms.has(edge.from)) {
+        throw new OrkaError(
+          `Node "${edge.from}" has both a conditional edge and a regular edge; the regular edge would never be followed.`,
+          OrkaErrorCode.GRAPH_INVALID_CONFIG,
+          'StateGraph',
+          undefined,
+          { from: edge.from }
+        );
+      }
+    }
+
     const nodes = new Map(this.nodes);
     const edges = [...this.edges];
     const conditionalEdges = [...this.conditionalEdges];
@@ -431,7 +461,7 @@ export class StateGraph<S extends BaseState> {
       currentNode = this.getNextNode(currentNode, state, edges, conditionalEdges);
     }
 
-    if (iterations >= maxIterations) {
+    if (currentNode !== END) {
       const maxErr = new OrkaError(
         `StateGraph exceeded max iterations (${maxIterations})`,
         OrkaErrorCode.GRAPH_MAX_ITERATIONS,
@@ -493,20 +523,32 @@ export class StateGraph<S extends BaseState> {
   ): Promise<StateGraphResult<S>> {
     const startTime = Date.now();
     const maxIterations = config?.maxIterations ?? 100;
-    
+    // Honor a resume-supplied threadId (e.g. fork() writes to a branch thread);
+    // fall back to the checkpoint's own thread for plain resumes.
+    const threadId = config?.threadId ?? checkpoint.threadId;
+
     let state = checkpoint.state;
     let currentNode = checkpoint.currentNode;
     const path = [...checkpoint.path];
     const nodeResults = [...checkpoint.nodeResults];
     let iterations = 0;
 
+    // When resuming from an interrupt-before checkpoint, skip re-firing that
+    // interrupt on the resumed node only (first iteration). Later cycles back to
+    // an interrupt.before node must still pause. This must not depend on
+    // checkpoint.status, which is a run-constant that resumeWithState rewrites.
+    const resumedFromInterruptBefore = checkpoint.interruptReason === 'before';
+
     while (currentNode !== END && iterations < maxIterations) {
       iterations++;
 
       // Check for interrupt before (skip if we're resuming from this exact interrupt)
-      if (config?.interrupt?.before?.includes(currentNode) && checkpoint.status !== 'interrupted') {
+      if (
+        config?.interrupt?.before?.includes(currentNode) &&
+        !(iterations === 1 && resumedFromInterruptBefore)
+      ) {
         const newCheckpoint = await this.createCheckpoint(
-          checkpoint.threadId,
+          threadId,
           state,
           currentNode,
           path,
@@ -570,7 +612,7 @@ export class StateGraph<S extends BaseState> {
       // Check for interrupt after
       if (config?.interrupt?.after?.includes(currentNode)) {
         const newCheckpoint = await this.createCheckpoint(
-          checkpoint.threadId,
+          threadId,
           state,
           this.getNextNode(currentNode, state, edges, conditionalEdges),
           path,
@@ -596,7 +638,7 @@ export class StateGraph<S extends BaseState> {
       // Save checkpoint
       if (config?.checkpointer) {
         await this.createCheckpoint(
-          checkpoint.threadId,
+          threadId,
           state,
           this.getNextNode(currentNode, state, edges, conditionalEdges),
           path,
@@ -612,7 +654,7 @@ export class StateGraph<S extends BaseState> {
       currentNode = this.getNextNode(currentNode, state, edges, conditionalEdges);
     }
 
-    if (iterations >= maxIterations) {
+    if (currentNode !== END) {
       throw new OrkaError(
         `StateGraph exceeded max iterations (${maxIterations})`,
         OrkaErrorCode.GRAPH_MAX_ITERATIONS,
@@ -626,7 +668,7 @@ export class StateGraph<S extends BaseState> {
     let finalCheckpoint: Checkpoint<S> | undefined;
     if (config?.checkpointer) {
       finalCheckpoint = await this.createCheckpoint(
-        checkpoint.threadId,
+        threadId,
         state,
         END,
         path,
@@ -837,7 +879,7 @@ export class StateGraph<S extends BaseState> {
       currentNode = this.getNextNode(currentNode, state, edges, conditionalEdges);
     }
 
-    if (iterations >= maxIterations) {
+    if (currentNode !== END) {
       const maxErr = new OrkaError(
         `StateGraph exceeded max iterations (${maxIterations})`,
         OrkaErrorCode.GRAPH_MAX_ITERATIONS,

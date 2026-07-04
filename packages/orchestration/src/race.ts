@@ -46,7 +46,7 @@ export class RaceLLM implements LLMAdapter {
       });
 
       const winner = await Promise.race([
-        ...racePromises,
+        Promise.any(racePromises),
         timeoutPromise,
       ]) as { adapter: string; result: RaceResult };
 
@@ -82,6 +82,6 @@ export class RaceLLM implements LLMAdapter {
       )), this.timeout);
     });
 
-    return Promise.race([...racePromises, timeoutPromise]);
+    return Promise.race([Promise.any(racePromises), timeoutPromise]);
   }
 }
