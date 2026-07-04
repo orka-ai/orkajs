@@ -41,6 +41,18 @@ jobs:
       - name: Build all packages
         run: pnpm build
 
+      # ── Quality gate ─────────────────────────────────────────────────────────
+      # Never publish a red build to npm/JSR. typecheck + test must pass first.
+      # (lint is a no-op today — no package defines a lint script yet.)
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
+
       # ── npm publish ──────────────────────────────────────────────────────────
       # 1. Auto-génère un patch changeset pour tout package modifié depuis son
       #    dernier tag git (skip si le package est déjà couvert par un changeset
