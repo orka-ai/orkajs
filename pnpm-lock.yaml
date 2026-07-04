@@ -128,6 +128,12 @@ importers:
         specifier: ^11.2.0
         version: 11.3.4
     devDependencies:
+      '@orka-js/agent':
+        specifier: workspace:*
+        version: link:../agent
+      '@orka-js/server':
+        specifier: workspace:*
+        version: link:../server
       '@types/fs-extra':
         specifier: ^11.0.4
         version: 11.0.4

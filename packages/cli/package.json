@@ -19,7 +19,21 @@
     "@clack/prompts": "^0.7.0",
     "fs-extra": "^11.2.0"
   },
+  "peerDependencies": {
+    "@orka-js/agent": "workspace:*",
+    "@orka-js/server": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@orka-js/agent": {
+      "optional": true
+    },
+    "@orka-js/server": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@orka-js/agent": "workspace:*",
+    "@orka-js/server": "workspace:*",
     "@types/fs-extra": "^11.0.4",
     "vitest": "^1.6.0"
   },
