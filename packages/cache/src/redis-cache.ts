@@ -17,15 +17,19 @@ export class RedisCache implements CacheStore {
   async connect(): Promise<void> {
     if (this.client) return;
 
+    let redis: typeof import('redis');
     try {
-      const redis = await import('redis');
-      this.client = redis.createClient({ url: this.url }) as unknown as RedisLikeClient;
-      await this.client.connect();
-    } catch {
+      redis = await import('redis');
+    } catch (cause) {
       throw new Error(
-        'RedisCache requires the "redis" package. Install it with: npm install redis'
+        'RedisCache requires the "redis" package. Install it with: npm install redis',
+        { cause }
       );
     }
+
+    const client = redis.createClient({ url: this.url }) as unknown as RedisLikeClient;
+    await client.connect();
+    this.client = client;
   }
 
   async get<T = unknown>(key: string): Promise<T | undefined> {
@@ -105,14 +109,14 @@ export class RedisCache implements CacheStore {
   }
 
   private async scanDel(pattern: string): Promise<void> {
-    let cursor = 0;
+    let cursor: string | number = 0;
     do {
       const result = await this.client!.scan(cursor, { MATCH: pattern, COUNT: 100 });
       cursor = result.cursor;
       if (result.keys.length > 0) {
         await this.client!.del(result.keys);
       }
-    } while (cursor !== 0);
+    } while (String(cursor) !== '0');
   }
 }
 
@@ -123,6 +127,6 @@ interface RedisLikeClient {
   set(key: string, value: string, options?: { PX?: number }): Promise<unknown>;
   del(key: string | string[]): Promise<number>;
   keys(pattern: string): Promise<string[]>;
-  scan(cursor: number, options?: { MATCH?: string; COUNT?: number }): Promise<{ cursor: number; keys: string[] }>;
+  scan(cursor: string | number, options?: { MATCH?: string; COUNT?: number }): Promise<{ cursor: string | number; keys: string[] }>;
   exists(key: string): Promise<number>;
 }

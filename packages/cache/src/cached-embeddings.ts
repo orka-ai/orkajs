@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { LLMAdapter } from '@orka-js/core';
 import type { CacheStore, EmbeddingCacheOptions } from './types.js';
 
@@ -54,12 +55,6 @@ export class CachedEmbeddings {
   }
 
   private defaultHash(text: string): string {
-    let hash = 0;
-    for (let i = 0; i < text.length; i++) {
-      const char = text.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash |= 0;
-    }
-    return Math.abs(hash).toString(36);
+    return createHash('sha256').update(text).digest('hex');
   }
 }

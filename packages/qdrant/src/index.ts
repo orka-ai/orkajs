@@ -1,14 +1,38 @@
-import type { 
-  VectorDBAdapter, 
-  VectorRecord, 
-  VectorSearchOptions, 
+import { createHash } from 'node:crypto';
+import type {
+  VectorDBAdapter,
+  VectorRecord,
+  VectorSearchOptions,
   VectorSearchResult,
-  CreateCollectionOptions 
+  CreateCollectionOptions
 } from '@orka-js/core';
 
 export interface QdrantAdapterConfig {
   url: string;
   apiKey?: string;
+}
+
+// Fixed namespace used to derive deterministic UUIDv5 point ids from the
+// arbitrary string ids allowed by VectorRecord. Qdrant only accepts unsigned
+// integers or UUIDs as point ids, so the original id is preserved in the
+// payload (see _id) and reconstructed on read.
+const QDRANT_ID_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+
+function uuidV5(name: string, namespace: string): string {
+  const namespaceBytes = Buffer.from(namespace.replace(/-/g, ''), 'hex');
+  const hash = createHash('sha1')
+    .update(namespaceBytes)
+    .update(Buffer.from(name, 'utf8'))
+    .digest();
+  const bytes = hash.subarray(0, 16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x50; // version 5
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // RFC 4122 variant
+  const hex = bytes.toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+function toPointId(id: string): string {
+  return uuidV5(id, QDRANT_ID_NAMESPACE);
 }
 
 export class QdrantAdapter implements VectorDBAdapter {
@@ -71,11 +95,12 @@ export class QdrantAdapter implements VectorDBAdapter {
 
   async upsert(collection: string, vectors: VectorRecord[]): Promise<void> {
     const points = vectors.map(v => ({
-      id: v.id,
+      id: toPointId(v.id),
       vector: v.vector,
       payload: {
         ...v.metadata,
         _content: v.content,
+        _id: v.id,
       },
     }));
 
@@ -122,9 +147,9 @@ export class QdrantAdapter implements VectorDBAdapter {
     };
 
     return data.result.map(match => {
-      const { _content, ...metadata } = (match.payload ?? {}) as { _content?: string; [key: string]: unknown };
+      const { _content, _id, ...metadata } = (match.payload ?? {}) as { _content?: string; _id?: string; [key: string]: unknown };
       return {
-        id: String(match.id),
+        id: _id ?? String(match.id),
         score: match.score,
         metadata,
         content: _content as string | undefined,
@@ -137,7 +162,7 @@ export class QdrantAdapter implements VectorDBAdapter {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify({
-        points: ids,
+        points: ids.map(toPointId),
       }),
     });
 

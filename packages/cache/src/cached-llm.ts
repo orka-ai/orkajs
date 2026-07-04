@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { LLMAdapter, LLMGenerateOptions, LLMResult, OrkaSchema } from '@orka-js/core';
 import type { CacheStore, LLMCacheOptions } from './types.js';
 
@@ -48,11 +49,6 @@ export class CachedLLM implements LLMAdapter {
 
   private defaultHash(prompt: string, options?: Record<string, unknown>): string {
     const input = JSON.stringify({ prompt, options });
-    let hash = 2166136261;
-    for (let i = 0; i < input.length; i++) {
-      hash ^= input.charCodeAt(i);
-      hash = Math.imul(hash, 16777619) >>> 0;
-    }
-    return hash.toString(36).padStart(8, '0');
+    return createHash('sha256').update(input).digest('hex');
   }
 }

@@ -39,7 +39,7 @@ export class PineconeAdapter implements VectorDBAdapter {
   }
 
   async deleteCollection(name: string): Promise<void> {
-    await fetch(`${this.indexHost}/vectors/delete`, {
+    const response = await fetch(`${this.indexHost}/vectors/delete`, {
       method: 'POST',
       headers: {
         'Api-Key': this.apiKey,
@@ -50,6 +50,11 @@ export class PineconeAdapter implements VectorDBAdapter {
         deleteAll: true,
       }),
     });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Pinecone delete collection error: ${response.status} - ${error}`);
+    }
   }
 
   async upsert(collection: string, vectors: VectorRecord[]): Promise<void> {
@@ -81,7 +86,7 @@ export class PineconeAdapter implements VectorDBAdapter {
   }
 
   async search(collection: string, vector: number[], options: VectorSearchOptions = {}): Promise<VectorSearchResult[]> {
-    const { topK = 5, filter } = options;
+    const { topK = 5, filter, minScore } = options;
 
     const response = await fetch(`${this.indexHost}/query`, {
       method: 'POST',
@@ -111,15 +116,17 @@ export class PineconeAdapter implements VectorDBAdapter {
       }>;
     };
 
-    return data.matches.map(match => {
-      const { _content, ...metadata } = (match.metadata ?? {}) as { _content?: string; [key: string]: unknown };
-      return {
-        id: match.id,
-        score: match.score,
-        metadata,
-        content: _content as string | undefined,
-      };
-    });
+    return data.matches
+      .filter(match => minScore === undefined || match.score >= minScore)
+      .map(match => {
+        const { _content, ...metadata } = (match.metadata ?? {}) as { _content?: string; [key: string]: unknown };
+        return {
+          id: match.id,
+          score: match.score,
+          metadata,
+          content: _content as string | undefined,
+        };
+      });
   }
 
   async delete(collection: string, ids: string[]): Promise<void> {

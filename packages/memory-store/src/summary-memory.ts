@@ -181,7 +181,6 @@ export class SummaryMemory {
       }
 
       const toSummarize = nonSystemMessages.slice(0, messagesToSummarize);
-      const toKeep = nonSystemMessages.slice(messagesToSummarize);
 
       let prompt: string;
 
@@ -211,11 +210,15 @@ export class SummaryMemory {
         lastSummarizedAt: Date.now(),
       };
 
-      const systemMessages = this.config.preserveSystemMessages
-        ? this.messages.filter(m => m.role === 'system' && !m.metadata?.isSummary)
-        : [];
-
-      this.messages = [...systemMessages, ...toKeep];
+      // Rebuild from the current messages (not a pre-await snapshot) so that
+      // messages added while the LLM call was in flight are not silently dropped.
+      const summarizedSet = new Set<Message>(toSummarize);
+      this.messages = this.messages.filter(
+        m =>
+          !summarizedSet.has(m) &&
+          (this.config.preserveSystemMessages ||
+            !(m.role === 'system' && !m.metadata?.isSummary))
+      );
     } finally {
       this.isSummarizing = false;
     }
@@ -301,11 +304,15 @@ export class SummaryMemory {
         lastSummarizedAt: Date.now(),
       };
 
-      const systemMessages = this.config.preserveSystemMessages
-        ? this.messages.filter(m => m.role === 'system' && !m.metadata?.isSummary)
-        : [];
-
-      this.messages = [...systemMessages];
+      // Rebuild from the current messages (not a pre-await snapshot) so that
+      // messages added while the LLM call was in flight are not silently dropped.
+      const summarizedSet = new Set<Message>(toSummarize);
+      this.messages = this.messages.filter(
+        m =>
+          !summarizedSet.has(m) &&
+          (this.config.preserveSystemMessages ||
+            !(m.role === 'system' && !m.metadata?.isSummary))
+      );
 
       return {
         success: true,
