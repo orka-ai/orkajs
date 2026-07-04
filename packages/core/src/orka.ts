@@ -46,13 +46,22 @@ export class Orka {
     if (this.vectorDB) {
       this.knowledge = new Knowledge(this.llm, this.vectorDB, this.defaults);
     } else {
+      // No vectorDB configured: fail loudly on any knowledge operation instead of
+      // silently discarding vectors and returning empty search results.
+      const requireVectorDB = (): never => {
+        throw new OrkaError(
+          'A vectorDB adapter is required for knowledge operations. Configure `vectorDB` in OrkaConfig (e.g. @orka-js/memory).',
+          OrkaErrorCode.MISSING_DEPENDENCY,
+          'core/orka',
+        );
+      };
       this.knowledge = new Knowledge(this.llm, {
-        name: 'memory',
-        upsert: async () => {},
-        search: async () => [],
-        delete: async () => {},
-        createCollection: async () => {},
-        deleteCollection: async () => {},
+        name: 'unconfigured',
+        upsert: async () => requireVectorDB(),
+        search: async () => requireVectorDB(),
+        delete: async () => requireVectorDB(),
+        createCollection: async () => requireVectorDB(),
+        deleteCollection: async () => requireVectorDB(),
       }, this.defaults);
     }
   }
@@ -78,7 +87,7 @@ export class Orka {
     let context: RetrievedContext[] = [];
     let prompt = question;
 
-    if (knowledge && this.vectorDB) {
+    if (knowledge) {
       const results = await this.knowledge.search(knowledge, question, { topK });
       context = results.map(r => ({
         content: r.content ?? '',
@@ -134,7 +143,7 @@ export class Orka {
     const streamingLLM = this.llm as StreamingLLMAdapter;
     let prompt = question;
 
-    if (knowledge && this.vectorDB) {
+    if (knowledge) {
       const results = await this.knowledge.search(knowledge, question, { topK });
       const context = results.map(r => r.content ?? '');
 
@@ -176,7 +185,7 @@ export class Orka {
     let context: RetrievedContext[] = [];
     let prompt = question;
 
-    if (knowledge && this.vectorDB) {
+    if (knowledge) {
       const results = await this.knowledge.search(knowledge, question, { topK });
       context = results.map(r => ({
         content: r.content ?? '',

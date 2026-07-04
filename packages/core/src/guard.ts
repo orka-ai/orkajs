@@ -228,11 +228,17 @@ export class PIIGuard {
       for (const { pattern, confidence } of patterns) {
         if (confidence < this.config.minConfidence) continue;
 
-        const regex = new RegExp(pattern.source, pattern.flags);
+        const regex = new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g');
         let match: RegExpExecArray | null;
 
         while ((match = regex.exec(text)) !== null) {
           const value = match[0];
+
+          // Guard against zero-length matches: exec() would not advance lastIndex, looping forever
+          if (value.length === 0) {
+            regex.lastIndex++;
+            continue;
+          }
 
           // Check allow list
           if (this.isAllowed(value)) continue;
@@ -256,12 +262,21 @@ export class PIIGuard {
 
     // Detect custom patterns
     for (const customPattern of this.config.customPatterns) {
-      const regex = new RegExp(customPattern.pattern.source, customPattern.pattern.flags);
+      const regex = new RegExp(
+        customPattern.pattern.source,
+        customPattern.pattern.flags.includes('g') ? customPattern.pattern.flags : customPattern.pattern.flags + 'g',
+      );
       let match: RegExpExecArray | null;
 
       while ((match = regex.exec(text)) !== null) {
         const value = match[0];
         const confidence = customPattern.confidence ?? 0.9;
+
+        // Guard against zero-length matches: exec() would not advance lastIndex, looping forever
+        if (value.length === 0) {
+          regex.lastIndex++;
+          continue;
+        }
 
         if (confidence < this.config.minConfidence) continue;
         if (this.isAllowed(value)) continue;

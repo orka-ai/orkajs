@@ -10,6 +10,11 @@ const DEFAULT_SEPARATORS = ['\n\n', '\n', '. ', ' ', ''];
 
 export function chunkDocument(doc: Document, options: ChunkerOptions): Chunk[] {
   const { chunkSize, chunkOverlap, separators = DEFAULT_SEPARATORS } = options;
+
+  if (chunkOverlap >= chunkSize) {
+    throw new Error(`chunkOverlap (${chunkOverlap}) must be less than chunkSize (${chunkSize})`);
+  }
+
   const chunks: Chunk[] = [];
   
   const textChunks = splitText(doc.content, chunkSize, chunkOverlap, separators);
@@ -68,8 +73,12 @@ function splitText(
           const subChunks = splitText(piece, chunkSize, chunkOverlap, separators.slice(1));
           chunks.push(...subChunks);
         } else {
-          chunks.push(piece.slice(0, chunkSize));
-          currentChunk = piece.slice(chunkSize - chunkOverlap);
+          // No separator left to split on: slide a fixed window over the whole piece
+          // so every emitted chunk stays within chunkSize instead of dumping the remainder.
+          const step = chunkSize - chunkOverlap;
+          for (let i = 0; i < piece.length; i += step) {
+            chunks.push(piece.slice(i, i + chunkSize));
+          }
         }
       }
     }
