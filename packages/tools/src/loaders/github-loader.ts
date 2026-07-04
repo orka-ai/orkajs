@@ -49,21 +49,21 @@ export class GitHubLoader implements DocumentLoader {
   private async listFiles(path: string): Promise<GitHubContent[]> {
     const files: GitHubContent[] = [];
 
-    try {
-      const contents = await this.fetchContents(path);
+    // Listing failures (rate limits, wrong branch/repo, network errors) must
+    // propagate: swallowing them would let load() resolve with an empty or
+    // partial corpus and silently index nothing. Per-file read failures are
+    // still tolerated in loadFile().
+    const contents = await this.fetchContents(path);
 
-      for (const item of contents) {
-        if (item.type === 'file') {
-          files.push(item);
-        } else if (item.type === 'dir' && this.options.recursive) {
-          if (!this.isExcludedPath(item.path)) {
-            const subFiles = await this.listFiles(item.path);
-            files.push(...subFiles);
-          }
+    for (const item of contents) {
+      if (item.type === 'file') {
+        files.push(item);
+      } else if (item.type === 'dir' && this.options.recursive) {
+        if (!this.isExcludedPath(item.path)) {
+          const subFiles = await this.listFiles(item.path);
+          files.push(...subFiles);
         }
       }
-    } catch (error) {
-      console.warn(`Failed to list GitHub path ${path}:`, error);
     }
 
     return files;

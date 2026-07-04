@@ -92,7 +92,7 @@ export class SummarizationChain {
 
     // Reduce phase: combine all summaries
     const combinedSummaries = chunkSummaries.join('\n\n');
-    const combinePrompt = this.combinePrompt.replace('{{summaries}}', combinedSummaries);
+    const combinePrompt = this.combinePrompt.replace('{{summaries}}', () => combinedSummaries);
 
     const reduceStart = Date.now();
     const finalResult = await this.llm.generate(combinePrompt, {
@@ -155,8 +155,8 @@ export class SummarizationChain {
     // Refine with each subsequent chunk
     for (let i = 1; i < allChunks.length; i++) {
       const refinePromptText = this.refinePrompt
-        .replace('{{existingSummary}}', currentSummary)
-        .replace('{{context}}', allChunks[i]);
+        .replace('{{existingSummary}}', () => currentSummary)
+        .replace('{{context}}', () => allChunks[i]);
 
       const refineStart = Date.now();
       const refineResult = await this.llm.generate(refinePromptText, {

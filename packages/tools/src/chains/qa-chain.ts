@@ -46,11 +46,18 @@ export class QAChain {
     // Step 2: Answer based on strategy
     let answer: string;
     let usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+    // map-reduce and refine consume every source; stuff reports back only the
+    // sources that actually fit into the context budget.
+    let usedSources = sources;
 
     switch (this.strategy) {
-      case 'stuff':
-        ({ answer, usage } = await this.stuffQA(question, sources, steps));
+      case 'stuff': {
+        const result = await this.stuffQA(question, sources, steps);
+        answer = result.answer;
+        usage = result.usage;
+        usedSources = result.usedSources;
         break;
+      }
       case 'map-reduce':
         ({ answer, usage } = await this.mapReduceQA(question, sources, steps));
         break;
@@ -61,7 +68,7 @@ export class QAChain {
 
     return {
       answer,
-      sources: this.returnSources ? sources : undefined,
+      sources: this.returnSources ? usedSources : undefined,
       intermediateSteps: steps,
       usage,
     };
@@ -71,16 +78,34 @@ export class QAChain {
     question: string,
     sources: VectorSearchResult[],
     steps: ChainResult['intermediateSteps']
-  ): Promise<{ answer: string; usage: ChainResult['usage'] & Record<string, number> }> {
+  ): Promise<{ answer: string; usage: ChainResult['usage'] & Record<string, number>; usedSources: VectorSearchResult[] }> {
     let context = '';
     let tokenEstimate = 0;
+    const usedSources: VectorSearchResult[] = [];
 
     for (const source of sources) {
       const text = source.content ?? '';
+      if (!text) continue;
+
+      const remainingTokens = this.maxSourceTokens - tokenEstimate;
+      if (remainingTokens <= 0) break;
+
+      // Truncate a source that exceeds the remaining budget rather than
+      // skipping it, so an oversized first document never yields empty context.
       const est = Math.ceil(text.length / 4);
-      if (tokenEstimate + est > this.maxSourceTokens) break;
-      context += `[Document ${source.id}]:\n${text}\n\n`;
-      tokenEstimate += est;
+      const included = est > remainingTokens ? text.slice(0, remainingTokens * 4) : text;
+
+      context += `[Document ${source.id}]:\n${included}\n\n`;
+      tokenEstimate += Math.ceil(included.length / 4);
+      usedSources.push(source);
+    }
+
+    if (context === '') {
+      return {
+        answer: 'No relevant documents found to answer this question.',
+        usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+        usedSources: [],
+      };
     }
 
     const prompt = `Documents:\n${context}\nQuestion: ${question}\n\nProvide a detailed answer based on the documents above:`;
@@ -97,7 +122,7 @@ export class QAChain {
       latencyMs: Date.now() - start,
     });
 
-    return { answer: result.content, usage: result.usage };
+    return { answer: result.content, usage: result.usage, usedSources };
   }
 
   private async mapReduceQA(

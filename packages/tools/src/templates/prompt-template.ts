@@ -35,12 +35,13 @@ export class PromptTemplate {
       throw new Error(`Missing variables: ${missing.join(', ')}`);
     }
 
-    let result = this.template;
-    for (const [key, value] of Object.entries(allVars)) {
-      result = result.replace(new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), value);
-    }
-
-    return result;
+    // Single-pass, function-based replacement: a function replacement neutralizes
+    // `$`-patterns in values, and a single pass prevents a value that contains a
+    // placeholder (e.g. "{{b}}") from being re-substituted on a later iteration.
+    return this.template.replace(
+      /\{\{\s*(\w+)\s*\}\}/g,
+      (match, key: string) => (key in allVars ? allVars[key] : match)
+    );
   }
 
   partial(variables: Record<string, string | (() => string)>): PromptTemplate {

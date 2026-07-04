@@ -43,19 +43,19 @@ export class FewShotPromptTemplate {
     const parts: string[] = [];
 
     if (this.prefix) {
-      let prefix = this.prefix;
-      for (const [key, value] of Object.entries(allVars)) {
-        prefix = prefix.replace(new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), value);
-      }
+      const prefix = this.prefix.replace(
+        /\{\{\s*(\w+)\s*\}\}/g,
+        (match, key: string) => (key in allVars ? allVars[key] : match)
+      );
       parts.push(prefix);
     }
 
     parts.push(formattedExamples.join(this.exampleSeparator));
 
-    let suffix = this.suffix;
-    for (const [key, value] of Object.entries(allVars)) {
-      suffix = suffix.replace(new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), value);
-    }
+    const suffix = this.suffix.replace(
+      /\{\{\s*(\w+)\s*\}\}/g,
+      (match, key: string) => (key in allVars ? allVars[key] : match)
+    );
     parts.push(suffix);
 
     return parts.join(this.exampleSeparator);

@@ -28,7 +28,10 @@ export class TokenTextSplitter implements TextSplitter {
 
       if (end < text.length) {
         const lastSpace = text.lastIndexOf(' ', end);
-        if (lastSpace > start) {
+        // Only snap back to a space if doing so still advances past the
+        // previous start (accounting for overlap). Otherwise a long run
+        // without spaces would pin `end` near `start` and stall the loop.
+        if (lastSpace > start + charOverlap) {
           end = lastSpace;
         }
       }
@@ -38,8 +41,8 @@ export class TokenTextSplitter implements TextSplitter {
         chunks.push(chunk);
       }
 
+      if (end >= text.length) break;
       start = end - charOverlap;
-      if (start >= text.length) break;
     }
 
     return chunks;

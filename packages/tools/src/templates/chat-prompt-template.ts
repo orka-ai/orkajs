@@ -46,10 +46,10 @@ export class ChatPromptTemplate {
     }
 
     return this.messageTemplates.map(msg => {
-      let content = msg.template;
-      for (const [key, value] of Object.entries(allVars)) {
-        content = content.replace(new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), value);
-      }
+      const content = msg.template.replace(
+        /\{\{\s*(\w+)\s*\}\}/g,
+        (match, key: string) => (key in allVars ? allVars[key] : match)
+      );
       return { role: msg.role, content };
     });
   }

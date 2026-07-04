@@ -116,9 +116,11 @@ Standalone Question:`;
       .map(h => `${h.role === 'user' ? 'Human' : 'Assistant'}: ${h.content}`)
       .join('\n');
 
+    // Function replacements so `$`-patterns in history/question content are not
+    // interpreted as replacement-string special patterns.
     const prompt = this.condenseQuestionPrompt
-      .replace('{{history}}', historyStr)
-      .replace('{{question}}', question);
+      .replace('{{history}}', () => historyStr)
+      .replace('{{question}}', () => question);
 
     const result = await this.llm.generate(prompt, {
       temperature: 0,

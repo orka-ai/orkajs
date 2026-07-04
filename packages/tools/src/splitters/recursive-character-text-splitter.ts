@@ -74,7 +74,7 @@ export class RecursiveCharacterTextSplitter implements TextSplitter {
         goodSplits.push(s);
       } else {
         if (goodSplits.length > 0) {
-          const merged = this.mergeSplits(goodSplits, separator);
+          const merged = this.mergeSplits(goodSplits, this.keepSeparator ? '' : separator);
           finalChunks.push(...merged);
           goodSplits = [];
         }
@@ -89,7 +89,7 @@ export class RecursiveCharacterTextSplitter implements TextSplitter {
     }
 
     if (goodSplits.length > 0) {
-      const merged = this.mergeSplits(goodSplits, separator);
+      const merged = this.mergeSplits(goodSplits, this.keepSeparator ? '' : separator);
       finalChunks.push(...merged);
     }
 
