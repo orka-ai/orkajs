@@ -110,17 +110,16 @@ export function createDevToolsHook(): ObservabilityHook {
         metadata.totalTokens = event.usage.totalTokens;
       }
 
-      // If event has both start and end time, create a completed run
+      // If event has both start and end time, create a completed run using the
+      // event's actual timestamps so latency reflects the real duration rather
+      // than the ~0ms gap between the two replay wall-clock calls.
       if (event.startTime && event.endTime) {
-        const runId = collector.startRun(runType, event.name, event.input, metadata);
-        collector.endRun(runId, event.output, {
-          ...metadata,
-          // Override latency calculation since we have actual times
-        });
+        const runId = collector.startRun(runType, event.name, event.input, metadata, event.startTime);
+        collector.endRun(runId, event.output, metadata, event.endTime);
         eventToRun.set(event.id, runId);
       } else if (event.startTime && !event.endTime) {
         // Event is starting
-        const runId = collector.startRun(runType, event.name, event.input, metadata);
+        const runId = collector.startRun(runType, event.name, event.input, metadata, event.startTime);
         eventToRun.set(event.id, runId);
       } else {
         // Event is ending (find matching start)

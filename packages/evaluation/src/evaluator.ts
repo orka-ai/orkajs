@@ -49,53 +49,65 @@ export class Evaluator {
 
     for (const batch of batches) {
       const batchResults = await Promise.all(
-        batch.map(async (evalCase) => {
+        batch.map(async (evalCase): Promise<EvalResult> => {
           const startTime = Date.now();
 
-          const askResult = await this.orka.ask({
-            knowledge: evalCase.knowledge,
-            question: evalCase.input,
-            includeContext: true,
-          });
+          try {
+            const askResult = await this.orka.ask({
+              knowledge: evalCase.knowledge,
+              question: evalCase.input,
+              includeContext: true,
+            });
 
-          const contextTexts = askResult.context?.map(c => c.content) ?? evalCase.context ?? [];
+            const contextTexts = askResult.context?.map(c => c.content) ?? evalCase.context ?? [];
 
-          const metricResults: MetricResult[] = [];
-          for (const metricFn of resolvedMetrics) {
-            const metricResult = await metricFn({
+            const metricResults: MetricResult[] = [];
+            for (const metricFn of resolvedMetrics) {
+              const metricResult = await metricFn({
+                input: evalCase.input,
+                output: askResult.answer,
+                expectedOutput: evalCase.expectedOutput,
+                context: contextTexts,
+                llm: this.llm,
+              });
+              metricResults.push(metricResult);
+            }
+
+            const costMetric = metricResults.find(m => m.name === 'cost');
+            if (costMetric) {
+              costMetric.score = askResult.usage.totalTokens;
+              costMetric.details = {
+                promptTokens: askResult.usage.promptTokens,
+                completionTokens: askResult.usage.completionTokens,
+                totalTokens: askResult.usage.totalTokens,
+              };
+            }
+
+            const evalResult: EvalResult = {
               input: evalCase.input,
               output: askResult.answer,
               expectedOutput: evalCase.expectedOutput,
-              context: contextTexts,
-              llm: this.llm,
-            });
-            metricResults.push(metricResult);
-          }
+              metrics: metricResults,
+              latencyMs: Date.now() - startTime,
+              usage: {
+                promptTokens: askResult.usage.promptTokens,
+                completionTokens: askResult.usage.completionTokens,
+                totalTokens: askResult.usage.totalTokens,
+              },
+            };
 
-          const costMetric = metricResults.find(m => m.name === 'cost');
-          if (costMetric) {
-            costMetric.score = askResult.usage.totalTokens;
-            costMetric.details = {
-              promptTokens: askResult.usage.promptTokens,
-              completionTokens: askResult.usage.completionTokens,
-              totalTokens: askResult.usage.totalTokens,
+            return evalResult;
+          } catch (err) {
+            return {
+              input: evalCase.input,
+              output: '',
+              expectedOutput: evalCase.expectedOutput,
+              metrics: [],
+              latencyMs: Date.now() - startTime,
+              usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+              error: err instanceof Error ? err.message : String(err),
             };
           }
-
-          const evalResult: EvalResult = {
-            input: evalCase.input,
-            output: askResult.answer,
-            expectedOutput: evalCase.expectedOutput,
-            metrics: metricResults,
-            latencyMs: Date.now() - startTime,
-            usage: {
-              promptTokens: askResult.usage.promptTokens,
-              completionTokens: askResult.usage.completionTokens,
-              totalTokens: askResult.usage.totalTokens,
-            },
-          };
-
-          return evalResult;
         })
       );
 

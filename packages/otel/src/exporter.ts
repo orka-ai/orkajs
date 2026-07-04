@@ -146,12 +146,26 @@ export class OtelExporter {
         body: JSON.stringify(payload),
       });
       if (!response.ok) {
-        // Re-buffer for retry
-        this.buffer.unshift(...spans);
+        // Re-buffer for retry (capped to prevent unbounded memory growth when the endpoint is down)
+        this.requeue(spans);
       }
     } catch {
-      // Re-buffer for retry
-      this.buffer.unshift(...spans);
+      // Re-buffer for retry (capped to prevent unbounded memory growth when the endpoint is down)
+      this.requeue(spans);
+    }
+  }
+
+  /**
+   * Re-buffer a failed batch for the next flush attempt, dropping the oldest
+   * spans beyond maxBufferSize so a persistently unreachable collector cannot
+   * grow the buffer without bound.
+   */
+  private requeue(spans: OTLPSpan[]): void {
+    const maxBufferSize = this.config.batchSize * 5;
+    this.buffer.unshift(...spans);
+    if (this.buffer.length > maxBufferSize) {
+      // Drop the oldest spans beyond the cap, keeping the freshest telemetry.
+      this.buffer.splice(0, this.buffer.length - maxBufferSize);
     }
   }
 

@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import type { TraceRun, TraceRunType, TraceEvent } from './types.js';
 import { getCollector } from './collector.js';
 
@@ -37,6 +38,7 @@ export class OpenTelemetryExporter {
   private spanBuffer: OTLPSpan[] = [];
   private flushTimer?: ReturnType<typeof setInterval>;
   private unsubscribe?: () => void;
+  private idHexCache: Map<string, string> = new Map();
 
   constructor(config: OpenTelemetryConfig) {
     this.config = {
@@ -95,10 +97,10 @@ export class OpenTelemetryExporter {
     const span = this.runToSpan(run, traceId);
     this.spanBuffer.push(span);
 
-    // Also add child spans
-    for (const child of run.children) {
-      this.addSpan(child, traceId);
-    }
+    // Do NOT recurse into run.children here: every run (including children)
+    // is exported by its own run:end event. Re-adding children would export
+    // each of them again for each ancestor, producing duplicate spanIds and
+    // double-counted token/cost attributes.
 
     // Flush if buffer is full
     if (this.spanBuffer.length >= this.config.batchSize) {
@@ -188,18 +190,27 @@ export class OpenTelemetryExporter {
   }
 
   /**
-   * Convert string ID to hex format
+   * Map a run/session id to a valid OTLP hex id.
+   *
+   * OTLP/W3C require a random 128-bit traceId (32 hex chars) / 64-bit spanId
+   * (16 hex chars) that is non-zero. A 32-bit string hash carries only 8 hex
+   * chars of entropy (colliding after ~77k spans) and can yield an invalid
+   * all-zero id, so instead we generate a proper random id per source id and
+   * cache it. The cache keeps the mapping stable so a child's parentSpanId
+   * always matches its parent's spanId.
    */
   private toHex(id: string, length: number): string {
-    // Simple hash to hex conversion
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) {
-      const char = id.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
+    const key = `${length}:${id}`;
+    let hex = this.idHexCache.get(key);
+    if (!hex) {
+      hex = randomBytes(length / 2).toString('hex');
+      if (/^0+$/.test(hex)) {
+        // Astronomically unlikely, but an all-zero id is invalid per spec.
+        hex = hex.slice(0, -1) + '1';
+      }
+      this.idHexCache.set(key, hex);
     }
-    const hex = Math.abs(hash).toString(16).padStart(length, '0');
-    return hex.slice(0, length);
+    return hex;
   }
 
   /**

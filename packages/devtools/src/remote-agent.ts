@@ -14,6 +14,7 @@ export class RemoteAgent {
   private batchTimeout?: NodeJS.Timeout;
   private readonly batchSize = 10;
   private readonly batchIntervalMs = 1000;
+  private readonly sessionSampling: Map<string, boolean> = new Map();
 
   constructor(
     private tracer: TraceCollector,
@@ -74,11 +75,11 @@ export class RemoteAgent {
    * Handle incoming trace event
    */
   private handleEvent(event: TraceEvent): void {
-    // Apply sampling if configured
-    if (this.config.remote?.sampling !== undefined) {
-      if (Math.random() > this.config.remote.sampling) {
-        return; // Skip this trace based on sampling rate
-      }
+    // Apply sampling per session, not per event: a single decision must cover
+    // every event of a session so we never forward an orphaned run:end without
+    // its run:start (or runs without their session).
+    if (!this.shouldSampleSession(event)) {
+      return;
     }
 
     // Add to batch queue
@@ -93,6 +94,30 @@ export class RemoteAgent {
         this.flushBatch();
       }, this.batchIntervalMs);
     }
+  }
+
+  /**
+   * Decide whether an event's session is sampled in. The decision is made once
+   * per session (on the first event seen for it) and reused for all subsequent
+   * events, keeping each trace's event stream structurally intact.
+   */
+  private shouldSampleSession(event: TraceEvent): boolean {
+    const sampling = this.config.remote?.sampling;
+    if (sampling === undefined) return true;
+
+    const { sessionId } = event;
+    let decision = this.sessionSampling.get(sessionId);
+    if (decision === undefined) {
+      decision = Math.random() <= sampling;
+      this.sessionSampling.set(sessionId, decision);
+    }
+
+    // Release the decision once the session is done to bound memory.
+    if (event.type === 'session:end') {
+      this.sessionSampling.delete(sessionId);
+    }
+
+    return decision;
   }
 
   /**

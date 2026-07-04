@@ -70,49 +70,62 @@ export class TestRunner {
     metrics: MetricFn[],
     assertions: Assertion[],
   ): Promise<TestCaseReport> {
-    const askResult = await this.orka.ask({
-      knowledge: evalCase.knowledge,
-      question: evalCase.input,
-      includeContext: true,
-    });
-
-    const contextTexts = askResult.context?.map(c => c.content) ?? evalCase.context ?? [];
-    const llm = this.orka.getLLM();
-
-    const metricResults: Record<string, number> = {};
-    for (const metricFn of metrics) {
-      const result = await metricFn({
-        input: evalCase.input,
-        output: askResult.answer,
-        expectedOutput: evalCase.expectedOutput,
-        context: contextTexts,
-        llm,
+    try {
+      const askResult = await this.orka.ask({
+        knowledge: evalCase.knowledge,
+        question: evalCase.input,
+        includeContext: true,
       });
-      metricResults[result.name] = result.score;
-    }
 
-    const assertionResults: AssertionResult[] = assertions.map(assertion =>
-      assertion.check({
+      const contextTexts = askResult.context?.map(c => c.content) ?? evalCase.context ?? [];
+      const llm = this.orka.getLLM();
+
+      const metricResults: Record<string, number> = {};
+      for (const metricFn of metrics) {
+        const result = await metricFn({
+          input: evalCase.input,
+          output: askResult.answer,
+          expectedOutput: evalCase.expectedOutput,
+          context: contextTexts,
+          llm,
+        });
+        metricResults[result.name] = result.score;
+      }
+
+      const assertionResults: AssertionResult[] = assertions.map(assertion =>
+        assertion.check({
+          input: evalCase.input,
+          output: askResult.answer,
+          expectedOutput: evalCase.expectedOutput,
+          metrics: metricResults,
+          latencyMs: askResult.latencyMs,
+          totalTokens: askResult.usage.totalTokens,
+        })
+      );
+
+      const allPassed = assertionResults.length === 0 || assertionResults.every(a => a.passed);
+
+      return {
         input: evalCase.input,
         output: askResult.answer,
-        expectedOutput: evalCase.expectedOutput,
+        passed: allPassed,
+        assertions: assertionResults,
         metrics: metricResults,
         latencyMs: askResult.latencyMs,
         totalTokens: askResult.usage.totalTokens,
-      })
-    );
-
-    const allPassed = assertionResults.length === 0 || assertionResults.every(a => a.passed);
-
-    return {
-      input: evalCase.input,
-      output: askResult.answer,
-      passed: allPassed,
-      assertions: assertionResults,
-      metrics: metricResults,
-      latencyMs: askResult.latencyMs,
-      totalTokens: askResult.usage.totalTokens,
-    };
+      };
+    } catch (err) {
+      return {
+        input: evalCase.input,
+        output: '',
+        passed: false,
+        assertions: [],
+        metrics: {},
+        latencyMs: 0,
+        totalTokens: 0,
+        error: err instanceof Error ? err.message : String(err),
+      };
+    }
   }
 
   private buildReport(name: string, cases: TestCaseReport[], duration: number): TestSuiteReport {

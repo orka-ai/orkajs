@@ -161,19 +161,22 @@ export const collector = devtools;
 /**
  * Create a trace wrapper for any function
  */
-export function withTrace<T extends (...args: unknown[]) => unknown>(
-  fn: T,
+export function withTrace<A extends unknown[], R>(
+  fn: (...args: A) => R,
   options: {
     name?: string;
     type?: TraceRunType;
     tracer?: TraceCollector;
   } = {}
-): T {
+): (...args: A) => Promise<Awaited<R>> {
   const tracer = options.tracer ?? getCollector();
   const name = options.name ?? fn.name ?? 'anonymous';
   const type = options.type ?? 'custom';
 
-  return (async (...args: unknown[]) => {
+  // The wrapper is always async (it awaits fn), so the return type is honestly
+  // a Promise rather than the original T. Casting back to T would lie about
+  // sync functions returning a plain value when they now return a Promise.
+  return async (...args: A): Promise<Awaited<R>> => {
     const runId = tracer.startRun(type, name, args);
     try {
       const result = await fn(...args);
@@ -183,7 +186,7 @@ export function withTrace<T extends (...args: unknown[]) => unknown>(
       tracer.errorRun(runId, error as Error);
       throw error;
     }
-  }) as T;
+  };
 }
 
 /**

@@ -8,6 +8,7 @@ export interface TestCaseReport {
   metrics: Record<string, number>;
   latencyMs: number;
   totalTokens: number;
+  error?: string;
 }
 
 export interface TestSuiteReport {
@@ -41,6 +42,10 @@ export class ConsoleReporter implements Reporter {
     for (const testCase of suite.cases) {
       const icon = testCase.passed ? '  ✅' : '  ❌';
       console.log(`${icon} "${testCase.input.slice(0, 60)}${testCase.input.length > 60 ? '...' : ''}"`);
+
+      if (testCase.error) {
+        console.log(`    ✗ errored: ${testCase.error}`);
+      }
 
       for (const assertion of testCase.assertions) {
         const aIcon = assertion.passed ? '    ✓' : '    ✗';

@@ -14,6 +14,7 @@ export class DevToolsServer {
   private config: Required<Pick<DevToolsConfig, 'port' | 'host' | 'cors'>>;
   private server?: Server;
   private clients: Set<ServerResponse> = new Set();
+  private unsubscribe?: () => void;
   private dashboardHTML: string;
 
   constructor(collector: TraceCollector, config: DevToolsConfig = {}) {
@@ -62,7 +63,10 @@ export class DevToolsServer {
     // CORS middleware
     if (this.config.cors) {
       app.use((_req: Request, res: Response, next: NextFunction) => {
-        res.header('Access-Control-Allow-Origin', '*');
+        // Restrict to the dashboard's own origin. A wildcard would let any
+        // website the developer has open read /api/export (full LLM prompts and
+        // outputs) or issue destructive calls cross-origin.
+        res.header('Access-Control-Allow-Origin', `http://${this.config.host}:${this.config.port}`);
         res.header('Access-Control-Allow-Headers', 'Content-Type');
         res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE');
         next();
@@ -85,8 +89,10 @@ export class DevToolsServer {
       });
     });
 
-    // Subscribe to trace events for SSE
-    this.collector.subscribe((event) => {
+    // Subscribe to trace events for SSE. Keep the unsubscribe handle so stop()
+    // can detach from the (shared/global) collector and avoid writing to dead
+    // sockets or leaking listeners across start/stop cycles.
+    this.unsubscribe = this.collector.subscribe((event) => {
       this.broadcastEvent(event);
     });
   }
@@ -95,9 +101,28 @@ export class DevToolsServer {
    * Stop the server
    */
   async stop(): Promise<void> {
+    // Detach from the collector first so no further events are broadcast to
+    // sockets we are about to close.
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = undefined;
+    }
+
+    // End every open SSE response. server.close() only resolves once all
+    // connections have ended, and these keep-alive streams never end on their
+    // own, so without this stop() would hang forever while a dashboard tab is
+    // connected.
+    for (const client of this.clients) {
+      client.end();
+    }
+    this.clients.clear();
+
     if (this.server) {
+      const server = this.server;
+      // Force-close any lingering keep-alive sockets (Node 18.2+).
+      server.closeAllConnections?.();
       await new Promise<void>((resolve, reject) => {
-        this.server!.close((err) => {
+        server.close((err) => {
           if (err) reject(err);
           else resolve();
         });

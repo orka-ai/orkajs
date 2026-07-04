@@ -67,7 +67,6 @@ export class RemoteViewer {
    */
   private async connect(): Promise<void> {
     const endpoint = this.config.remote!.endpoint;
-    const apiKey = this.config.remote?.apiKey;
     const projectId = this.config.remote?.projectId;
     const filters = this.config.remote?.filters;
 
@@ -83,16 +82,10 @@ export class RemoteViewer {
 
     const streamUrl = `${endpoint}/api/stream?${params.toString()}`;
 
-    // Note: EventSource doesn't support custom headers natively
-    // For API key auth, we'll use query param (or implement custom SSE client)
-    const urlWithAuth = apiKey 
-      ? `${streamUrl}&apiKey=${encodeURIComponent(apiKey)}`
-      : streamUrl;
-
-    // Create EventSource connection
-    // In Node.js, we need to use a polyfill or custom implementation
-    // For now, we'll use fetch with streaming for better compatibility
-    this.connectWithFetch(urlWithAuth);
+    // The API key is sent via the Authorization header in connectWithFetch.
+    // It must never be placed in the URL query string, where it would leak
+    // into server access logs, proxy/CDN logs and URL-echoing error messages.
+    this.connectWithFetch(streamUrl);
   }
 
   /**
@@ -200,26 +193,14 @@ export class RemoteViewer {
         break;
       
       case 'run:start':
-        if (event.run) {
-          // Start a new run in local tracer
-          this.tracer.startRun(
-            event.run.type,
-            event.run.name,
-            event.run.input,
-            event.run.metadata
-          );
-        }
-        break;
-      
       case 'run:end':
-        if (event.run) {
-          this.tracer.endRun(event.run.id, event.run.output, event.run.metadata);
-        }
-        break;
-      
       case 'run:error':
-        if (event.run && event.error) {
-          this.tracer.errorRun(event.run.id, event.error);
+        // Ingest the remote run keyed by its own id so that follow-up
+        // run:end/run:error events match and update it in place. Replaying
+        // through startRun/endRun would mint a new local id and orphan every
+        // remote run (it could never be ended).
+        if (event.run) {
+          this.tracer.ingestRun(event.sessionId, event.run);
         }
         break;
     }

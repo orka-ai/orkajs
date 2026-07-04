@@ -1,5 +1,6 @@
 import type { LLMAdapter } from '@orka-js/core';
 import type { MetricFn, MetricResult } from './metrics.js';
+import { parseJudgeScore } from './metrics.js';
 
 /**
  * Cosine similarity between two vectors (used by embedding-based RAGAS metrics).
@@ -21,10 +22,9 @@ export function cosineSimilarity(a: number[], b: number[]): number {
  */
 async function llmScore(llm: LLMAdapter, prompt: string, metricName: string): Promise<MetricResult> {
   const result = await llm.generate(prompt, { temperature: 0, maxTokens: 10 });
-  const score = parseFloat(result.content.trim());
   return {
     name: metricName,
-    score: isNaN(score) ? 0 : Math.min(1, Math.max(0, score)),
+    score: parseJudgeScore(result.content),
   };
 }
 

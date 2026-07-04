@@ -16,6 +16,7 @@ export class TraceCollector {
   private sessions: Map<string, TraceSession> = new Map();
   private activeSessionId?: string;
   private runStack: Map<string, TraceRun[]> = new Map();
+  private runToSession: Map<string, string> = new Map();
   private maxTraces: number;
   private retentionMs: number;
   private listeners: Set<(event: TraceEvent) => void> = new Set();
@@ -80,7 +81,8 @@ export class TraceCollector {
     type: TraceRunType,
     name: string,
     input?: unknown,
-    metadata?: TraceMetadata
+    metadata?: TraceMetadata,
+    startTime?: number
   ): string {
     const sessionId = this.activeSessionId ?? this.startSession();
     const session = this.sessions.get(sessionId)!;
@@ -91,7 +93,7 @@ export class TraceCollector {
       parentId: stack.length > 0 ? stack[stack.length - 1].id : undefined,
       type,
       name,
-      startTime: Date.now(),
+      startTime: startTime ?? Date.now(),
       status: 'running',
       input,
       metadata,
@@ -106,6 +108,7 @@ export class TraceCollector {
     }
 
     stack.push(run);
+    this.runToSession.set(run.id, sessionId);
 
     this.emit({
       type: 'run:start',
@@ -120,8 +123,11 @@ export class TraceCollector {
   /**
    * End a trace run
    */
-  endRun(runId: string, output?: unknown, metadata?: TraceMetadata): void {
-    const sessionId = this.activeSessionId;
+  endRun(runId: string, output?: unknown, metadata?: TraceMetadata, endTime?: number): void {
+    // Resolve the session that owns this run rather than assuming it is the
+    // currently-active one; concurrent traces switch activeSessionId, so a run
+    // may be ended while a different session is active.
+    const sessionId = this.runToSession.get(runId);
     if (!sessionId) return;
 
     const stack = this.runStack.get(sessionId);
@@ -131,7 +137,7 @@ export class TraceCollector {
     if (runIndex === -1) return;
 
     const run = stack[runIndex];
-    run.endTime = Date.now();
+    run.endTime = endTime ?? Date.now();
     run.latencyMs = run.endTime - run.startTime;
     run.status = 'success';
     run.output = output;
@@ -142,6 +148,7 @@ export class TraceCollector {
 
     // Pop from stack
     stack.splice(runIndex, 1);
+    this.runToSession.delete(runId);
 
     this.emit({
       type: 'run:end',
@@ -155,7 +162,9 @@ export class TraceCollector {
    * Mark a run as errored
    */
   errorRun(runId: string, error: Error | string): void {
-    const sessionId = this.activeSessionId;
+    // Resolve the owning session by run id (see endRun) instead of relying on
+    // the currently-active session.
+    const sessionId = this.runToSession.get(runId);
     if (!sessionId) return;
 
     const stack = this.runStack.get(sessionId);
@@ -171,6 +180,7 @@ export class TraceCollector {
     run.error = error instanceof Error ? error.message : error;
 
     stack.splice(runIndex, 1);
+    this.runToSession.delete(runId);
 
     this.emit({
       type: 'run:error',
@@ -178,6 +188,70 @@ export class TraceCollector {
       sessionId,
       run,
       error: run.error,
+    });
+  }
+
+  /**
+   * Ingest a fully-formed run originating from a remote collector, preserving
+   * its original id, timestamps and status.
+   *
+   * Unlike startRun/endRun (which mint a new local id and wall-clock times),
+   * this keys the run by its remote id so that follow-up run:end/run:error
+   * events for the same run can be matched and updated in place. Used by
+   * RemoteViewer to faithfully mirror a remote session tree.
+   */
+  ingestRun(sessionId: string, incoming: TraceRun): void {
+    let session = this.sessions.get(sessionId);
+    if (!session) {
+      session = {
+        id: sessionId,
+        name: `Session ${this.sessions.size + 1}`,
+        startTime: incoming.startTime,
+        runs: [],
+      };
+      this.sessions.set(sessionId, session);
+      if (!this.runStack.has(sessionId)) {
+        this.runStack.set(sessionId, []);
+      }
+    }
+
+    const existing = this.findRun(incoming.id, sessionId);
+    if (existing) {
+      // Update the already-inserted run in place (e.g. run:start followed by
+      // run:end). Children arrive as their own events, so we never overwrite
+      // the existing subtree.
+      existing.endTime = incoming.endTime;
+      existing.latencyMs = incoming.latencyMs;
+      existing.status = incoming.status;
+      existing.output = incoming.output;
+      existing.error = incoming.error;
+      if (incoming.metadata) {
+        existing.metadata = { ...existing.metadata, ...incoming.metadata };
+      }
+    } else {
+      const parent = incoming.parentId
+        ? this.findRun(incoming.parentId, sessionId)
+        : undefined;
+      if (parent) {
+        parent.children.push(incoming);
+      } else {
+        session.runs.push(incoming);
+      }
+    }
+
+    const type: TraceEvent['type'] =
+      incoming.status === 'running'
+        ? 'run:start'
+        : incoming.status === 'error'
+          ? 'run:error'
+          : 'run:end';
+
+    this.emit({
+      type,
+      timestamp: Date.now(),
+      sessionId,
+      run: existing ?? incoming,
+      error: incoming.error,
     });
   }
 
@@ -387,8 +461,7 @@ export class TraceCollector {
 
     for (const [id, session] of this.sessions) {
       if (session.endTime && session.endTime < cutoff) {
-        this.sessions.delete(id);
-        this.runStack.delete(id);
+        this.forgetSession(id);
       }
     }
 
@@ -396,13 +469,26 @@ export class TraceCollector {
     if (this.sessions.size > this.maxTraces) {
       const sorted = Array.from(this.sessions.entries())
         .sort((a, b) => a[1].startTime - b[1].startTime);
-      
+
       const toDelete = sorted.slice(0, this.sessions.size - this.maxTraces);
       for (const [id] of toDelete) {
-        this.sessions.delete(id);
-        this.runStack.delete(id);
+        this.forgetSession(id);
       }
     }
+  }
+
+  /**
+   * Drop a session and any bookkeeping that references its runs.
+   */
+  private forgetSession(id: string): void {
+    const stack = this.runStack.get(id);
+    if (stack) {
+      for (const run of stack) {
+        this.runToSession.delete(run.id);
+      }
+    }
+    this.sessions.delete(id);
+    this.runStack.delete(id);
   }
 
   /**
@@ -411,6 +497,7 @@ export class TraceCollector {
   clear(): void {
     this.sessions.clear();
     this.runStack.clear();
+    this.runToSession.clear();
     this.activeSessionId = undefined;
   }
 

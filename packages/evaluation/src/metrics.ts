@@ -6,6 +6,20 @@ export interface MetricResult {
   details?: Record<string, unknown>;
 }
 
+/**
+ * Parse a 0.0–1.0 score from an LLM judge response. Extracts the first numeric
+ * token so that judge preambles ("Score: 0.8") still yield the intended score.
+ * Throws when no number is present so a failed judge call is treated as an error
+ * rather than being silently coerced to 0 (which would flip pass/fail semantics).
+ */
+export function parseJudgeScore(content: string): number {
+  const match = content.match(/\d+(?:\.\d+)?/);
+  if (!match) {
+    throw new Error(`Judge returned an unparseable score: "${content.trim()}"`);
+  }
+  return Math.min(1, Math.max(0, parseFloat(match[0])));
+}
+
 export interface EvalCase {
   input: string;
   expectedOutput?: string;
@@ -25,6 +39,7 @@ export interface EvalResult {
     completionTokens: number;
     totalTokens: number;
   };
+  error?: string;
 }
 
 export interface EvalSummary {
@@ -58,11 +73,10 @@ Rate from 0.0 to 1.0 where:
 Respond with ONLY a number between 0.0 and 1.0, nothing else.`;
 
     const result = await llm.generate(prompt, { temperature: 0, maxTokens: 10 });
-    const score = parseFloat(result.content.trim());
-    
+
     return {
       name: 'relevance',
-      score: isNaN(score) ? 0 : Math.min(1, Math.max(0, score)),
+      score: parseJudgeScore(result.content),
     };
   },
 
@@ -87,11 +101,10 @@ Rate from 0.0 to 1.0 where:
 Respond with ONLY a number between 0.0 and 1.0, nothing else.`;
 
     const result = await llm.generate(prompt, { temperature: 0, maxTokens: 10 });
-    const score = parseFloat(result.content.trim());
 
     return {
       name: 'faithfulness',
-      score: isNaN(score) ? 0 : Math.min(1, Math.max(0, score)),
+      score: parseJudgeScore(result.content),
     };
   },
 
@@ -113,11 +126,10 @@ Rate from 0.0 to 1.0 where:
 Respond with ONLY a number between 0.0 and 1.0, nothing else.`;
 
     const result = await llm.generate(prompt, { temperature: 0, maxTokens: 10 });
-    const score = parseFloat(result.content.trim());
 
     return {
       name: 'correctness',
-      score: isNaN(score) ? 0 : Math.min(1, Math.max(0, score)),
+      score: parseJudgeScore(result.content),
     };
   },
 
@@ -142,11 +154,10 @@ Rate from 0.0 to 1.0 where:
 Respond with ONLY a number between 0.0 and 1.0, nothing else.`;
 
     const result = await llm.generate(prompt, { temperature: 0, maxTokens: 10 });
-    const score = parseFloat(result.content.trim());
 
     return {
       name: 'hallucination',
-      score: isNaN(score) ? 0 : Math.min(1, Math.max(0, score)),
+      score: parseJudgeScore(result.content),
     };
   },
 
