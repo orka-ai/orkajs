@@ -90,7 +90,7 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
 
     let response: Response;
     try {
-      response = await fetch(`${this.baseURL}/messages`, {
+      response = await fetch(`${this.baseURL}/v1/messages`, {
         method: 'POST',
         signal: controller.signal,
         headers: {
@@ -221,6 +221,15 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
     });
   }
 
+  private mapToolChoice(choice: StreamGenerateOptions['toolChoice']): { type: string } {
+    switch (choice) {
+      case 'none': return { type: 'none' };
+      case 'required': return { type: 'any' };
+      case 'auto':
+      default: return { type: 'auto' };
+    }
+  }
+
   private mapStopReason(reason: string): LLMResult['finishReason'] {
     switch (reason) {
       case 'end_turn': return 'stop';
@@ -241,12 +250,14 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
       messages = [];
       for (const msg of options.messages) {
         if (msg.role === 'system') {
-          system = typeof msg.content === 'string' ? msg.content : String(msg.content);
+          system = typeof msg.content === 'string' ? msg.content : (msg.content[0] as { text: string }).text;
           continue;
         }
         messages.push({
           role: msg.role,
-          content: msg.content,
+          content: typeof msg.content === 'string'
+            ? msg.content
+            : this.mapContentParts(msg.content as ContentPart[]),
         });
       }
     } else {
@@ -278,6 +289,14 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
           temperature: options.temperature ?? 0.7,
           stop_sequences: options.stopSequences,
           stream: true,
+          ...(options.tools?.length ? {
+            tools: options.tools.map(t => ({
+              name: t.name,
+              description: t.description,
+              input_schema: t.parameters ?? { type: 'object', properties: {} },
+            })),
+            tool_choice: this.mapToolChoice(options.toolChoice),
+          } : {}),
         }),
       });
     } catch (error) {
@@ -470,14 +489,16 @@ export class AnthropicAdapter implements LLMAdapter, StreamingLLMAdapter {
 
     let cost: number | undefined;
 
-    for await (const event of this.stream(prompt, options)) {
-      options.onEvent?.(event);
+    const { onToken, onEvent, ...streamOptions } = options;
+
+    for await (const event of this.stream(prompt, streamOptions)) {
+      onEvent?.(event);
 
       switch (event.type) {
         case 'token':
           if (ttft === undefined) ttft = Date.now() - startTime;
           content += event.token;
-          options.onToken?.(event.token, tokenIndex++);
+          onToken?.(event.token, tokenIndex++);
           break;
         case 'usage':
           usage = event.usage;

@@ -45,9 +45,11 @@ export class ReplicateAdapter implements LLMAdapter, StreamingLLMAdapter {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
 
+    const { url, version } = this.getPredictionRequest();
+
     let response: Response;
     try {
-      response = await fetch(`${this.baseURL}/predictions`, {
+      response = await fetch(url, {
         method: 'POST',
         signal: controller.signal,
         headers: {
@@ -55,7 +57,7 @@ export class ReplicateAdapter implements LLMAdapter, StreamingLLMAdapter {
           'Authorization': `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
-          version: this.getModelVersion(),
+          ...(version ? { version } : {}),
           input,
         }),
       });
@@ -105,9 +107,11 @@ export class ReplicateAdapter implements LLMAdapter, StreamingLLMAdapter {
       options.signal.addEventListener('abort', () => controller.abort());
     }
 
+    const { url, version } = this.getPredictionRequest();
+
     let response: Response;
     try {
-      response = await fetch(`${this.baseURL}/predictions`, {
+      response = await fetch(url, {
         method: 'POST',
         signal: controller.signal,
         headers: {
@@ -116,7 +120,7 @@ export class ReplicateAdapter implements LLMAdapter, StreamingLLMAdapter {
           'Prefer': 'wait',
         },
         body: JSON.stringify({
-          version: this.getModelVersion(),
+          ...(version ? { version } : {}),
           input,
           stream: true,
         }),
@@ -303,14 +307,15 @@ export class ReplicateAdapter implements LLMAdapter, StreamingLLMAdapter {
     return input;
   }
 
-  private getModelVersion(): string {
-    // For official models, the version is part of the model string
+  private getPredictionRequest(): { url: string; version?: string } {
     // Format: owner/model:version or owner/model
+    // A ':version' hash targets the shared /predictions endpoint with a `version` field.
     if (this.model.includes(':')) {
-      return this.model.split(':')[1];
+      return { url: `${this.baseURL}/predictions`, version: this.model.split(':')[1] };
     }
-    // Return the full model identifier for official models
-    return this.model;
+    // Official models without a version hash must use the model-scoped endpoint
+    // (POST /models/{owner}/{name}/predictions) and send no `version` field.
+    return { url: `${this.baseURL}/models/${this.model}/predictions` };
   }
 
   async generateObject<T>(schema: OrkaSchema<T>, prompt: string, options?: LLMGenerateOptions): Promise<T> {

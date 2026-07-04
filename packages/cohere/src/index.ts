@@ -57,11 +57,34 @@ export class CohereAdapter implements LLMAdapter, StreamingLLMAdapter {
     }
 
     if (options.messages) {
-      body.chat_history = options.messages.map(msg => ({
-        role: msg.role === 'assistant' ? 'CHATBOT' : 'USER',
-        message: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content),
-      }));
-      body.message = prompt;
+      const preambleParts: string[] = [];
+      const turns: Array<{ role: 'USER' | 'CHATBOT'; message: string }> = [];
+
+      for (const msg of options.messages) {
+        const text = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content);
+        if (msg.role === 'system') {
+          preambleParts.push(text);
+        } else {
+          turns.push({
+            role: msg.role === 'assistant' ? 'CHATBOT' : 'USER',
+            message: text,
+          });
+        }
+      }
+
+      // Cohere v1 /chat treats `message` as the current turn; the latest user
+      // turn belongs there, not duplicated into chat_history.
+      const last = turns.length > 0 ? turns[turns.length - 1] : undefined;
+      if (last && last.role === 'USER') {
+        body.message = last.message;
+        turns.pop();
+      }
+
+      body.chat_history = turns;
+
+      if (preambleParts.length > 0 && !options.systemPrompt) {
+        body.preamble = preambleParts.join('\n');
+      }
     }
 
     let response: Response;
@@ -178,10 +201,34 @@ export class CohereAdapter implements LLMAdapter, StreamingLLMAdapter {
     }
 
     if (options.messages) {
-      body.chat_history = options.messages.map(msg => ({
-        role: msg.role === 'assistant' ? 'CHATBOT' : 'USER',
-        message: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content),
-      }));
+      const preambleParts: string[] = [];
+      const turns: Array<{ role: 'USER' | 'CHATBOT'; message: string }> = [];
+
+      for (const msg of options.messages) {
+        const text = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content);
+        if (msg.role === 'system') {
+          preambleParts.push(text);
+        } else {
+          turns.push({
+            role: msg.role === 'assistant' ? 'CHATBOT' : 'USER',
+            message: text,
+          });
+        }
+      }
+
+      // Cohere v1 /chat treats `message` as the current turn; the latest user
+      // turn belongs there, not duplicated into chat_history.
+      const last = turns.length > 0 ? turns[turns.length - 1] : undefined;
+      if (last && last.role === 'USER') {
+        body.message = last.message;
+        turns.pop();
+      }
+
+      body.chat_history = turns;
+
+      if (preambleParts.length > 0 && !options.systemPrompt) {
+        body.preamble = preambleParts.join('\n');
+      }
     }
 
     let response: Response;

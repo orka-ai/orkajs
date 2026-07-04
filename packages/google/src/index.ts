@@ -445,13 +445,28 @@ export class GoogleAdapter implements LLMAdapter, StreamingLLMAdapter {
       switch (part.type) {
         case 'text':
           return { text: part.text };
-        case 'image_url':
+        case 'image_url': {
+          const url = part.image_url.url;
+          // Data URIs carry the bytes inline; Gemini's inlineData.data must be
+          // the bare base64 payload (without the 'data:...;base64,' prefix).
+          const dataUriMatch = /^data:([^;,]+)(;base64)?,(.*)$/s.exec(url);
+          if (dataUriMatch) {
+            const [, mimeType, isBase64, payload] = dataUriMatch;
+            return {
+              inlineData: {
+                mimeType,
+                data: isBase64 ? payload : Buffer.from(decodeURIComponent(payload)).toString('base64'),
+              },
+            };
+          }
+          // Remote URLs are passed by reference; a URL is not valid base64 and
+          // must not be placed in inlineData.data.
           return {
-            inlineData: {
-              mimeType: 'image/jpeg',
-              data: part.image_url.url,
+            fileData: {
+              fileUri: url,
             },
           };
+        }
         case 'image_base64':
           return {
             inlineData: {

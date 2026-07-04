@@ -60,12 +60,18 @@ export class MistralAdapter implements LLMAdapter, StreamingLLMAdapter {
   }
 
   async generate(prompt: string, options: LLMGenerateOptions = {}): Promise<LLMResult> {
-    const messages: Array<{ role: string; content: string }> = [];
-    
-    if (options.systemPrompt) {
-      messages.push({ role: 'system', content: options.systemPrompt });
+    const messages: Array<{ role: string; content: string | unknown[] }> = [];
+
+    if (options.messages) {
+      for (const msg of options.messages) {
+        messages.push({ role: msg.role, content: msg.content });
+      }
+    } else {
+      if (options.systemPrompt) {
+        messages.push({ role: 'system', content: options.systemPrompt });
+      }
+      messages.push({ role: 'user', content: prompt });
     }
-    messages.push({ role: 'user', content: prompt });
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -213,12 +219,18 @@ export class MistralAdapter implements LLMAdapter, StreamingLLMAdapter {
    * Mistral API is OpenAI-compatible for streaming
    */
   async *stream(prompt: string, options: StreamGenerateOptions = {}): AsyncIterable<LLMStreamEvent> {
-    const messages: Array<{ role: string; content: string }> = [];
+    const messages: Array<{ role: string; content: string | unknown[] }> = [];
 
-    if (options.systemPrompt) {
-      messages.push({ role: 'system', content: options.systemPrompt });
+    if (options.messages) {
+      for (const msg of options.messages) {
+        messages.push({ role: msg.role, content: msg.content });
+      }
+    } else {
+      if (options.systemPrompt) {
+        messages.push({ role: 'system', content: options.systemPrompt });
+      }
+      messages.push({ role: 'user', content: prompt });
     }
-    messages.push({ role: 'user', content: prompt });
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);

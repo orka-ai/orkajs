@@ -39,11 +39,17 @@ export class OllamaAdapter implements LLMAdapter, StreamingLLMAdapter {
 
   async generate(prompt: string, options: LLMGenerateOptions = {}): Promise<LLMResult> {
     const messages: Array<{ role: string; content: string }> = [];
-    
-    if (options.systemPrompt) {
-      messages.push({ role: 'system', content: options.systemPrompt });
+
+    if (options.messages) {
+      for (const msg of options.messages) {
+        messages.push({ role: msg.role, content: this.toOllamaContent(msg.content) });
+      }
+    } else {
+      if (options.systemPrompt) {
+        messages.push({ role: 'system', content: options.systemPrompt });
+      }
+      messages.push({ role: 'user', content: prompt });
     }
-    messages.push({ role: 'user', content: prompt });
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -84,6 +90,7 @@ export class OllamaAdapter implements LLMAdapter, StreamingLLMAdapter {
       message: { content: string };
       model: string;
       done: boolean;
+      done_reason?: string;
       prompt_eval_count?: number;
       eval_count?: number;
     };
@@ -96,9 +103,24 @@ export class OllamaAdapter implements LLMAdapter, StreamingLLMAdapter {
         totalTokens: (data.prompt_eval_count ?? 0) + (data.eval_count ?? 0),
       },
       model: data.model,
-      finishReason: data.done ? 'stop' : 'length',
+      finishReason: data.done_reason === 'length' ? 'length' : 'stop',
       cost: 0, // Ollama runs locally — no API cost
     };
+  }
+
+  /**
+   * Ollama's /api/chat expects string message content. String content maps 1:1;
+   * structured content parts are flattened to their concatenated text.
+   */
+  private toOllamaContent(content: string | unknown[]): string {
+    if (typeof content === 'string') return content;
+    return content
+      .map((part) =>
+        part && typeof part === 'object' && 'text' in part
+          ? String((part as { text: unknown }).text)
+          : '',
+      )
+      .join('');
   }
 
   async embed(texts: string | string[]): Promise<number[][]> {
@@ -149,10 +171,16 @@ export class OllamaAdapter implements LLMAdapter, StreamingLLMAdapter {
   async *stream(prompt: string, options: StreamGenerateOptions = {}): AsyncIterable<LLMStreamEvent> {
     const messages: Array<{ role: string; content: string }> = [];
 
-    if (options.systemPrompt) {
-      messages.push({ role: 'system', content: options.systemPrompt });
+    if (options.messages) {
+      for (const msg of options.messages) {
+        messages.push({ role: msg.role, content: this.toOllamaContent(msg.content) });
+      }
+    } else {
+      if (options.systemPrompt) {
+        messages.push({ role: 'system', content: options.systemPrompt });
+      }
+      messages.push({ role: 'user', content: prompt });
     }
-    messages.push({ role: 'user', content: prompt });
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -219,6 +247,7 @@ export class OllamaAdapter implements LLMAdapter, StreamingLLMAdapter {
     let content = '';
     let tokenIndex = 0;
     let usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+    let finishReason: DoneEvent['finishReason'] = 'stop';
 
     try {
       while (true) {
@@ -267,6 +296,7 @@ export class OllamaAdapter implements LLMAdapter, StreamingLLMAdapter {
 
             // Final message with usage stats
             if (json.done) {
+              finishReason = json.done_reason === 'length' ? 'length' : 'stop';
               usage = {
                 promptTokens: json.prompt_eval_count || 0,
                 completionTokens: json.eval_count || 0,
@@ -282,14 +312,14 @@ export class OllamaAdapter implements LLMAdapter, StreamingLLMAdapter {
 
       yield createStreamEvent<DoneEvent>('done', {
         content,
-        finishReason: 'stop',
+        finishReason,
         usage,
         cost: 0,
       });
 
       options.onEvent?.(createStreamEvent<DoneEvent>('done', {
         content,
-        finishReason: 'stop',
+        finishReason,
         usage,
         cost: 0,
       }));

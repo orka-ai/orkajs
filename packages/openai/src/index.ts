@@ -360,7 +360,7 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter, AudioAdap
           role: msg.role,
           content: typeof msg.content === 'string'
             ? msg.content
-            : msg.content,
+            : this.mapContentParts(msg.content as ContentPart[]),
         });
       }
     } else {
@@ -564,6 +564,9 @@ export class OpenAIAdapter implements LLMAdapter, StreamingLLMAdapter, AudioAdap
       }));
 
     } finally {
+      // Cancel the body so the underlying socket is torn down on every exit
+      // path (early break, downstream throw, error event), not just released.
+      await reader.cancel().catch(() => {});
       reader.releaseLock();
     }
   }
