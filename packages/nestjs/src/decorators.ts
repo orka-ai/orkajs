@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Inject } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { ORKA_AGENT_TOKEN, ORKA_AGENT_CLIENT_TOKEN, ORKA_AGENT_METADATA, ORKA_REACT_METADATA } from './tokens.js';
 import type { OrkaAgentMetadata, AgentReactOptions } from './types.js';
 import type { BaseAgent } from '@orka-js/agent';
@@ -104,6 +104,8 @@ export function InjectAgentClient(name: string): ParameterDecorator & PropertyDe
  *
  * @param options - Agent property name (string shorthand) or full options object
  */
+const agentReactLogger = new Logger('AgentReact');
+
 export function AgentReact(options: AgentReactOptions | string = {}): MethodDecorator {
   const opts: AgentReactOptions = typeof options === 'string' ? { agent: options } : options;
   const agentProp = opts.agent ?? 'agent';
@@ -124,7 +126,15 @@ export function AgentReact(options: AgentReactOptions | string = {}): MethodDeco
             `[OrkaJS] @AgentReact: property "${agentProp}" is not a valid BaseAgent on ${this.constructor.name}`,
           );
         }
-        void agent.run(JSON.stringify(payload));
+        // Fire-and-forget: swallow-and-log rejections so a transient LLM
+        // failure (rate limit, network, provider 5xx) cannot become an
+        // unhandled rejection that crashes the process (Node 15+).
+        agent.run(JSON.stringify(payload)).catch((err: unknown) => {
+          agentReactLogger.error(
+            `@AgentReact: agent run failed in ${this.constructor.name}.${String(propertyKey)}`,
+            err instanceof Error ? err.stack : String(err),
+          );
+        });
       };
     } else {
       descriptor.value = async function (

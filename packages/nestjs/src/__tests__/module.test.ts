@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import 'reflect-metadata';
 import type { BaseAgent, AgentResult } from '@orka-js/agent';
 import type { LLMAdapter, LLMResult } from '@orka-js/core';
@@ -119,8 +119,8 @@ describe('@AgentReact', () => {
 
     const handler = new EventHandler();
     const result = await handler.onEvent({ type: 'test', id: 42 });
-    expect((result as AgentResult).output).toBe('hello from agent');
-    expect((result as AgentResult).input).toBe(JSON.stringify({ type: 'test', id: 42 }));
+    expect((result as unknown as AgentResult).output).toBe('hello from agent');
+    expect((result as unknown as AgentResult).input).toBe(JSON.stringify({ type: 'test', id: 42 }));
     expect(mockAgent.run).toHaveBeenCalledOnce();
   });
 
@@ -138,7 +138,7 @@ describe('@AgentReact', () => {
 
     const handler = new Handler();
     const result = await handler.onEvent('ping');
-    expect((result as AgentResult).output).toBe('custom prop');
+    expect((result as unknown as AgentResult).output).toBe('custom prop');
     expect(mockAgent.run).toHaveBeenCalledWith(JSON.stringify('ping'));
   });
 
@@ -250,7 +250,7 @@ describe('OrkaSemanticGuard', () => {
     expect(result).toBe(false);
   });
 
-  it('includes request details in the LLM prompt', async () => {
+  it('includes request details in the LLM prompt without leaking the raw credential', async () => {
     const { OrkaSemanticGuard } = await import('../guards.js');
     const llm = createMockLLM('ALLOW');
     const guard = new OrkaSemanticGuard(llm, 'Only GET requests allowed');
@@ -262,17 +262,28 @@ describe('OrkaSemanticGuard', () => {
     const promptArg = (llm.generate as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
     expect(promptArg).toContain('DELETE');
     expect(promptArg).toContain('/users/123');
-    expect(promptArg).toContain('Bearer token');
     expect(promptArg).toContain('Only GET requests allowed');
+    // The raw Authorization value must never reach the third-party LLM; only its presence is reported.
+    expect(promptArg).not.toContain('Bearer token');
+    expect(promptArg).toContain('Authorization header: present');
   });
 
   it('is case-insensitive for ALLOW detection', async () => {
     const { OrkaSemanticGuard } = await import('../guards.js');
-    const llm = createMockLLM('allow (confirmed)');
+    const llm = createMockLLM('allow');
     const guard = new OrkaSemanticGuard(llm, 'policy');
 
     const result = await guard.canActivate(makeContext() as never);
     expect(result).toBe(true);
+  });
+
+  it('fails closed when the verdict merely contains ALLOW (e.g. DISALLOW)', async () => {
+    const { OrkaSemanticGuard } = await import('../guards.js');
+    const llm = createMockLLM('DISALLOW');
+    const guard = new OrkaSemanticGuard(llm, 'policy');
+
+    const result = await guard.canActivate(makeContext() as never);
+    expect(result).toBe(false);
   });
 });
 

@@ -1,4 +1,5 @@
 import { createServer } from 'http';
+import { exec } from 'child_process';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import type { OrkaServerConfig, OrkaServerInstance } from './types.js';
@@ -94,7 +95,6 @@ export async function createOrkaServer(config: OrkaServerConfig): Promise<OrkaSe
 }
 
 function openBrowser(url: string): void {
-  const { exec } = require('child_process') as typeof import('child_process');
   const platform = process.platform;
   const cmd = platform === 'darwin' ? 'open'
     : platform === 'win32' ? 'start'

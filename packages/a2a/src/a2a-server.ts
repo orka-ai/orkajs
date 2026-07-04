@@ -1,3 +1,4 @@
+import { Router } from 'express';
 import type { BaseAgent } from '@orka-js/agent';
 import type {
   AgentCard,
@@ -59,7 +60,6 @@ export class A2AServer {
    * Returns an Express middleware (Router) that handles A2A protocol requests.
    */
   handler(): import('express').Router {
-    const { Router } = require('express') as typeof import('express');
     const router = Router();
 
     // Agent Card endpoint
@@ -69,34 +69,63 @@ export class A2AServer {
 
     // JSON-RPC 2.0 endpoint
     router.post('/', async (req: import('express').Request, res: import('express').Response) => {
-      const body = req.body as JsonRpcRequest;
+      const body = req.body as JsonRpcRequest | undefined;
 
-      if (body.jsonrpc !== '2.0' || !body.method) {
-        res.json(this.rpcError(body.id ?? 0, -32600, 'Invalid Request'));
-        return;
-      }
+      try {
+        if (!body || body.jsonrpc !== '2.0' || !body.method) {
+          res.json(this.rpcError(body?.id ?? 0, -32600, 'Invalid Request'));
+          return;
+        }
 
-      switch (body.method) {
-        case 'tasks/send':
-          await this.handleTaskSend(body, res);
-          break;
-        case 'tasks/sendSubscribe':
-          await this.handleTaskSubscribe(body, req, res);
-          break;
-        default:
-          res.json(this.rpcError(body.id, -32601, `Method not found: ${body.method}`));
+        switch (body.method) {
+          case 'tasks/send':
+            await this.handleTaskSend(body, res);
+            break;
+          case 'tasks/sendSubscribe':
+            await this.handleTaskSubscribe(body, req, res);
+            break;
+          default:
+            res.json(this.rpcError(body.id, -32601, `Method not found: ${body.method}`));
+        }
+      } catch (error) {
+        // Ensure no promise rejection escapes to Express 4 (which would crash the process).
+        if (res.headersSent) {
+          res.end();
+        } else {
+          res.json(this.rpcError(body?.id ?? 0, -32603, (error as Error).message));
+        }
       }
     });
 
     return router;
   }
 
+  /**
+   * Validates that JSON-RPC params match the A2ATask shape and returns the
+   * parsed task plus its joined text input, or null when the params are invalid.
+   */
+  private parseTaskParams(params: unknown): { task: A2ATask; input: string } | null {
+    if (!params || typeof params !== 'object') {
+      return null;
+    }
+    const task = params as A2ATask;
+    const parts = task.message?.parts;
+    if (!Array.isArray(parts) || !parts.every(p => p && typeof p.text === 'string')) {
+      return null;
+    }
+    return { task, input: parts.map(p => p.text).join('\n') };
+  }
+
   private async handleTaskSend(
     req: JsonRpcRequest,
     res: import('express').Response,
   ): Promise<void> {
-    const task = req.params as A2ATask;
-    const input = task.message.parts.map(p => p.text).join('\n');
+    const parsed = this.parseTaskParams(req.params);
+    if (!parsed) {
+      res.json(this.rpcError(req.id, -32602, 'Invalid params'));
+      return;
+    }
+    const { task, input } = parsed;
 
     try {
       const result = await this.agent.run(input);
@@ -126,8 +155,12 @@ export class A2AServer {
     _expressReq: import('express').Request,
     res: import('express').Response,
   ): Promise<void> {
-    const task = req.params as A2ATask;
-    const input = task.message.parts.map(p => p.text).join('\n');
+    const parsed = this.parseTaskParams(req.params);
+    if (!parsed) {
+      res.json(this.rpcError(req.id, -32602, 'Invalid params'));
+      return;
+    }
+    const { task, input } = parsed;
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -150,11 +183,17 @@ export class A2AServer {
 
     try {
       if (typeof (this.agent as { runStream?: unknown }).runStream === 'function') {
-        const streamAgent = this.agent as unknown as { runStream(input: string): AsyncIterable<{ type: string; token?: string; content?: string }> };
+        const streamAgent = this.agent as unknown as { runStream(input: string): AsyncIterable<{ type: string; token?: string; content?: string; message?: string }> };
         let fullContent = '';
+        let streamError: string | null = null;
 
         for await (const event of streamAgent.runStream(input)) {
-          if (event.type === 'token' && event.token) {
+          if (event.type === 'error') {
+            // Agents yield (not throw) error events, so catch them here to
+            // avoid reporting a failed run as 'completed'.
+            streamError = event.message ?? 'Agent stream error';
+            break;
+          } else if (event.type === 'token' && event.token) {
             fullContent += event.token;
             sendEvent({
               jsonrpc: '2.0',
@@ -173,15 +212,30 @@ export class A2AServer {
           }
         }
 
-        sendEvent({
-          jsonrpc: '2.0',
-          id: req.id,
-          result: {
-            id: task.id,
-            status: { state: 'completed', timestamp: new Date().toISOString() },
-            artifacts: [{ parts: [{ type: 'text', text: fullContent }] }],
-          } satisfies A2ATaskState,
-        });
+        if (streamError) {
+          sendEvent({
+            jsonrpc: '2.0',
+            id: req.id,
+            result: {
+              id: task.id,
+              status: {
+                state: 'failed',
+                message: { role: 'agent', parts: [{ type: 'text', text: streamError }] },
+                timestamp: new Date().toISOString(),
+              },
+            } satisfies A2ATaskState,
+          });
+        } else {
+          sendEvent({
+            jsonrpc: '2.0',
+            id: req.id,
+            result: {
+              id: task.id,
+              status: { state: 'completed', timestamp: new Date().toISOString() },
+              artifacts: [{ parts: [{ type: 'text', text: fullContent }] }],
+            } satisfies A2ATaskState,
+          });
+        }
       } else {
         const result = await this.agent.run(input);
         sendEvent({

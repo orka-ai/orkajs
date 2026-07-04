@@ -46,6 +46,22 @@ import type {
  * MCP Client for connecting to MCP servers
  */
 export class MCPClient {
+  /**
+   * JSON-RPC methods that are safe to retry automatically. Only read-only /
+   * idempotent methods are listed; mutating calls (tools/call,
+   * resources/subscribe, resources/unsubscribe) are never blind-retried to
+   * avoid duplicating side effects when a response is lost after execution.
+   */
+  private static readonly IDEMPOTENT_METHODS: ReadonlySet<string> = new Set([
+    'initialize',
+    'tools/list',
+    'resources/list',
+    'resources/read',
+    'prompts/list',
+    'prompts/get',
+    'ping',
+  ]);
+
   private config: MCPClientConfig;
   private serverInfo: MCPServerInfo | null = null;
   private connectionState: MCPConnectionState = 'disconnected';
@@ -121,7 +137,19 @@ export class MCPClient {
         },
       });
 
-      this.serverInfo = response as MCPServerInfo;
+      // The MCP 2024-11-05 InitializeResult nests name/version under a
+      // `serverInfo` envelope; translate it into our internal MCPServerInfo.
+      const initResult = response as {
+        protocolVersion?: string;
+        capabilities?: MCPServerInfo['capabilities'];
+        serverInfo?: { name?: string; version?: string };
+      };
+      this.serverInfo = {
+        name: initResult.serverInfo?.name ?? 'unknown',
+        version: initResult.serverInfo?.version ?? 'unknown',
+        protocolVersion: initResult.protocolVersion ?? '2024-11-05',
+        capabilities: initResult.capabilities ?? {},
+      };
       this.connectionState = 'connected';
 
       // Send initialized notification
@@ -194,8 +222,28 @@ export class MCPClient {
 
     try {
       const response = await this.sendRequest('tools/call', { name: toolCall.name, arguments: toolCall.arguments });
-      const result = response as MCPToolResult;
-      
+
+      // The MCP spec's CallToolResult is { content, isError }; translate it to
+      // our internal MCPToolResult so callers can rely on `success`/`error`.
+      const raw = response as {
+        content?: MCPContent[];
+        isError?: boolean;
+        error?: string;
+        metadata?: MCPToolResult['metadata'];
+      };
+      const content = raw.content ?? [];
+      const isError = raw.isError === true;
+      const result: MCPToolResult = {
+        success: !isError,
+        content,
+        error:
+          raw.error ??
+          (isError
+            ? content.flatMap(c => (c.type === 'text' ? [c.text] : [])).join('\n') || undefined
+            : undefined),
+        metadata: raw.metadata,
+      };
+
       this.emit('tool:result', { tool: name, result });
       
       return result;
@@ -340,9 +388,11 @@ export class MCPClient {
       params,
     };
 
+    const idempotent = MCPClient.IDEMPOTENT_METHODS.has(method);
+
     return this.executeWithRetry(async () => {
       const response = await this.httpRequest(request);
-      
+
       if (response.error) {
         throw new OrkaError(
           response.error.message,
@@ -354,7 +404,7 @@ export class MCPClient {
       }
 
       return response.result;
-    });
+    }, idempotent);
   }
 
   /**
@@ -419,9 +469,9 @@ export class MCPClient {
   /**
    * Execute with retry logic
    */
-  private async executeWithRetry<T>(fn: () => Promise<T>): Promise<T> {
+  private async executeWithRetry<T>(fn: () => Promise<T>, idempotent: boolean): Promise<T> {
     const { maxRetries = 3, initialDelayMs = 1000, maxDelayMs = 10000 } = this.config.retry || {};
-    
+
     let lastError: Error | null = null;
     let delay = initialDelayMs;
 
@@ -431,8 +481,12 @@ export class MCPClient {
       } catch (error) {
         lastError = error as Error;
 
-        // Don't retry on certain errors
-        if (error instanceof OrkaError && !error.isRetryable()) {
+        // Never retry non-idempotent methods (e.g. tools/call): re-sending
+        // could duplicate side effects if the server already executed the
+        // call before the response was lost. Only retry transport-level
+        // failures on idempotent methods; JSON-RPC application errors are
+        // deterministic and are not retried.
+        if (!idempotent || !this.isRetryableTransportError(error)) {
           throw error;
         }
 
@@ -447,6 +501,19 @@ export class MCPClient {
     }
 
     throw lastError;
+  }
+
+  /**
+   * Whether an error is a retryable transport-level failure. Request timeouts
+   * abort fetch with an AbortError, and HTTP failures surface as NETWORK_ERROR;
+   * both are transient. JSON-RPC application errors (EXTERNAL_SERVICE_ERROR) are
+   * deterministic server responses and are never retried.
+   */
+  private isRetryableTransportError(error: unknown): boolean {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return true;
+    }
+    return error instanceof OrkaError && error.code === OrkaErrorCode.NETWORK_ERROR;
   }
 
   /**

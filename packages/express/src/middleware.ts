@@ -102,17 +102,27 @@ export function orkaMiddleware(config: OrkaExpressConfig): ReturnType<typeof Rou
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
 
-    const send = (data: unknown) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+    // Track client disconnect so we stop pulling LLM events and writing to a dead socket.
+    let clientClosed = false;
+    res.on('close', () => { clientClosed = true; });
+
+    const send = (data: unknown) => {
+      if (clientClosed || res.writableEnded) return;
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
 
     try {
       for await (const event of agent.runStream(body.input)) {
+        // On disconnect, break the loop — this invokes the generator's return(),
+        // the strongest cancellation available at this adapter boundary.
+        if (clientClosed) break;
         send(event);
         if (event.type === 'done' || event.type === 'error') break;
       }
     } catch (err) {
       send({ type: 'error', message: (err as Error).message });
     }
-    res.end();
+    if (!res.writableEnded) res.end();
   });
 
   return router;

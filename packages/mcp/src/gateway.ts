@@ -58,6 +58,11 @@ export class MCPGateway {
   private eventListeners: Map<MCPEventType, Set<MCPEventListener>> = new Map();
   private isRunning = false;
   private healthCheckInterval: ReturnType<typeof setInterval> | null = null;
+  private healthCheckRunning = false;
+  /** Default timeout for proxied requests to an upstream (ms). */
+  private readonly UPSTREAM_TIMEOUT_MS = 30000;
+  /** Shorter timeout for health-check pings so one wedged upstream can't stall others (ms). */
+  private readonly HEALTH_CHECK_TIMEOUT_MS = 5000;
 
   constructor(config: MCPGatewayConfig) {
     this.config = { port: 4000, host: 'localhost', cors: true, loadBalancing: 'round-robin', ...config };
@@ -74,6 +79,19 @@ export class MCPGateway {
         prompts: { listChanged: true },
         logging: {},
       },
+    };
+  }
+
+  /**
+   * Translate the gateway's MCPServerInfo into the MCP 2024-11-05
+   * InitializeResult wire shape, which nests name/version under `serverInfo`.
+   */
+  private toWireGatewayInfo(): { protocolVersion: string; capabilities: MCPServerInfo['capabilities']; serverInfo: { name: string; version: string } } {
+    const info = this.getGatewayInfo();
+    return {
+      protocolVersion: info.protocolVersion,
+      capabilities: info.capabilities,
+      serverInfo: { name: info.name, version: info.version },
     };
   }
 
@@ -117,34 +135,48 @@ export class MCPGateway {
       connections: 0,
     };
 
+    // Register the state before loading so it is tracked (and health-checked)
+    // even if the upstream is currently down.
+    this.upstreams.set(config.name, state);
+
     try {
-      // Initialize connection and fetch capabilities
-      await this.initializeUpstream(config);
+      await this.loadUpstreamCapabilities(state);
       state.healthy = true;
-
-      // Fetch tools, resources, prompts
-      const [tools, resources, prompts] = await Promise.all([
-        this.fetchUpstreamTools(config),
-        this.fetchUpstreamResources(config),
-        this.fetchUpstreamPrompts(config),
-      ]);
-
-      state.tools = tools;
-      state.resources = resources;
-      state.prompts = prompts;
-
-      // Map tools/resources/prompts to upstream
-      tools.forEach(t => this.toolToUpstream.set(t.name, config.name));
-      resources.forEach(r => this.resourceToUpstream.set(r.uri, config.name));
-      prompts.forEach(p => this.promptToUpstream.set(p.name, config.name));
-
-      this.upstreams.set(config.name, state);
-      console.log(`[MCP Gateway] Added upstream: ${config.name} (${tools.length} tools, ${resources.length} resources, ${prompts.length} prompts)`);
+      console.log(`[MCP Gateway] Added upstream: ${config.name} (${state.tools.length} tools, ${state.resources.length} resources, ${state.prompts.length} prompts)`);
     } catch (error) {
       state.healthy = false;
-      this.upstreams.set(config.name, state);
       console.error(`[MCP Gateway] Failed to connect to upstream ${config.name}:`, (error as Error).message);
     }
+  }
+
+  /**
+   * (Re-)run the initialize handshake, fetch tools/resources/prompts, and
+   * rebuild this upstream's name mappings. Used both on initial connect and
+   * when a previously unhealthy upstream comes back online, so a recovered
+   * upstream that was never initialized still exposes its tools.
+   */
+  private async loadUpstreamCapabilities(state: UpstreamState): Promise<void> {
+    const config = state.config;
+    await this.initializeUpstream(config);
+
+    const [tools, resources, prompts] = await Promise.all([
+      this.fetchUpstreamTools(config),
+      this.fetchUpstreamResources(config),
+      this.fetchUpstreamPrompts(config),
+    ]);
+
+    // Drop any stale mappings from a previous load before rebuilding them.
+    state.tools.forEach(t => this.toolToUpstream.delete(t.name));
+    state.resources.forEach(r => this.resourceToUpstream.delete(r.uri));
+    state.prompts.forEach(p => this.promptToUpstream.delete(p.name));
+
+    state.tools = tools;
+    state.resources = resources;
+    state.prompts = prompts;
+
+    tools.forEach(t => this.toolToUpstream.set(t.name, config.name));
+    resources.forEach(r => this.resourceToUpstream.set(r.uri, config.name));
+    prompts.forEach(p => this.promptToUpstream.set(p.name, config.name));
   }
 
   async removeUpstream(name: string): Promise<void> {
@@ -191,31 +223,55 @@ export class MCPGateway {
     } catch { return []; }
   }
 
-  private async sendToUpstream(config: MCPUpstreamConfig, method: string, params: Record<string, unknown>): Promise<unknown> {
+  private async sendToUpstream(config: MCPUpstreamConfig, method: string, params: Record<string, unknown>, timeoutMs: number = this.UPSTREAM_TIMEOUT_MS): Promise<unknown> {
     const request: MCPRequest = { jsonrpc: '2.0', id: generateId(), method, params };
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (config.apiKey) headers['Authorization'] = `Bearer ${config.apiKey}`;
 
-    const response = await fetch(config.endpoint, { method: 'POST', headers, body: JSON.stringify(request) });
-    if (!response.ok) throw new OrkaError(`Upstream error: ${response.status}`, OrkaErrorCode.NETWORK_ERROR, 'mcp');
+    // Abort a wedged upstream that accepts the connection but never responds,
+    // so proxied calls (and health-check pings) can't hang indefinitely.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(config.endpoint, { method: 'POST', headers, body: JSON.stringify(request), signal: controller.signal });
+      if (!response.ok) throw new OrkaError(`Upstream error: ${response.status}`, OrkaErrorCode.NETWORK_ERROR, 'mcp');
 
-    const data = await response.json() as MCPResponse;
-    if (data.error) throw new OrkaError(data.error.message, OrkaErrorCode.EXTERNAL_SERVICE_ERROR, 'mcp');
-    return data.result;
+      const data = await response.json() as MCPResponse;
+      if (data.error) throw new OrkaError(data.error.message, OrkaErrorCode.EXTERNAL_SERVICE_ERROR, 'mcp');
+      return data.result;
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   private startHealthChecks(): void {
-    this.healthCheckInterval = setInterval(async () => {
-      for (const [, state] of this.upstreams) {
-        try {
-          await this.sendToUpstream(state.config, 'ping', {});
-          state.healthy = true;
-        } catch {
-          state.healthy = false;
-        }
-        state.lastCheck = new Date();
-      }
+    this.healthCheckInterval = setInterval(() => {
+      // Guard against overlapping runs: a wedged upstream must not cause a new
+      // health-check pass (and a new set of fetches) to pile up every 30s.
+      if (this.healthCheckRunning) return;
+      this.healthCheckRunning = true;
+      void this.runHealthChecks().finally(() => {
+        this.healthCheckRunning = false;
+      });
     }, 30000);
+  }
+
+  private async runHealthChecks(): Promise<void> {
+    for (const [, state] of this.upstreams) {
+      try {
+        await this.sendToUpstream(state.config, 'ping', {}, this.HEALTH_CHECK_TIMEOUT_MS);
+        // An upstream that was down (and therefore never initialized, with no
+        // tools or mappings) has just come back: re-run the handshake and
+        // re-fetch its capabilities before advertising it as healthy.
+        if (!state.healthy) {
+          await this.loadUpstreamCapabilities(state);
+        }
+        state.healthy = true;
+      } catch {
+        state.healthy = false;
+      }
+      state.lastCheck = new Date();
+    }
   }
 
   private async handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -245,7 +301,7 @@ export class MCPGateway {
     const { method, params } = request;
     try {
       switch (method) {
-        case 'initialize': return { result: this.getGatewayInfo() };
+        case 'initialize': return { result: this.toWireGatewayInfo() };
         case 'notifications/initialized': return { result: {} };
         case 'tools/list': return { result: { tools: this.getAllTools() } };
         case 'tools/call': return { result: await this.routeToolCall(params as { name: string; arguments: Record<string, unknown> }) };

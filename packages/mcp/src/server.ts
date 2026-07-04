@@ -148,10 +148,10 @@ export class MCPServer {
     const { method, params } = request;
     try {
       switch (method) {
-        case 'initialize': return { result: this.getServerInfo() };
+        case 'initialize': return { result: this.toWireServerInfo() };
         case 'notifications/initialized': return { result: {} };
         case 'tools/list': return { result: { tools: Array.from(this.tools.values()).map(t => t.definition) } };
-        case 'tools/call': return { result: await this.handleToolCall(params as { name: string; arguments: Record<string, unknown> }) };
+        case 'tools/call': return { result: this.toWireToolResult(await this.handleToolCall(params as { name: string; arguments: Record<string, unknown> })) };
         case 'resources/list': return { result: { resources: Array.from(this.resources.values()).map(r => r.definition) } };
         case 'resources/read': return { result: await this.handleResourceRead(params as { uri: string }) };
         case 'resources/subscribe': case 'resources/unsubscribe': return { result: {} };
@@ -161,6 +161,31 @@ export class MCPServer {
         default: return { error: { code: -32601, message: `Method not found: ${method}` } };
       }
     } catch (error) { return { error: { code: -32603, message: (error as Error).message } }; }
+  }
+
+  /**
+   * Translate our internal MCPServerInfo into the MCP 2024-11-05
+   * InitializeResult wire shape, which nests name/version under `serverInfo`.
+   */
+  private toWireServerInfo(): { protocolVersion: string; capabilities: MCPServerCapabilities; serverInfo: { name: string; version: string } } {
+    const info = this.getServerInfo();
+    return {
+      protocolVersion: info.protocolVersion,
+      capabilities: info.capabilities,
+      serverInfo: { name: info.name, version: info.version },
+    };
+  }
+
+  /**
+   * Translate our internal MCPToolResult into the MCP spec's CallToolResult
+   * wire shape ({ content, isError }).
+   */
+  private toWireToolResult(result: MCPToolResult): { content: MCPContent[]; isError: boolean; metadata?: MCPToolResult['metadata'] } {
+    return {
+      content: result.content,
+      isError: result.success === false,
+      ...(result.metadata ? { metadata: result.metadata } : {}),
+    };
   }
 
   private async handleToolCall(params: { name: string; arguments: Record<string, unknown> }): Promise<MCPToolResult> {

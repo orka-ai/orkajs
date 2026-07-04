@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { stream } from 'hono/streaming';
+import { streamSSE } from 'hono/streaming';
 import { cors } from 'hono/cors';
 import type { BaseAgent } from '@orka-js/agent';
 import type { LLMStreamEvent } from '@orka-js/core';
@@ -83,14 +83,14 @@ export function orkaHono(config: OrkaHonoConfig): Hono {
     if (!body?.input) return c.json({ error: 'Request body must include "input" field' }, 400);
 
     const input = body.input;
-    return stream(c, async (s) => {
+    return streamSSE(c, async (s) => {
       try {
         for await (const event of agent.runStream!(input)) {
-          await s.writeln(`data: ${JSON.stringify(event)}`);
+          await s.writeSSE({ data: JSON.stringify(event) });
           if (event.type === 'done' || event.type === 'error') break;
         }
       } catch (err) {
-        await s.writeln(`data: ${JSON.stringify({ type: 'error', message: (err as Error).message })}`);
+        await s.writeSSE({ data: JSON.stringify({ type: 'error', message: (err as Error).message }) });
       }
     });
   });

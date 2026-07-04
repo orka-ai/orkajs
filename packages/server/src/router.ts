@@ -1,19 +1,17 @@
-import type { Router } from 'express';
+import { Router } from 'express';
 import type { BaseAgent } from '@orka-js/agent';
 
 export function createApiRouter(
   agents: Record<string, BaseAgent>,
   wsBroadcast: (agentName: string, event: unknown) => void,
 ): Router {
-  // Dynamic import of express to avoid bundling issues
-  const { Router: ExpressRouter } = require('express') as typeof import('express');
-  const router = ExpressRouter();
+  const router = Router();
 
   // GET /api/agents — list all agents
   router.get('/agents', (_req, res) => {
     const list = Object.entries(agents).map(([name, agent]) => ({
       name,
-      goal: (agent as { goal?: string }).goal ?? '',
+      goal: (agent as unknown as { goal?: string }).goal ?? '',
     }));
     res.json({ agents: list, version: '1.5.0' });
   });
@@ -35,7 +33,11 @@ export function createApiRouter(
 
     try {
       const result = await agent.run(input);
-      res.json({ result: result.output, usage: result.usage, steps: result.steps.length });
+      res.json({
+        result: result.output,
+        usage: { totalTokens: result.totalTokens },
+        steps: result.steps.length,
+      });
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
@@ -69,7 +71,7 @@ export function createApiRouter(
 
     try {
       if (typeof (agent as { runStream?: unknown }).runStream === 'function') {
-        const streamAgent = agent as { runStream(input: string): AsyncIterable<unknown> };
+        const streamAgent = agent as unknown as { runStream(input: string): AsyncIterable<unknown> };
         for await (const event of streamAgent.runStream(input)) {
           sendEvent(event);
         }

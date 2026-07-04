@@ -69,6 +69,12 @@ export class OpenAITTSAdapter implements TTSAdapter {
   async *synthesizeStream(text: string, options: TTSSynthesizeOptions = {}): AsyncIterable<Buffer> {
     // Split text into sentences for lower latency
     const sentences = text.match(/[^.!?]+[.!?]+/g) ?? [text];
+    // match() drops any trailing text after the final terminator; re-append it.
+    const matchedLength = sentences.reduce((sum, s) => sum + s.length, 0);
+    const remainder = text.slice(matchedLength).trim();
+    if (remainder) {
+      sentences.push(remainder);
+    }
     for (const sentence of sentences) {
       const audio = await this.synthesize(sentence.trim(), options);
       yield audio;
