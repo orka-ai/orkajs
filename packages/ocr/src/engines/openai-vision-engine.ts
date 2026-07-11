@@ -13,6 +13,8 @@ import type {
 } from '../types.js';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as dns from 'dns';
+import * as net from 'net';
 
 /**
  * OpenAI Vision OCR Engine
@@ -83,13 +85,10 @@ export class OpenAIVisionEngine implements OCREngine {
       }
       throw new Error('Invalid data URL format');
     } else if (input.startsWith('http://') || input.startsWith('https://')) {
-      // URL - fetch the image
-      const response = await fetch(input);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.statusText}`);
-      }
-      buffer = Buffer.from(await response.arrayBuffer());
-      mimeType = response.headers.get('content-type') || this.detectMimeType(buffer);
+      // URL - fetch the image with SSRF protections
+      const fetched = await this.fetchRemoteImage(input);
+      buffer = fetched.buffer;
+      mimeType = fetched.mimeType;
     } else {
       // File path
       buffer = fs.readFileSync(input);
@@ -101,6 +100,119 @@ export class OpenAIVisionEngine implements OCREngine {
       base64: buffer.toString('base64'),
       mimeType,
     };
+  }
+
+  /**
+   * Fetch an image from a remote URL while guarding against SSRF.
+   *
+   * Rejects non-http(s) schemes, enforces an optional host allowlist, refuses
+   * any host that resolves to a private/loopback/link-local/metadata address,
+   * disallows redirects (which could otherwise re-target an internal host), and
+   * caps the downloaded body size.
+   */
+  private async fetchRemoteImage(input: string): Promise<{ buffer: Buffer; mimeType: string }> {
+    const url = new URL(input);
+
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      throw new Error(`Unsupported URL protocol for image fetch: ${url.protocol}`);
+    }
+
+    const allowedHosts = this.config.allowedImageHosts;
+    if (allowedHosts && !allowedHosts.includes(url.hostname)) {
+      throw new Error(`Host not allowed for image fetch: ${url.hostname}`);
+    }
+
+    await this.assertPublicHost(url.hostname);
+
+    // `redirect: 'error'` prevents an initially-public host from redirecting the
+    // request to an internal address after the allowlist/DNS checks have passed.
+    const response = await fetch(input, { redirect: 'error' });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
+    }
+
+    const maxBytes = this.config.maxImageBytes ?? 10 * 1024 * 1024;
+    const declaredLength = Number(response.headers.get('content-length'));
+    if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+      throw new Error(`Remote image exceeds maximum size of ${maxBytes} bytes`);
+    }
+
+    const buffer = await this.readCappedBody(response, maxBytes);
+    const mimeType = response.headers.get('content-type') || this.detectMimeType(buffer);
+    return { buffer, mimeType };
+  }
+
+  /**
+   * Resolve a hostname and reject it if any resolved address is in a
+   * private/loopback/link-local/metadata range.
+   */
+  private async assertPublicHost(hostname: string): Promise<void> {
+    let addresses: string[];
+    if (net.isIP(hostname)) {
+      addresses = [hostname];
+    } else {
+      const resolved = await dns.promises.lookup(hostname, { all: true });
+      addresses = resolved.map((entry) => entry.address);
+    }
+
+    if (addresses.length === 0) {
+      throw new Error(`Could not resolve host: ${hostname}`);
+    }
+
+    for (const address of addresses) {
+      if (this.isPrivateAddress(address)) {
+        throw new Error(`Refusing to fetch image from non-public address: ${address}`);
+      }
+    }
+  }
+
+  private isPrivateAddress(address: string): boolean {
+    const type = net.isIP(address);
+    if (type === 4) {
+      const [a, b] = address.split('.').map(Number);
+      if (a === 0 || a === 10 || a === 127) return true;
+      if (a === 169 && b === 254) return true; // link-local (incl. cloud metadata)
+      if (a === 172 && b >= 16 && b <= 31) return true;
+      if (a === 192 && b === 168) return true;
+      if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
+      return false;
+    }
+    if (type === 6) {
+      const addr = address.toLowerCase();
+      if (addr === '::' || addr === '::1') return true;
+      if (addr.startsWith('fe80')) return true; // link-local
+      if (addr.startsWith('fc') || addr.startsWith('fd')) return true; // unique local (fc00::/7)
+      const mapped = addr.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+      if (mapped) return this.isPrivateAddress(mapped[1]);
+      return false;
+    }
+    // Unknown / unparseable address - treat as unsafe.
+    return true;
+  }
+
+  private async readCappedBody(response: Response, maxBytes: number): Promise<Buffer> {
+    const reader = response.body?.getReader();
+    if (!reader) {
+      const buffer = Buffer.from(await response.arrayBuffer());
+      if (buffer.length > maxBytes) {
+        throw new Error(`Remote image exceeds maximum size of ${maxBytes} bytes`);
+      }
+      return buffer;
+    }
+
+    const chunks: Buffer[] = [];
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.length;
+      if (total > maxBytes) {
+        await reader.cancel();
+        throw new Error(`Remote image exceeds maximum size of ${maxBytes} bytes`);
+      }
+      chunks.push(Buffer.from(value));
+    }
+    return Buffer.concat(chunks);
   }
 
   private detectMimeType(buffer: Buffer): string {

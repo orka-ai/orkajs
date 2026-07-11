@@ -251,6 +251,17 @@ export interface OpenAIVisionConfig {
   apiKey: string;
   model?: string;
   maxTokens?: number;
+  /**
+   * Optional allowlist of hostnames permitted when an image is supplied as an
+   * http(s) URL. When set, any URL whose host is not in this list is rejected.
+   * Private/loopback/link-local/metadata addresses are always rejected
+   * regardless of this setting.
+   */
+  allowedImageHosts?: string[];
+  /**
+   * Maximum size (in bytes) of an image fetched from a URL. Defaults to 10 MiB.
+   */
+  maxImageBytes?: number;
 }
 
 export interface GoogleVisionConfig {
