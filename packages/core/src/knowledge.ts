@@ -7,6 +7,7 @@ import type {
   VectorSearchResult,
   OrkaDefaults
 } from './types.js';
+import type { LookupFunction } from 'node:net';
 import { chunkDocuments } from './chunker.js';
 import { generateId } from './utils.js';
 import { OrkaError, OrkaErrorCode } from './errors.js';
@@ -222,13 +223,15 @@ export class Knowledge {
     for (let hop = 0; hop <= maxRedirects; hop++) {
       await this.assertUrlAllowed(url);
 
-      const response = await fetch(url, { signal, redirect: 'manual' });
+      const response = await this.pinnedFetch(url, signal);
 
       if (response.status >= 300 && response.status < 400) {
         const location = response.headers.get('location');
         if (!location) {
           return response;
         }
+        // Release the socket before following the redirect on a fresh connection.
+        await response.body?.cancel();
         url = new URL(location, url).toString();
         continue;
       }
@@ -241,6 +244,82 @@ export class Knowledge {
       OrkaErrorCode.SSRF_BLOCKED,
       'core/knowledge',
     );
+  }
+
+  // Issue the request over node's http/https client with a pinned DNS lookup so
+  // the connection can only reach an address that passed validation. The global
+  // fetch() performs its OWN DNS resolution at connect time with no way to pin
+  // the validated IP, which a low-TTL rebinding record can exploit to swap in a
+  // private address (e.g. the cloud metadata endpoint) after assertUrlAllowed
+  // has already approved a public one.
+  private async pinnedFetch(rawUrl: string, signal: AbortSignal): Promise<Response> {
+    const [{ request: httpsRequest }, { request: httpRequest }, { Readable }] = await Promise.all([
+      import('node:https'),
+      import('node:http'),
+      import('node:stream'),
+    ]);
+
+    const parsed = new URL(rawUrl);
+    const requestFn = parsed.protocol === 'https:' ? httpsRequest : httpRequest;
+    const lookup = this.createPinnedLookup(rawUrl);
+
+    return await new Promise<Response>((resolve, reject) => {
+      const req = requestFn(parsed, { signal, lookup }, (res) => {
+        const headers = new Headers();
+        for (const [key, value] of Object.entries(res.headers)) {
+          if (Array.isArray(value)) {
+            for (const entry of value) headers.append(key, entry);
+          } else if (value !== undefined) {
+            headers.set(key, value);
+          }
+        }
+
+        const hasBody = res.statusCode !== 204 && res.statusCode !== 304;
+        const body = hasBody ? (Readable.toWeb(res) as ReadableStream) : null;
+        resolve(new Response(body, {
+          status: res.statusCode ?? 0,
+          statusText: res.statusMessage,
+          headers,
+        }));
+      });
+      req.on('error', reject);
+      req.end();
+    });
+  }
+
+  // Resolve the hostname once and hand the socket only addresses that passed the
+  // private/loopback/link-local checks. Because the connection uses these pinned
+  // addresses instead of resolving DNS a second time, a rebinding record cannot
+  // substitute a private IP between validation and connect.
+  private createPinnedLookup(rawUrl: string): LookupFunction {
+    return (hostname, options, callback) => {
+      (async () => {
+        const { lookup } = await import('dns/promises');
+        const resolved = await lookup(hostname, { all: true });
+
+        for (const { address } of resolved) {
+          if (isBlockedAddress(address)) {
+            throw new OrkaError(
+              `Blocked request to private or loopback address (${address}) for URL: ${rawUrl}`,
+              OrkaErrorCode.SSRF_BLOCKED,
+              'core/knowledge',
+            );
+          }
+        }
+
+        const family = typeof options === 'object' && options ? (options.family ?? 0) : 0;
+        const selected = family ? resolved.filter((entry) => entry.family === family) : resolved;
+        if (selected.length === 0) {
+          throw new Error(`No address of the requested family for host: ${hostname}`);
+        }
+
+        if (typeof options === 'object' && options?.all) {
+          callback(null, selected.map(({ address, family }) => ({ address, family })));
+        } else {
+          callback(null, selected[0].address, selected[0].family);
+        }
+      })().catch((error) => callback(error as Error, '', 0));
+    };
   }
 
   private async assertUrlAllowed(rawUrl: string): Promise<void> {
