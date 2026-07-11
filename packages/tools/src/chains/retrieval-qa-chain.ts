@@ -40,11 +40,27 @@ export class RetrievalQAChain {
 
     for (const source of sources) {
       const text = source.content ?? '';
+      if (!text) continue;
+
+      const remainingTokens = this.maxSourceTokens - tokenEstimate;
+      if (remainingTokens <= 0) break;
+
+      // Truncate a source that exceeds the remaining budget rather than
+      // skipping it, so an oversized first document never yields empty context.
       const estimatedTokens = Math.ceil(text.length / 4);
-      if (tokenEstimate + estimatedTokens > this.maxSourceTokens) break;
-      context += `---\n${text}\n\n`;
-      tokenEstimate += estimatedTokens;
+      const included = estimatedTokens > remainingTokens ? text.slice(0, remainingTokens * 4) : text;
+
+      context += `---\n${included}\n\n`;
+      tokenEstimate += Math.ceil(included.length / 4);
       usedSources.push(source);
+    }
+
+    if (context === '') {
+      return {
+        answer: 'No relevant documents found to answer this question.',
+        sources: this.returnSources ? [] : undefined,
+        intermediateSteps: steps,
+      };
     }
 
     // Step 3: Generate answer
