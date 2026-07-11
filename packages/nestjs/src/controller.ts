@@ -81,7 +81,14 @@ export function createOrkaController(path: string, agentsMap: Record<string, Bas
     async streamAgent(
       @Param('agent') name: string,
       @Body() body: AgentRunRequest,
-      @Res() res: { setHeader(k: string, v: string): void; write(chunk: string): void; end(): void },
+      @Res()
+      res: {
+        setHeader(k: string, v: string): void;
+        write(chunk: string): void;
+        end(): void;
+        on(event: 'close', listener: () => void): void;
+        writableEnded: boolean;
+      },
     ): Promise<void> {
       const agent = agentsMap[name] as StreamableAgent | undefined;
       if (!agent) {
@@ -105,17 +112,27 @@ export function createOrkaController(path: string, agentsMap: Record<string, Bas
       res.setHeader('Connection', 'keep-alive');
       res.setHeader('X-Accel-Buffering', 'no');
 
-      const send = (data: unknown) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+      // Track client disconnect so we stop pulling LLM events and writing to a dead socket.
+      let clientClosed = false;
+      res.on('close', () => { clientClosed = true; });
+
+      const send = (data: unknown) => {
+        if (clientClosed || res.writableEnded) return;
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+      };
 
       try {
         for await (const event of agent.runStream(body.input)) {
+          // On disconnect, break the loop — this invokes the generator's return(),
+          // the strongest cancellation available at this adapter boundary.
+          if (clientClosed) break;
           send(event);
           if (event.type === 'done' || event.type === 'error') break;
         }
       } catch (err) {
         send({ type: 'error', message: (err as Error).message });
       }
-      res.end();
+      if (!res.writableEnded) res.end();
     }
   }
 
@@ -191,7 +208,14 @@ export function createAsyncOrkaController(path: string): Type<unknown> {
     async streamAgent(
       @Param('agent') name: string,
       @Body() body: AgentRunRequest,
-      @Res() res: { setHeader(k: string, v: string): void; write(chunk: string): void; end(): void },
+      @Res()
+      res: {
+        setHeader(k: string, v: string): void;
+        write(chunk: string): void;
+        end(): void;
+        on(event: 'close', listener: () => void): void;
+        writableEnded: boolean;
+      },
     ): Promise<void> {
       const agent = this.agents[name] as StreamableAgent | undefined;
       if (!agent) {
@@ -215,17 +239,27 @@ export function createAsyncOrkaController(path: string): Type<unknown> {
       res.setHeader('Connection', 'keep-alive');
       res.setHeader('X-Accel-Buffering', 'no');
 
-      const send = (data: unknown) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+      // Track client disconnect so we stop pulling LLM events and writing to a dead socket.
+      let clientClosed = false;
+      res.on('close', () => { clientClosed = true; });
+
+      const send = (data: unknown) => {
+        if (clientClosed || res.writableEnded) return;
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+      };
 
       try {
         for await (const event of agent.runStream(body.input)) {
+          // On disconnect, break the loop — this invokes the generator's return(),
+          // the strongest cancellation available at this adapter boundary.
+          if (clientClosed) break;
           send(event);
           if (event.type === 'done' || event.type === 'error') break;
         }
       } catch (err) {
         send({ type: 'error', message: (err as Error).message });
       }
-      res.end();
+      if (!res.writableEnded) res.end();
     }
   }
 

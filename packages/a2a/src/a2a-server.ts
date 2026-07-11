@@ -167,7 +167,12 @@ export class A2AServer {
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
+    // Track client disconnect so we stop pulling LLM events and writing to a dead socket.
+    let clientClosed = false;
+    res.on('close', () => { clientClosed = true; });
+
     const sendEvent = (data: unknown) => {
+      if (clientClosed || res.writableEnded) return;
       res.write(`data: ${JSON.stringify(data)}\n\n`);
     };
 
@@ -188,6 +193,9 @@ export class A2AServer {
         let streamError: string | null = null;
 
         for await (const event of streamAgent.runStream(input)) {
+          // On disconnect, break the loop — this invokes the generator's return(),
+          // the strongest cancellation available at this adapter boundary.
+          if (clientClosed) break;
           if (event.type === 'error') {
             // Agents yield (not throw) error events, so catch them here to
             // avoid reporting a failed run as 'completed'.
