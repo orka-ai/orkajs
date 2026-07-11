@@ -59,6 +59,10 @@ export class MCPServer {
   private prompts: Map<string, { definition: MCPPrompt; handler: MCPPromptHandler }> = new Map();
   private eventListeners: Map<MCPEventType, Set<MCPEventListener>> = new Map();
   private isRunning = false;
+  /** Maximum accepted request body size (bytes); larger bodies are rejected to prevent memory-exhaustion DoS. */
+  private readonly MAX_REQUEST_BODY_BYTES = 4 * 1024 * 1024;
+  /** Idle timeout for reading a request body (ms); a connection that stalls or never ends is dropped. */
+  private readonly BODY_READ_TIMEOUT_MS = 30000;
 
   constructor(config: MCPServerConfig) {
     this.config = { version: '1.0.0', port: 3000, host: 'localhost', cors: true, ...config };
@@ -220,13 +224,22 @@ export class MCPServer {
   private parseBody(req: IncomingMessage): Promise<unknown> {
     return new Promise(resolve => {
       let body = '';
-      req.on('data', chunk => body += chunk.toString());
-      req.on('end', () => { try { resolve(JSON.parse(body)); } catch { resolve(null); } });
-      req.on('error', () => resolve(null));
+      let size = 0;
+      let settled = false;
+      const finish = (value: unknown) => { if (settled) return; settled = true; resolve(value); };
+      req.setTimeout(this.BODY_READ_TIMEOUT_MS, () => { finish(null); req.destroy(); });
+      req.on('data', chunk => {
+        size += chunk.length;
+        if (size > this.MAX_REQUEST_BODY_BYTES) { finish(null); req.destroy(); return; }
+        body += chunk.toString();
+      });
+      req.on('end', () => { try { finish(JSON.parse(body)); } catch { finish(null); } });
+      req.on('error', () => finish(null));
     });
   }
 
   private sendError(res: ServerResponse, code: number, message: string): void {
+    if (res.destroyed) return;
     res.setHeader('Content-Type', 'application/json');
     res.writeHead(200);
     res.end(JSON.stringify({ jsonrpc: '2.0', id: 0, error: { code, message } }));
